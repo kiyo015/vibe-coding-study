@@ -32,6 +32,12 @@ Day1〜3で毎回手作業していた「学習セッションのクローズ作
 
 `SKILL.md`のStep1「`vibe-practice`側で変更があればコミット」は、Day2時点（`vibe-practice`が独立git管理だった頃）の想定のまま。Day3後にStudy全体を1つのリポジトリに統合したため、`vibe-practice`はもう独立リポジトリでなく、この手順は実質Step4（Study全体コミット）に吸収されるべき内容になっていた。書いたばかりのスキルが早速、運用実態とのズレを露呈した——**スキルも育てるもの**という実感を得た良い実例。次回以降、この記述は修正対象。
 
+## 成果物
+
+- [`.claude/skills/daily-closeout/SKILL.md`](https://github.com/kiyo015/vibe-coding-study/blob/master/.claude/skills/daily-closeout/SKILL.md)
+- [`study_plan_2weeks.md`](https://github.com/kiyo015/vibe-coding-study/blob/master/study_plan_2weeks.md)（恒久パスに移動）
+- コミット: https://github.com/kiyo015/vibe-coding-study/commit/cdef3c3
+
 ## 次回（Day5）予告
 
 サブエージェント設計。定義方法（frontmatter・tools制限・model指定）、「本体作業 vs サブエージェント委譲」の判断基準、並列実行・isolation（worktree）の概念。Day2の実証実験・Day4のスキル比較（「Who」を分離するサブエージェント vs 「How」を注入するスキル）を踏まえて理解を深める。

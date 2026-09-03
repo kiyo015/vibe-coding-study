@@ -17,15 +17,18 @@ description: バイブコーディング学習(2週間計画、Study配下)で�
 
 ### 1. 今日の学習内容をまとめる
 
-`C:\Users\sakaguchi\Study\{YYYY-MM-DD}\summary.md` を新規作成する（日付はその日の日付）。構成は以下を踏襲する（Day1〜3のsummary.mdを参考にする）:
+`C:\Users\sakaguchi\Study\{YYYY-MM-DD}\summary.md` を新規作成する（日付はその日の日付）。構成は以下を踏襲する（Day1〜4のsummary.mdを参考にする）:
 
-- タイトル・対象Day・関連コミットハッシュ
+- タイトル・対象Day
 - 今日学んだこと（仕組みの解説・実例分析で分かったこと）
 - 実践内容（何を作った/直したか、動作確認結果）
 - 気づき・発見（あれば）
+- **成果物** — 生成・変更したファイルへのGitHubリンクを列挙する（下記参照）
 - 次回予告
 
 会話の中でその日実際に扱った内容を反映すること——テンプレートを機械的に埋めるのではなく、その日固有の学びを書く。
+
+**成果物リンクの書き方** — リポジトリは `https://github.com/kiyo015/vibe-coding-study`。各ファイルは `https://github.com/kiyo015/vibe-coding-study/blob/master/<リポジトリルートからの相対パス>` の形でリンクする（例: `study_plan_2weeks.md` → `.../blob/master/study_plan_2weeks.md`）。`master`ブランチ参照にする理由: コミットハッシュ固定にすると、まだcommitしていないこの時点でハッシュが確定せずStep3の後にsummary.mdを書き直す二度手間が生じる。過去日付のフォルダは以後基本的に書き換えない運用なので、`master`参照でも実用上「その日時点の内容」を指せる。
 
 ### 2. 学習計画シートを更新
 

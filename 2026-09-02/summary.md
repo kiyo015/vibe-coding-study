@@ -60,6 +60,13 @@
 
 **気づき:** `frontend/CLAUDE.md`のルール（バンドラー不使用）は違反ゼロだったが、ルートCLAUDE.mdの「マジックナンバー禁止」は指摘が出た。厳密なルールほど実運用でグレーゾーンが生まれやすい実例。
 
+## 成果物
+
+- [`vibe-practice/src/server.js`](https://github.com/kiyo015/vibe-coding-study/blob/master/vibe-practice/src/server.js)（クエリ文字列対応・PORT定数化）
+- [`vibe-practice/frontend/app.js`](https://github.com/kiyo015/vibe-coding-study/blob/master/vibe-practice/frontend/app.js)（削除失敗時エラーハンドリング追加）
+- [`vibe-practice/test/memo.test.js`](https://github.com/kiyo015/vibe-coding-study/blob/master/vibe-practice/test/memo.test.js)（マジックナンバー修正）
+- コミット: https://github.com/kiyo015/vibe-coding-study/commit/7e8698c
+
 ## 次回（Day4）予告
 
 自作スキル作成。SKILL.mdのdescription精度がトリガー精度に直結する点を意識しながら、自分専用スキルを1つ作り切る。

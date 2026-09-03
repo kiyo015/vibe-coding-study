@@ -46,9 +46,9 @@
 
 ## 成果物
 
-- [`vibe-practice/CLAUDE.md`](vibe-practice/CLAUDE.md) — 完成版（本フォルダにスナップショット同梱）
-- `vibe-practice/`一式（`package.json`/`src/memo.js`/`src/server.js`/`test/memo.test.js`、実体は`Study\vibe-practice\`側）
-- [`study_plan_2weeks.md`](study_plan_2weeks.md) — 2週間全体スケジュール（初日のみ同梱、以降は日次成果物のみ）
+- [`vibe-practice/CLAUDE.md`](https://github.com/kiyo015/vibe-coding-study/blob/master/2026-08-31/vibe-practice/CLAUDE.md) — 完成版（本フォルダにスナップショット同梱）
+- [`vibe-practice/`一式](https://github.com/kiyo015/vibe-coding-study/tree/master/vibe-practice)（`package.json`/`src/memo.js`/`src/server.js`/`test/memo.test.js`、最新状態）
+- [`study_plan_2weeks.md`](https://github.com/kiyo015/vibe-coding-study/blob/master/study_plan_2weeks.md) — 2週間全体スケジュール
 
 ## 次回（Day2）予告
 

@@ -43,12 +43,12 @@
 
 ## 成果物
 
-本フォルダ配下に元と同じディレクトリ構造でスナップショット同梱（`vibe-practice/`以下）。
+本フォルダ配下に元と同じディレクトリ構造でスナップショット同梱（`vibe-practice/`以下）。GitHubは最新状態(`master`)へのリンク。
 
-- [`vibe-practice/CLAUDE.md`](vibe-practice/CLAUDE.md)
-- [`vibe-practice/frontend/CLAUDE.md`](vibe-practice/frontend/CLAUDE.md)
-- [`vibe-practice/frontend/index.html`](vibe-practice/frontend/index.html) / [`app.js`](vibe-practice/frontend/app.js)
-- [`vibe-practice/src/server.js`](vibe-practice/src/server.js)（静的配信追加）
+- [`vibe-practice/CLAUDE.md`](https://github.com/kiyo015/vibe-coding-study/blob/master/vibe-practice/CLAUDE.md)
+- [`vibe-practice/frontend/CLAUDE.md`](https://github.com/kiyo015/vibe-coding-study/blob/master/vibe-practice/frontend/CLAUDE.md)
+- [`vibe-practice/frontend/index.html`](https://github.com/kiyo015/vibe-coding-study/blob/master/vibe-practice/frontend/index.html) / [`app.js`](https://github.com/kiyo015/vibe-coding-study/blob/master/vibe-practice/frontend/app.js)
+- [`vibe-practice/src/server.js`](https://github.com/kiyo015/vibe-coding-study/blob/master/vibe-practice/src/server.js)（静的配信追加）
 
 ## 次回（Day3）予告
 
