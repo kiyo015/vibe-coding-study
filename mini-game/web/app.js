@@ -55,3 +55,6 @@ formEl.onsubmit = (e) => {
 restartEl.onclick = start;
 
 start();
+
+// index.html側がこのフラグを見て「モジュールが読めなかった」場合に警告を出す
+window.__gameReady = true;

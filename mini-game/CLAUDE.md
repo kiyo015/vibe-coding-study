@@ -6,7 +6,9 @@
 
 - `npm test` — 全テスト実行（`node --test`、`test/`配下を自動検出）
 - `node --test test/game.test.js` — 単一テストファイルのみ実行
-- `npm run dev` — 動作確認用サーバー起動（`server.js`）。`PORT`環境変数未指定時は3100番ポート
+- `npm run dev` — サーバー起動（`server.js`）。`PORT`環境変数未指定時は3100番ポート。起動後 http://localhost:3100/ を開く
+
+**`web/index.html`を直接開いても動かない。** UIは`src/game.js`をESモジュールとしてimportしており、ブラウザのCORS制約により`file://`では読み込めないため。プレイするには必ず`npm run dev`が要る（この制約に気づかず「動かない」となった実例があるので、`file://`で開かれた場合はその旨の警告が表示されるようにしてある）。
 
 ## アーキテクチャ
 

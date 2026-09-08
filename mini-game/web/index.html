@@ -8,10 +8,34 @@
     #log { margin-top: 1rem; padding-left: 1.2rem; }
     .correct { color: #2a7; font-weight: bold; }
     .lose { color: #c33; font-weight: bold; }
+    #file-warning { display: none; padding: 1rem; border: 2px solid #c33; background: #fee; }
+    #file-warning code { background: #fff; padding: 0.1rem 0.3rem; }
   </style>
 </head>
 <body>
   <h1>数当てゲーム</h1>
+
+  <div id="file-warning">
+    <strong>このページはHTMLファイルを直接開いても動きません。</strong>
+    <p>ゲーム本体はESモジュールで書かれており、ブラウザのセキュリティ制約により
+    <code>file://</code> では読み込めないためです。</p>
+    <p><code>mini-game</code> フォルダで <code>npm run dev</code> を実行し、
+    <a href="http://localhost:3100/">http://localhost:3100/</a> を開いてください。</p>
+  </div>
+
+  <!--
+    通常スクリプト(type="module"でない)なのでモジュールが読めない環境でも必ず実行される。
+    プロトコルで判定せず「app.jsが実際に動いたか」を見る——file://以外でも、パス誤りや
+    読み込み失敗なら等しく警告を出したいため。
+  -->
+  <script>
+    setTimeout(function () {
+      if (!window.__gameReady) {
+        document.getElementById("file-warning").style.display = "block";
+      }
+    }, 500);
+  </script>
+
   <p><span id="min"></span>〜<span id="max"></span>の数を当てる。残り<span id="remaining"></span>回。</p>
   <form id="guess-form">
     <input id="guess-input" type="number" required />
