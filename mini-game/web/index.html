@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>数当てゲーム</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; }
+    #log { margin-top: 1rem; padding-left: 1.2rem; }
+    .correct { color: #2a7; font-weight: bold; }
+    .lose { color: #c33; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>数当てゲーム</h1>
+  <p><span id="min"></span>〜<span id="max"></span>の数を当てる。残り<span id="remaining"></span>回。</p>
+  <form id="guess-form">
+    <input id="guess-input" type="number" required />
+    <button type="submit">推測</button>
+  </form>
+  <ul id="log"></ul>
+  <button id="restart" type="button">やり直す</button>
+  <script type="module" src="/web/app.js"></script>
+</body>
+</html>
