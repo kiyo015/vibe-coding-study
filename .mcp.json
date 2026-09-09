@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "study-progress": {
+      "type": "stdio",
+      "command": "node",
+      "args": [".claude/mcp/study-progress-server.js"]
+    }
+  }
+}
