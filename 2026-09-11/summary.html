@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day10 プラグイン化 — 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);
+  gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;
+  align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:2px;
+  font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+.mx-cell ul{margin:0}
+.mx-cell li{margin-bottom:5px}
+b,strong{font-weight:700}
+.em{color:var(--accent);font-weight:700}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code{font-family:Consolas,Menlo,monospace;font-size:.9em;color:var(--ink-2)}
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons,.matrix{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">バイブコーディング学習記録 ／ Day10</p>
+    <h1>プラグイン化は「まとめる作業」ではなく「汎用化する作業」だった</h1>
+    <p class="lead">Day1〜9で作った資産を、別のプロジェクトでも使える配布単位（プラグイン）にまとめた記録。途中で、機構ごとのコンテキストコストを数値で確認でき、学習記録の運用上の欠陥も1つ見つけて直した。</p>
+    <div class="doc-meta"><span>2026-09-11（金）</span><span>14日計画の10日目</span><span>コミット 3c82824 ／ タグ day10</span></div>
+  </header>
+
+  <section>
+    <h2>要点</h2>
+    <ol class="summary">
+      <li><b>作った資産の大半は、このリポジトリ専用だった。</b>そのままプラグインに詰めても配布先では動かないため、汎用的なhooks 2つだけを<code>dev-guard</code>プラグインに入れ、残りはプロジェクト内に残した。</li>
+      <li><b>5つの機構のコンテキストコストが数値で揃った。</b><code>claude plugin details</code>の見積もりで、hooksだけが常時・発火時ともにゼロと確認できた。モデルを経由せずに動く、という性質がそのままコストに出ている。</li>
+      <li><b>次はチーム運用。</b>Day11の最初に、プラグイン経由のhooksが実際に発火するかを確かめる（プラグインはセッション開始時に読み込まれるため、今日は未検証）。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">2<small>／7</small></div><div class="l">プラグインに入れた資産</div></div>
+      <div class="kpi"><div class="v">0<small>tok</small></div><div class="l">hooksの常時コスト</div></div>
+      <div class="kpi"><div class="v">23<small>倍</small></div><div class="l">スキル本文 ÷ 常駐部分</div></div>
+      <div class="kpi"><div class="v">3<small>件</small></div><div class="l">後始末で直した問題</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>プラグインの構造</h2>
+    <p class="msg">プラグインは「機能の塊」、マーケットプレイスは「その配布カタログ」。この2層を分けて理解すると、設定の書き方が読めるようになる。</p>
+
+    <div class="fig-scroll"><div class="matrix">
+      <div class="mx-h"></div>
+      <div class="mx-h">役割</div>
+      <div class="mx-h">置き場所と中身</div>
+      <div class="mx-label"><small>LAYER 1</small>plugin.json</div>
+      <div class="mx-cell">1つのプラグインの定義。名前・説明・hooksの登録を書く</div>
+      <div class="mx-cell"><code>plugins/dev-guard/.claude-plugin/</code><br>hooksのパスは<code>${CLAUDE_PLUGIN_ROOT}</code>で書く（インストール先がどこでも解決される）</div>
+      <div class="mx-label"><small>LAYER 2</small>marketplace.json</div>
+      <div class="mx-cell">配布カタログ。<code>plugins: [...]</code>で複数のプラグインを並べられる</div>
+      <div class="mx-cell"><code>.claude-plugin/</code>（リポジトリ直下）<br>このリポジトリ自体がGitHub経由の配布元になる</div>
+    </div></div>
+
+    <p style="margin-top:24px">設定ファイルに出てくる<code>"genshijin@genshijin"</code>という書き方は、<b>プラグイン名@マーケットプレイス名</b>を指している。今回作ったものは<code>dev-guard@vibe-study</code>になる。</p>
+
+    <h3>お手本にしたgenshijinの中身</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>ディレクトリ</th><th>中身</th><th>読み取れたこと</th></tr></thead>
+      <tbody>
+        <tr><td><code>skills/</code> <code>agents/</code></td><td>スキル7個・サブエージェント3個</td><td>1つのプラグインに全機構を同梱できる</td></tr>
+        <tr><td><code>hooks/</code></td><td>Windows用<code>.ps1</code>とUnix用<code>.sh</code>の両方</td><td>シェルで書くとOSごとに作り分けが要る。自作hooksはNode.jsで書いたので最初から回避できていた</td></tr>
+        <tr><td><code>.cursor/</code> <code>.windsurf/</code> ほか</td><td>他のAIツール用の設定ファイル</td><td>ルールファイルは各ツールで形式がバラバラ。共通規格のあるMCPと違い、全形式を個別に用意するしかない</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>何をプラグインに入れるか</h2>
+    <p class="msg">7つの資産を棚卸しすると、別のプロジェクトでそのまま動くのは2つだけだった。</p>
+
+    <div class="tbl"><table>
+      <caption>表1　作った資産の汎用性</caption>
+      <thead><tr><th>資産</th><th>何をするか</th><th>汎用性</th><th>判断</th></tr></thead>
+      <tbody>
+        <tr><td><code>pre-bash-guard</code></td><td>危険なコマンドを実行前に止める</td><td>どこでも使える</td><td><span class="em">入れる</span></td></tr>
+        <tr><td><code>post-edit-test</code></td><td>編集後にテストを自動実行</td><td>対象プロジェクト名を書き込んでいた</td><td><span class="em">汎用化して入れる</span></td></tr>
+        <tr><td><code>daily-closeout</code></td><td>学習の締め作業</td><td>この学習リポジトリ専用</td><td>残す</td></tr>
+        <tr><td><code>study-progress</code>（MCP）</td><td>学習の進捗を集計</td><td>この学習リポジトリ専用</td><td>残す</td></tr>
+        <tr><td><code>game-balance</code> <code>game-playtester</code></td><td>数当てゲームの調整・検証</td><td>mini-game専用</td><td>残す</td></tr>
+        <tr><td><code>vibe-code-locator</code></td><td>コードの場所を調べる</td><td>vibe-practice専用</td><td>残す</td></tr>
+      </tbody>
+    </table></div>
+
+    <p class="note">Day7では<code>post-edit-test</code>について「package.jsonを探して自動で対象を判別するのは、今の規模では過剰」として見送っていた。プラグイン化という要件が来た今、まさにその汎用化が必要になった。YAGNI（今は作らない）は「永遠に作らない」ではない、という実例。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>汎用化の設計</h2>
+    <p class="msg">プロジェクト名を書き込むのをやめ、編集されたファイルから親フォルダを遡って、最初に見つかったpackage.jsonでテストする方式にした。</p>
+
+    <figure>
+      <figcaption>図1　post-edit-testが対象プロジェクトを見つけるまで</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">ファイル編集<small>.js / .ts等のみ</small></div>
+        <div class="chev">親フォルダへ遡る<small>ルートより上へ出ない</small></div>
+        <div class="chev on">最初のpackage.json<small>ここで探索を止める</small></div>
+        <div class="chev">testスクリプト確認<small>無ければ何もしない</small></div>
+        <div class="chev">npm test<small>25秒で打ち切り</small></div>
+      </div></div>
+    </figure>
+
+    <h3>設計で決めた3点</h3>
+    <ol class="summary">
+      <li><b>最も近いpackage.jsonで止まる。</b>そこにテストが無ければ、さらに上は探さない。入れ子になったプロジェクトで、親のテストを誤って走らせないため。</li>
+      <li><b>プロジェクトのルートより上には遡らない。</b>ホームフォルダにある無関係なpackage.jsonを拾わないため。</li>
+      <li><b>テストの打ち切り時間（25秒）を、hook自体の制限時間（30秒）より短くする。</b>逆にすると、hookごと強制終了されて失敗の理由を何も報告できなくなる。</li>
+    </ol>
+
+    <h3>有効化する範囲（スコープ）</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>スコープ</th><th>書き込み先</th><th>効く範囲</th></tr></thead>
+      <tbody>
+        <tr><td>user（既定値）</td><td><code>~/.claude/settings.json</code></td><td>自分のすべてのプロジェクト</td></tr>
+        <tr class="total"><td>project（今回採用）</td><td><code>.claude/settings.json</code></td><td>このプロジェクトのみ。git管理されるのでチームで共有できる</td></tr>
+        <tr><td>local</td><td><code>.claude/settings.local.json</code></td><td>このプロジェクトのみ。git管理されない（個人用）</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">既定値が<b>user</b>である点に注意。指定せずに実行すると、全プロジェクトに効くグローバル設定へ書き込まれる。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>5つの機構のコンテキストコスト</h2>
+    <p class="msg">hooksだけが、常時も発火時もコストがゼロ。スキルとサブエージェントは「説明文だけ常駐し、本文は使う時に読む」ことで常時コストを小さく抑えている。</p>
+
+    <figure>
+      <figcaption>図2　genshijinとdev-guardの部品ごとのトークン消費（濃紺＝毎セッション常に消費、グレー＝使った時だけ消費）</figcaption>
+      <div class="fig-scroll">
+      <svg viewBox="0 0 720 376" role="img" aria-label="部品ごとの常駐トークンと発火時トークンの横棒グラフ">
+        <line x1="176" y1="8" x2="176" y2="364" stroke="#a8adb5" stroke-width="1"/>
+        <g font-size="10" fill="#8e8e8e"><text x="0" y="14">スキル</text><text x="0" y="222">サブエージェント</text><text x="0" y="326">hooks（dev-guard）</text></g>
+        <g font-size="12" fill="#1a1a1a" text-anchor="end">
+          <text x="168" y="33">genshijin</text>
+          <text x="168" y="59">genshijin-commit</text>
+          <text x="168" y="85">genshijin-compress</text>
+          <text x="168" y="111">genshijin-crew</text>
+          <text x="168" y="137">genshijin-help</text>
+          <text x="168" y="163">genshijin-review</text>
+          <text x="168" y="189">genshijin-stats</text>
+          <text x="168" y="241">genshijin-builder</text>
+          <text x="168" y="267">genshijin-investigator</text>
+          <text x="168" y="293">genshijin-reviewer</text>
+          <text x="168" y="345">pre-bash-guard ほか</text>
+        </g>
+        <g fill="#c9ccd1">
+          <rect x="176" y="22" width="460" height="14"/>
+          <rect x="176" y="48" width="180" height="14"/>
+          <rect x="176" y="74" width="355" height="14"/>
+          <rect x="176" y="100" width="285" height="14"/>
+          <rect x="176" y="126" width="135" height="14"/>
+          <rect x="176" y="152" width="155" height="14"/>
+          <rect x="176" y="178" width="40" height="14"/>
+          <rect x="176" y="230" width="95" height="14"/>
+          <rect x="176" y="256" width="120" height="14"/>
+          <rect x="176" y="282" width="105" height="14"/>
+        </g>
+        <g fill="#173f66">
+          <rect x="176" y="22" width="20" height="14"/>
+          <rect x="176" y="48" width="20" height="14"/>
+          <rect x="176" y="74" width="25" height="14"/>
+          <rect x="176" y="100" width="45" height="14"/>
+          <rect x="176" y="126" width="15" height="14"/>
+          <rect x="176" y="152" width="20" height="14"/>
+          <rect x="176" y="178" width="20" height="14"/>
+          <rect x="176" y="230" width="20" height="14"/>
+          <rect x="176" y="256" width="20" height="14"/>
+          <rect x="176" y="282" width="25" height="14"/>
+        </g>
+        <g font-size="11" fill="#555555">
+          <text x="644" y="33">40 → 920</text>
+          <text x="364" y="59">40 → 360</text>
+          <text x="539" y="85">50 → 710</text>
+          <text x="469" y="111">90 → 570</text>
+          <text x="319" y="137">30 → 270</text>
+          <text x="339" y="163">40 → 310</text>
+          <text x="224" y="189">40 → 80</text>
+          <text x="279" y="241">40 → 190</text>
+          <text x="304" y="267">40 → 240</text>
+          <text x="289" y="293">50 → 210</text>
+        </g>
+        <text x="184" y="345" font-size="12" font-weight="700" fill="#173f66">0 → 0　モデルのコンテキストを一切使わない</text>
+      </svg>
+      </div>
+      <p class="src">出所：<code>claude plugin details</code>の見積もり値（単位はトークン、「常駐 → 発火時」）。実際の消費量とは異なる場合がある。</p>
+    </figure>
+
+    <p style="margin-top:24px">たとえば<code>genshijin</code>スキルは、常駐40トークンに対して本文が920トークンある。本文は常駐部分の<span class="em">23倍</span>で、使わない限りこの920トークンを払わずに済む。Day3に「説明2行＋本文296行」と<b>行数</b>で確かめたことを、<b>トークン数</b>で裏付けた形になる。</p>
+
+    <div class="tbl"><table>
+      <caption>表2　Day1〜10で確認した、機構ごとのコスト</caption>
+      <thead><tr><th>機構</th><th>常時かかるコスト</th><th>使った時のコスト</th><th>確認した日</th></tr></thead>
+      <tbody>
+        <tr><td>CLAUDE.md</td><td>全文</td><td>–</td><td>Day1</td></tr>
+        <tr><td>スキル</td><td>説明文ぶん（30〜90 tok）</td><td>本文（80〜920 tok）</td><td>Day3・Day10</td></tr>
+        <tr><td>サブエージェント</td><td>説明文ぶん（40〜50 tok）</td><td>本文（190〜240 tok）</td><td>Day10</td></tr>
+        <tr><td>MCP</td><td>ツール定義すべて（遅延読み込みで緩和）</td><td>実行結果</td><td>Day8</td></tr>
+        <tr class="total"><td>hooks</td><td>0</td><td>0</td><td>Day10</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>検証で踏んだ2つの罠</h2>
+    <p class="msg">「失敗したから本体が悪い」「壊したから必ず落ちる」——どちらの思い込みも外れた。</p>
+
+    <div class="fig-scroll"><div class="matrix" style="--mx-cols:3;--mx-label:120px">
+      <div class="mx-h"></div>
+      <div class="mx-h">起きたこと</div>
+      <div class="mx-h">本当の原因</div>
+      <div class="mx-h">学び</div>
+      <div class="mx-label"><small>罠 1</small>出力が空</div>
+      <div class="mx-cell">汎用化したhookを単体で試すと、何も返ってこなかった</div>
+      <div class="mx-cell">hookではなく<b>テストの入力</b>が壊れていた。Git Bash経由でWindowsのパス<code>\\</code>が崩れ、JSONとして読めなかった</div>
+      <div class="mx-cell">テストが失敗しても本体は正しいことがある。本体を疑う前にテスト自体を切り分ける</div>
+      <div class="mx-label"><small>罠 2</small>壊れない</div>
+      <div class="mx-cell">わざと<code>MAX_TRIES</code>を10→3に変えたのに、テストが通ってしまった</div>
+      <div class="mx-cell">テストが<code>MAX_TRIES</code>の値を参照して回数を決めていたため、定数を変えても整合が崩れなかった</div>
+      <div class="mx-cell">結果的に「定数の変更に強い良いテスト」だと実証された。答えを決め打ちしている<code>MAX_NUMBER</code>を変えて失敗を確認した</div>
+    </div></div>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>後始末で見つかった3つの問題</h2>
+    <p class="msg">どれも「作り終えた後」に見つかった。自動で生成された設定や、過去の記録とのつながりまで確認して初めて気づけた。</p>
+
+    <div class="fig-scroll"><div class="matrix" style="--mx-label:150px">
+      <div class="mx-h"></div>
+      <div class="mx-h">何が起きたか</div>
+      <div class="mx-h">対応</div>
+      <div class="mx-label"><small>01</small>絶対パスの自動書き込み</div>
+      <div class="mx-cell">登録コマンドが設定に<code>C:\Users\sakaguchi\Study</code>を書いた。Day6で絶対パスを全部消したのに、ツールの自動生成で元に戻った</div>
+      <div class="mx-cell"><code>"."</code>に直し、読み直しで検証が通ることを確認。自動生成された設定も中身を確認する</div>
+      <div class="mx-label"><small>02</small>二重に発火</div>
+      <div class="mx-cell">プロジェクト設定に書いた旧hooksと、プラグインのhooksが両方動く状態になっていた</div>
+      <div class="mx-cell">旧hooksの定義とスクリプトを削除</div>
+      <div class="mx-label"><small>03</small>過去の記録のリンク切れ</div>
+      <div class="mx-cell">消そうとしたファイルに、Day6・Day7の記録が<code>master</code>でリンクしていた（Day9で作った検索ツールで発見）</div>
+      <div class="mx-cell">両日のリンクを、その日のコミットに固定してから削除</div>
+    </div></div>
+
+    <p class="note">プラグインはインストール時に<code>~/.claude/plugins/cache/</code>へコピーされ、そちらが実行される。つまり<code>plugins/dev-guard/</code>の元ファイルを直しても、更新コマンドを実行するまで反映されない。開発中に「直したのに動きが変わらない」となる落とし穴。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>記録の運用を直した</h2>
+    <p class="msg">成果物のリンクを<code>master</code>で書く方式は、最初から「その日時点の内容」を指せていなかった。タグなら事前に書けて、打った時点に固定できる。</p>
+
+    <div class="tbl"><table>
+      <caption>表3　成果物リンクの書き方の比較</caption>
+      <thead><tr><th>方式</th><th>コミット前に書けるか</th><th>後で更新されても当日の内容を指すか</th><th>削除されてもリンクが切れないか</th></tr></thead>
+      <tbody>
+        <tr><td><code>master</code>参照（Day4〜9）</td><td>書ける</td><td>指さない</td><td>切れる</td></tr>
+        <tr><td>コミットハッシュ</td><td>書けない</td><td>指す</td><td>切れない</td></tr>
+        <tr class="total"><td>タグ <code>day10</code>（今回から）</td><td>書ける</td><td>指す</td><td>切れない</td></tr>
+      </tbody>
+    </table></div>
+
+    <p style="margin-top:24px">あわせて、締め作業のスキルに<code>Claude Sonnet 5</code>と<b>モデル名を直接書いていた</b>のも直した（現在はOpus 5）。Day1で学んだ「すぐ古くなる情報を書かない」と同じ話で、「その時点の指示に従う」と書くべきだった。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>成果物と次のアクション</h2>
+    <p class="msg">今日の成果物はタグ<code>day10</code>に固定した。次はプラグインが実際に動くかの確認から始める。</p>
+
+    <h3>成果物（GitHub・タグday10の時点）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day10/plugins/dev-guard/.claude-plugin/plugin.json">plugins/dev-guard/.claude-plugin/plugin.json</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day10/plugins/dev-guard/hooks/post-edit-test.js">plugins/dev-guard/hooks/post-edit-test.js</a>（汎用化）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day10/plugins/dev-guard/hooks/pre-bash-guard.js">plugins/dev-guard/hooks/pre-bash-guard.js</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day10/.claude-plugin/marketplace.json">.claude-plugin/marketplace.json</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day10/.claude/settings.json">.claude/settings.json</a>（プラグインの有効化のみに整理）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day10/.claude/skills/daily-closeout/SKILL.md">.claude/skills/daily-closeout/SKILL.md</a>（タグ方式に修正）</li>
+    </ul>
+
+    <div class="tbl"><table>
+      <caption>表4　次のアクション</caption>
+      <thead><tr><th>アクション</th><th>ねらい</th><th>時期</th></tr></thead>
+      <tbody>
+        <tr><td>プラグイン経由のhooksが発火するか確認</td><td>今日は未検証。プラグインはセッション開始時に読み込まれる</td><td>Day11 冒頭</td></tr>
+        <tr><td>チーム運用の設計</td><td>今日出てきた論点（projectスコープでの共有、絶対パス、キャッシュの反映タイミング）を、チームで使う前提で整理する</td><td>Day11</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day10 学習記録 — vibe-coding-study</span>
+    <span>トークン数は claude plugin details の見積もり値</span>
+  </footer>
+
+</div>
+</body>
+</html>
