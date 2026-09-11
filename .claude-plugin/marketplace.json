@@ -1,0 +1,13 @@
+{
+  "name": "vibe-study",
+  "owner": {
+    "name": "kiyo015"
+  },
+  "plugins": [
+    {
+      "name": "dev-guard",
+      "source": "./plugins/dev-guard",
+      "description": "危険コマンドの事前ブロックと、編集後の自動テスト実行"
+    }
+  ]
+}

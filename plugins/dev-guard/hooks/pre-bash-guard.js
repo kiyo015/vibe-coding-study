@@ -1,6 +1,10 @@
 #!/usr/bin/env node
-// PreToolUseフック。Bashで危険なコマンド(force push・git reset --hard等)を
-// 実行"前"に検知してブロックする実演用。
+// PreToolUseフック。Bashで取り返しのつかないコマンド(force push・git reset --hard・rm -rf)を
+// 実行"前"に検知してブロックする。PostToolUseでは実行後なので手遅れになる。
+//
+// 限界: ブロックリスト方式なので既知の書き方しか止められない。`rm -fr`や`rm -r -f`、
+// 変数展開やシェル関数を経由した実行は素通りする。これは「うっかり」を防ぐ安全網であって、
+// 悪意ある実行を防ぐ仕組みではない。確実に禁じたいならサブエージェントのtoolsからBashを外すこと。
 
 let input = '';
 process.stdin.on('data', chunk => { input += chunk; });

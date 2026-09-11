@@ -105,8 +105,10 @@ hooksだけ「モデルを介さず確実に実行される」という他の3�
 ## 成果物
 
 - [`.claude/settings.json`](https://github.com/kiyo015/vibe-coding-study/blob/master/.claude/settings.json)（PreToolUse/PostToolUseフック登録）
-- [`.claude/hooks/post-edit-test.js`](https://github.com/kiyo015/vibe-coding-study/blob/master/.claude/hooks/post-edit-test.js)
-- [`.claude/hooks/pre-bash-guard.js`](https://github.com/kiyo015/vibe-coding-study/blob/master/.claude/hooks/pre-bash-guard.js)
+- [`.claude/hooks/post-edit-test.js`](https://github.com/kiyo015/vibe-coding-study/blob/f3a336c/.claude/hooks/post-edit-test.js)
+- [`.claude/hooks/pre-bash-guard.js`](https://github.com/kiyo015/vibe-coding-study/blob/f3a336c/.claude/hooks/pre-bash-guard.js)
+
+（Day10でhooksをプラグインへ移したため、このDay時点のコミット`f3a336c`に固定したリンクに差し替えた）
 - [`.claude/skills/daily-closeout/SKILL.md`](https://github.com/kiyo015/vibe-coding-study/blob/master/.claude/skills/daily-closeout/SKILL.md)（相対パス化）
 - [`.claude/agents/vibe-code-locator.md`](https://github.com/kiyo015/vibe-coding-study/blob/master/.claude/agents/vibe-code-locator.md)（相対パス化）
 

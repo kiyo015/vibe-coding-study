@@ -1,0 +1,34 @@
+{
+  "name": "dev-guard",
+  "version": "1.0.0",
+  "description": "開発中の安全装置。Bashで取り返しのつかないコマンド(force push・reset --hard・rm -rf)を実行前にブロックし、コードファイルの編集後にはそのファイルが属するプロジェクトのテストを自動実行する。",
+  "author": {
+    "name": "kiyo015"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-bash-guard.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/post-edit-test.js\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

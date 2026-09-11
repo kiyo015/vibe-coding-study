@@ -109,7 +109,7 @@ Day1の`game/CLAUDE.md`にあった「新しい発見の多くは錯覚・局所
 - [`mini-game/`](https://github.com/kiyo015/vibe-coding-study/tree/master/mini-game) 一式（`CLAUDE.md`・`docs/`・`src/`・`web/`・`test/`・`server.js`）
 - [`.claude/skills/game-balance/SKILL.md`](https://github.com/kiyo015/vibe-coding-study/blob/master/.claude/skills/game-balance/SKILL.md) ＋ [`references/difficulty-math.md`](https://github.com/kiyo015/vibe-coding-study/blob/master/.claude/skills/game-balance/references/difficulty-math.md)
 - [`.claude/agents/game-playtester.md`](https://github.com/kiyo015/vibe-coding-study/blob/master/.claude/agents/game-playtester.md)
-- [`.claude/hooks/post-edit-test.js`](https://github.com/kiyo015/vibe-coding-study/blob/master/.claude/hooks/post-edit-test.js)（2プロジェクト対応に拡張）
+- [`.claude/hooks/post-edit-test.js`](https://github.com/kiyo015/vibe-coding-study/blob/5612ad6/.claude/hooks/post-edit-test.js)（2プロジェクト対応に拡張。Day10でプラグインへ移したため、このDay時点のコミット`5612ad6`に固定したリンクに差し替えた）
 
 ## 次回（Day8）予告
 

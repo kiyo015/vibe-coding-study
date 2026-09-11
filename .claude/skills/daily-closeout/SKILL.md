@@ -28,7 +28,9 @@ description: バイブコーディング学習(2週間計画、Study配下)で�
 
 会話の中でその日実際に扱った内容を反映すること——テンプレートを機械的に埋めるのではなく、その日固有の学びを書く。
 
-**成果物リンクの書き方** — リポジトリは `https://github.com/kiyo015/vibe-coding-study`。各ファイルは `https://github.com/kiyo015/vibe-coding-study/blob/master/<リポジトリルートからの相対パス>` の形でリンクする（例: `study_plan_2weeks.md` → `.../blob/master/study_plan_2weeks.md`）。`master`ブランチ参照にする理由: コミットハッシュ固定にすると、まだcommitしていないこの時点でハッシュが確定せずStep3の後にsummary.mdを書き直す二度手間が生じる。過去日付のフォルダは以後基本的に書き換えない運用なので、`master`参照でも実用上「その日時点の内容」を指せる。
+**成果物リンクの書き方** — リポジトリは `https://github.com/kiyo015/vibe-coding-study`。各ファイルは `https://github.com/kiyo015/vibe-coding-study/blob/day{N}/<リポジトリルートからの相対パス>` の形で、**その日のDay番号のタグ**でリンクする（例: Day11なら `.../blob/day11/study_plan_2weeks.md`）。タグはStep3でコミット後に打つ。
+
+タグにする理由: 以前は`master`参照にしていたが、Day10で2つの問題が判明した。(1) リンク先のファイルが後日更新されると、過去の記録から新しい版が見えてしまう（その日時点の内容を指せていなかった）。(2) リンク先のファイルを移動・削除すると過去の記録のリンクが切れる。コミットハッシュ固定なら両方防げるが、commit前にはハッシュが確定しない。**タグ名はcommit前から決まっているので事前に書け、打った時点に永続的に固定される。**
 
 ### 2. 学習計画シートを更新
 
@@ -48,11 +50,15 @@ description: バイブコーディング学習(2週間計画、Study配下)で�
 git add -A
 git commit -m "<その日の内容が分かる日本語メッセージ>
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+<その時点でシステムから指示されているCo-Authored-By行>"
+git tag day{N}
 git push
+git push origin day{N}
 ```
 
-push先は既存のリモート（`origin`）にそのまま行う。新しいリポジトリを作ったりリモートを変更したりはしない。
+- `Co-Authored-By`の行は、その時点でシステムから指示されている文言をそのまま使う。モデル名をこのスキルに固定で書かないこと（以前`Claude Sonnet 5`と固定で書いていたが、使用モデルが変わって古くなった）
+- タグはStep1で書いたリンクの`day{N}`と一致させる。これを打たないとsummary.mdのリンクが全部404になる
+- push先は既存のリモート（`origin`）にそのまま行う。新しいリポジトリを作ったりリモートを変更したりはしない
 
 ## 完了後の報告
 
