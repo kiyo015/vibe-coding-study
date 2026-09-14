@@ -1,2 +1,6 @@
 node_modules/
 .claude/worktrees/
+# 個人ごとの設定(許可ルールの蓄積など)。共有するのは.claude/settings.jsonだけにする。
+# 作者のPCでは個人のgit除外設定(~/.config/git/ignore)で隠れていたが、他の人がcloneすると
+# この行が無い限りコミットに混入する。
+.claude/settings.local.json

@@ -1,4 +1,4 @@
-// 難易度に関わる定数。変更時はdocs/game-rules.mdとテストも合わせて見直すこと
+// 難易度に関わる定数。変更時はdocs/game-rules.mdとテストも合わせて見直すこと(手順はgame-balanceスキル)
 export const MIN_NUMBER = 1;
 export const MAX_NUMBER = 500;
 export const MAX_TRIES = 10;

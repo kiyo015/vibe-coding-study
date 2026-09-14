@@ -1,14 +1,14 @@
 {
   "name": "dev-guard",
-  "version": "1.0.0",
-  "description": "開発中の安全装置。Bashで取り返しのつかないコマンド(force push・reset --hard・rm -rf)を実行前にブロックし、コードファイルの編集後にはそのファイルが属するプロジェクトのテストを自動実行する。",
+  "version": "1.0.3",
+  "description": "開発中の安全装置。Bash・PowerShellで取り返しのつかないコマンド(force push・reset --hard・rm -rf)を実行前にブロックし、コードファイルの編集後にはそのファイルが属するプロジェクトのテストを自動実行する。",
   "author": {
     "name": "kiyo015"
   },
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|PowerShell",
         "hooks": [
           {
             "type": "command",

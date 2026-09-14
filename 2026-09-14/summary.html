@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day11 チーム運用設計 — 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);
+  gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;
+  align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:2px;
+  font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+.mx-cell ul{margin:0}
+.mx-cell li{margin-bottom:5px}
+b,strong{font-weight:700}
+.em{color:var(--accent);font-weight:700}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code{font-family:Consolas,Menlo,monospace;font-size:.9em;color:var(--ink-2)}
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons,.matrix{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">バイブコーディング学習記録 ／ Day11</p>
+    <h1>チームのルールは「お願い」と「強制」を分けて書き、レビューの指摘は実測してから直す</h1>
+    <p class="lead">チームで使う前提で、共有設定・権限・レビューの流れを設計した記録。点検の途中で、個人の環境でたまたま動いていた前提と、ガードがまったく効いていないツールが見つかり、レビュー役を使って直した。</p>
+    <div class="doc-meta"><span>2026-09-14（月）</span><span>14日計画の11日目</span><span>タグ day11</span></div>
+  </header>
+
+  <section>
+    <h2>要点</h2>
+    <ol class="summary">
+      <li><b>共有する前に、自分のPCで「たまたま動いている」ものを探す。</b><code>settings.local.json</code>は個人のgit除外設定で隠れていただけで、未信頼のフォルダではチームの許可ルールがそもそも無視される。</li>
+      <li><b>ルールには「強制」か「お願い」かを書く。</b>CLAUDE.mdの「禁止」は破れる。技術的に止めているのは設定・hooks・サブエージェントのtoolsだけで、それも書き方の列挙なので穴は残る。</li>
+      <li><b>レビュー役の指摘は、実測してから直す・反論する。</b>1回目は1件が外れ、2回目は15例すべて的中した。2回目では、自分で書いたテストが全部通っていたガードに、自分のコミットを止める誤検知が見つかった。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">15<small>／15</small></div><div class="l">実測で的中したレビュー指摘の例</div></div>
+      <div class="kpi"><div class="v">57<small>件</small></div><div class="l">今日書いたテスト（48＋9）</div></div>
+      <div class="kpi"><div class="v">1.0.3</div><div class="l">dev-guardの版（1.0.0から）</div></div>
+      <div class="kpi"><div class="v">4<small>件</small></div><div class="l">共有前に見つかった前提</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>共有設定の点検</h2>
+    <p class="msg">チーム共有の目で<code>.claude/</code>を見直すと、自分のPCでしか成り立っていない前提が4つあった。</p>
+
+    <div class="tbl"><table>
+      <caption>表1　共有前に見つかった前提</caption>
+      <thead><tr><th>見つかったこと</th><th>なぜ問題か</th><th>対応</th></tr></thead>
+      <tbody>
+        <tr><td><code>settings.local.json</code>がリポジトリの<code>.gitignore</code>に無い。個人のgit除外設定で隠れていただけ</td><td>他の人がcloneすると個人の許可ルールがコミットに混入する</td><td><code>.gitignore</code>に追加</td></tr>
+        <tr><td>個人の許可ルールが63件。うち11件は一度きりの承認の残骸</td><td>そのまま標準にすると、誰も意図していない権限が全員に付く</td><td>チーム標準を別に設計</td></tr>
+        <tr><td><b>未信頼のフォルダでは<code>permissions.allow</code>が無視される</b></td><td>clone直後はチームの許可ルールが効かない</td><td>雛形に明記</td></tr>
+        <tr><td>同じフォルダが<code>C:/…</code>と<code>C:\…</code>の2通りで記録され、片方だけ未信頼</td><td>アプリでは効くのに、ターミナルから起動すると効かない</td><td>雛形に明記</td></tr>
+      </tbody>
+    </table></div>
+    <p class="src">3件目はヘッドレス起動時の表示「Ignoring 4 permissions.allow entries from .claude/settings.json: this workspace has not been trusted.」で判明。信頼の記録を手で書き換える回避は、安全装置を外すことになるので行わなかった。</p>
+
+    <h3>チーム標準の権限（.claude/settings.json）</h3>
+    <ul>
+      <li><b>allow 4件</b>: <code>npm test</code>・<code>git status</code>・<code>git diff</code>・<code>git log</code>（読むだけのものとテストに限定）</li>
+      <li><b>deny 3件</b>: <code>git push --force</code>・<code>git push -f</code>・<code>git reset --hard</code></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>「お願い」と「強制」</h2>
+    <p class="msg">チーム向けCLAUDE.mdの雛形では、ルールごとに「強制」か「お願い」かと、どこで止めているかを必ず書く形にした。</p>
+
+    <div class="tbl"><table>
+      <caption>表2　雛形の禁止事項（templates/team-CLAUDE.md）</caption>
+      <thead><tr><th>ルール</th><th>種別</th><th>どこで止めているか</th></tr></thead>
+      <tbody>
+        <tr><td>force push・<code>git reset --hard</code>・再帰かつ強制の削除</td><td>強制（漏れあり）</td><td>denyルールと<code>dev-guard</code>のフック</td></tr>
+        <tr><td>テストが落ちたまま次に進む</td><td>強制</td><td>PostToolUseフックが編集ごとにテストし、失敗なら差し戻す</td></tr>
+        <tr><td>レビュー役がコードを書き換える</td><td>強制</td><td><code>team-reviewer</code>にRead/Grep/Globしか与えない</td></tr>
+        <tr><td>絶対パス・秘密情報・マジックナンバー</td><td>お願い</td><td>機械で判定しきれないのでレビューで拾う</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>denyルールとフックの漏れ方</h2>
+    <p class="msg">2つの層は漏れ方が違うので併用には意味がある。ただ実測すると、両方を抜ける書き方があり、PowerShellツールにはどちらも効いていなかった。</p>
+
+    <div class="tbl"><table>
+      <caption>表3　書き方ごとの判定（実測）</caption>
+      <thead><tr><th>書き方</th><th>denyルール</th><th>フック1.0.1</th><th>フック1.0.3</th></tr></thead>
+      <tbody>
+        <tr><td><code>git -C . reset --hard HEAD</code></td><td>抜ける</td><td>止める</td><td>止める</td></tr>
+        <tr><td><code>git push -f origin main</code></td><td>止める</td><td>抜ける</td><td>止める</td></tr>
+        <tr><td><code>git push origin main -f</code></td><td>抜ける</td><td><b>抜ける</b></td><td>止める</td></tr>
+        <tr><td><code>git push origin +main</code></td><td>抜ける</td><td><b>抜ける</b></td><td>止める</td></tr>
+        <tr><td><code>rm -fr</code> ／ <code>rm -r -f</code></td><td>ルールなし</td><td><b>抜ける</b></td><td>止める</td></tr>
+        <tr><td>PowerShellツールの<code>Remove-Item -Recurse -Force</code></td><td>対象外</td><td><b>対象外</b></td><td>止める</td></tr>
+        <tr><td><code>cmd /c rd /s /q node_modules</code></td><td>ルールなし</td><td><b>抜ける</b></td><td>止める</td></tr>
+        <tr><td>変数・gitのエイリアス・スクリプトファイル経由</td><td>抜ける</td><td>抜ける</td><td><b>抜ける</b></td></tr>
+      </tbody>
+    </table></div>
+    <p class="src">denyルールの列は、無害な<code>git branch --list</code>に一時的なdenyを付けて確かめた規則を当てはめた結果。フックの列は、フックを別プロセスで起動して判定だけを見た実測。</p>
+
+    <ul>
+      <li><b>denyルール</b>は<code>&amp;&amp;</code>で分解してから照合するが、分解後は<b>先頭一致しか見ない</b>。<code>Bash(…)</code>ルールはBashツールにしか効かない</li>
+      <li><b>フック</b>のmatcherは<code>Bash</code>だけだった。PowerShellツールでも<code>tool_input.command</code>でコマンドが渡ることを一時的な記録用フックで確かめ、<code>Bash|PowerShell</code>に広げた</li>
+      <li>どちらも書き方の列挙なので、穴はゼロにならない。<b>うっかりを防ぐ安全網</b>であり、確実に禁じたい作業はシェル系ツールを持たないサブエージェントに任せる</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>レビューの流れ</h2>
+    <p class="msg">読み取り専用は「書き換えないで」と頼むのでなく、書き換える手段を持たせないことで保証する。指摘は実測してから扱う。</p>
+
+    <figure>
+      <figcaption>図1　レビューの手順（濃紺はレビュー役、他は呼ぶ側の作業）</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">差分を作る<small>git diff</small></div>
+        <div class="chev">意図と渡す<small>見立ては渡さない</small></div>
+        <div class="chev on">レビュー<small>Read/Grep/Globのみ</small></div>
+        <div class="chev">指摘を実測<small>コマンド例を再現</small></div>
+        <div class="chev">テストを先に足す<small>失敗を確認して修正</small></div>
+      </div></div>
+    </figure>
+
+    <div class="tbl"><table>
+      <caption>表4　2回のレビューと実測の結果</caption>
+      <thead><tr><th>対象</th><th>レビュー役</th><th>実測の結果</th></tr></thead>
+      <tbody>
+        <tr><td><code>post-edit-test.js</code>（Day10で汎用化）</td><td><code>general-purpose</code>に同じ基準を指示（読み取り専用は「お願い」）</td><td>Critical「<code>err.killed</code>は存在しない」は<b>本当</b>（<code>code = ETIMEDOUT</code>）。ルートより上に遡る件・stderrを落とす件も本当。「孫プロセスで25秒返らない」は<b>再現せず反論</b>（1.0秒で返った）</td></tr>
+        <tr><td><code>pre-bash-guard.js</code>（今日の1.0.2）</td><td><code>team-reviewer</code>（toolsで読み取り専用。本人も「書き込み・実行はできない」と申告）</td><td>添えられたコマンド例<b>15件すべて見立てどおり</b>。引用符の中の文字列を判定する誤検知で、ガードの話題を含む自分のコミットが止まる状態だった</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">新しく作ったサブエージェントは同じセッションですぐには使えなかった（8回呼んで「Agent type not found」）。セッションの後半で使えるようになった。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>テストを先に書いて直した</h2>
+    <p class="msg">3回とも、テストを先に足して「バグどおりの理由で失敗する」ことを見てから本体を直した。それでも2回目の31件は、自分の想定したケースしか確かめていなかった。</p>
+
+    <figure>
+      <figcaption>図2　テストの件数と、実装前に失敗を確認した件数</figcaption>
+      <div class="fig-scroll">
+      <svg viewBox="0 0 760 160" role="img" aria-label="テストの件数と実装前に失敗を確認した件数">
+        <text x="0" y="30" font-size="12" fill="#1a1a1a">post-edit-test</text>
+        <rect x="200" y="16" width="60" height="20" fill="#c9ccd1"/>
+        <rect x="200" y="16" width="40" height="20" fill="#173f66"/>
+        <text x="268" y="31" font-size="12" fill="#555555">9件（失敗を確認 6件）</text>
+
+        <text x="0" y="80" font-size="12" fill="#1a1a1a">pre-bash-guard 1.0.2</text>
+        <rect x="200" y="66" width="207" height="20" fill="#c9ccd1"/>
+        <rect x="200" y="66" width="87" height="20" fill="#173f66"/>
+        <text x="415" y="81" font-size="12" fill="#555555">31件（失敗を確認 13件）</text>
+
+        <text x="0" y="130" font-size="12" fill="#1a1a1a">pre-bash-guard 1.0.3</text>
+        <rect x="200" y="116" width="320" height="20" fill="#c9ccd1"/>
+        <rect x="200" y="116" width="100" height="20" fill="#173f66"/>
+        <text x="528" y="131" font-size="12" font-weight="700" fill="#173f66">48件（失敗を確認 15件）</text>
+
+        <line x1="200" y1="8" x2="200" y2="146" stroke="#a8adb5" stroke-width="1"/>
+      </svg>
+      </div>
+    </figure>
+    <p class="src">濃紺＝実装前に失敗を確認したテスト、グレー＝回帰防止を含むテスト全体。1.0.2の31件はすべて通っていたが、1.0.3で足した誤検知のケースを含んでいなかった。</p>
+
+    <div class="tbl"><table>
+      <caption>表5　pre-bash-guardの判定の仕方</caption>
+      <thead><tr><th>版</th><th>判定の仕方</th></tr></thead>
+      <tbody>
+        <tr><td>1.0.1</td><td>1本の正規表現で文字列全体を探す</td></tr>
+        <tr><td>1.0.2</td><td><code>&amp;&amp;</code>・<code>;</code>・<code>|</code>・改行で区切り、単語ごとにフラグを見る。PowerShellを対象に追加</td></tr>
+        <tr><td>1.0.3</td><td><b>コマンド名の位置にある単語だけ</b>を見る（先頭、<code>sudo</code>・<code>-exec</code>・<code>-c</code>・<code>/c</code>の直後、<code>$(</code>・<code>(</code>の直後）。行の継続をつなぐ。PowerShellの別名とcmdの削除を追加。判定中のエラーを標準エラーに残す</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">2回目の指摘9件のうち、PreToolUseの<code>decision: 'block'</code>が非推奨という1件は見送った（今も動作し、公式ドキュメントの記述を未確認のため）。プラグインは次のセッションから1.0.3が有効になる。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>気づき</h2>
+    <p class="msg">テストが全部通っていても、テストの想定が狭ければ守れていない。第三者のレビューが効くのはそこだった。</p>
+    <ul>
+      <li><b>レビュー役は当たることも外れることもある。</b>「言われたから直す」ではなく、実測してから直す・反論する</li>
+      <li>レビュー役に<b>具体的なコマンド例を添えて</b>と頼んだことで、指摘をそのまま実測とテストに変換できた。指摘の形式を指定すると検証の手間が下がる</li>
+      <li>対象ツールを増やす時は、そのツールに<b>今どのガードが効いているかを先に実測</b>する。matcherに無いツールには何も効かない</li>
+      <li>設定が効かない理由は、ファイルの中身でなく環境（信頼状態・パス表記の重複）にあることがある</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>成果物と次のアクション</h2>
+    <p class="msg">今日の成果物はタグ<code>day11</code>に固定した。次は1.0.3が効いているかの確認と、CLIへの再ログインから始める。</p>
+
+    <h3>成果物（GitHub・タグday11の時点）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day11/templates/team-CLAUDE.md">templates/team-CLAUDE.md</a>（チーム向けCLAUDE.md雛形）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day11/.claude/agents/team-reviewer.md">.claude/agents/team-reviewer.md</a>（読み取り専用レビュー役）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day11/.claude/settings.json">.claude/settings.json</a>（チーム標準の権限）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day11/.gitignore">.gitignore</a>（settings.local.jsonを追加）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day11/plugins/dev-guard/.claude-plugin/plugin.json">plugins/dev-guard/.claude-plugin/plugin.json</a>（1.0.3・PowerShellを対象に追加）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day11/plugins/dev-guard/hooks/pre-bash-guard.js">plugins/dev-guard/hooks/pre-bash-guard.js</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day11/plugins/dev-guard/hooks/pre-bash-guard.test.js">pre-bash-guard.test.js</a>（48件）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day11/plugins/dev-guard/hooks/post-edit-test.js">plugins/dev-guard/hooks/post-edit-test.js</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day11/plugins/dev-guard/hooks/post-edit-test.test.js">post-edit-test.test.js</a>（9件）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day11/mini-game/src/game.js">mini-game/src/game.js</a>（フック発火確認に使った編集）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day11/study_plan_2weeks.md">study_plan_2weeks.md</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day11/2026-09-14/summary.md">2026-09-14/summary.md</a></li>
+    </ul>
+
+    <div class="tbl"><table>
+      <caption>表6　次のアクション</caption>
+      <thead><tr><th>アクション</th><th>ねらい</th><th>担当・時期</th></tr></thead>
+      <tbody>
+        <tr><td>アプリを再起動し、1.0.3が有効か確認</td><td>PowerShellツールで<code>Write-Output "git reset --hard HEAD"</code>がブロックされれば有効</td><td>Day12 冒頭</td></tr>
+        <tr><td><code>claude</code> CLIに再ログイン</td><td>認証が失効している（401 revoked）。代理では行えない</td><td>本人・Day12 までに</td></tr>
+        <tr><td>ヘッドレス実行・定期実行</td><td>未信頼フォルダと認証切れは、無人実行でそのまま詰まる箇所なので最初に押さえる</td><td>Day12</td></tr>
+        <tr><td>未解決の確認</td><td>孫プロセスが残るか／MCPサーバーの承認記録の所在／PowerShell向けdenyルール／<code>decision: 'block'</code>の移行要否</td><td>Day12以降</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day11 学習記録 — vibe-coding-study</span>
+    <span>判定・件数はすべてこの日の実測値</span>
+  </footer>
+
+</div>
+</body>
+</html>
