@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day12 自動化・定期実行 — 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);
+  gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;
+  align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:2px;
+  font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+.mx-cell ul{margin:0}
+.mx-cell li{margin-bottom:5px}
+b,strong{font-weight:700}
+.em{color:var(--accent);font-weight:700}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code{font-family:Consolas,Menlo,monospace;font-size:.9em;color:var(--ink-2)}
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons,.matrix{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">バイブコーディング学習記録 ／ Day12</p>
+    <h1>定期実行で効くのは、モデル選びより「AIを呼ぶ回数」の設計だった</h1>
+    <p class="lead">人が座っていない時間にClaude Codeを動かす仕組みを作った記録。ヘッドレス実行の費用構造を実測し、健康診断を2種類のスケジューラに登録して、無人実行だけで起きる詰まり方を3つ踏んだ。</p>
+    <div class="doc-meta"><span>2026-09-15（火）</span><span>14日計画の12日目</span><span>タグ day12</span></div>
+  </header>
+
+  <section>
+    <h2>要点</h2>
+    <ol class="summary">
+      <li><b>コストの正体は、指示の長さではなく毎回積み直す文脈。</b><code>2+3</code>を聞くだけで$0.075かかる。Day10で測った「機構ごとの常時コスト」が、定期実行では1回ごとの請求になる。</li>
+      <li><b>事実の収集は決定的な処理、AIは異常時だけ。</b>正常な日はAIを呼ばないので費用は0。毎回AIに報告させる設計と比べて2桁安い。</li>
+      <li><b>無人実行で最初に詰まるのは権限。</b>要約を頼んだAIが自分でコマンドを実行しようとして、確認待ちのまま20分以上止まった。人がいない前提の設計が要る。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">$0</div><div class="l">正常な日の実行コスト</div></div>
+      <div class="kpi"><div class="v">65<small>%減</small></div><div class="l">モデル変更によるコスト削減</div></div>
+      <div class="kpi"><div class="v">17<small>秒</small></div><div class="l">健康診断1回（全7項目）</div></div>
+      <div class="kpi"><div class="v">3<small>件</small></div><div class="l">無人実行特有のつまずき</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>ヘッドレス実行と費用構造</h2>
+    <p class="msg"><code>claude -p</code>は対話画面を開かずに1往復だけ動かす形。出力をJSONで受け取ると、応答・終了コード・料金・権限拒否まで機械で読める。</p>
+
+    <div class="tbl"><table>
+      <caption>表1　<code>--output-format json</code> で返る主なフィールド</caption>
+      <thead><tr><th>フィールド</th><th>使い道</th></tr></thead>
+      <tbody>
+        <tr><td><code>result</code></td><td>応答本文</td></tr>
+        <tr><td><code>is_error</code> / 終了コード</td><td>スクリプト側の分岐</td></tr>
+        <tr><td><code>total_cost_usd</code></td><td><b>1回いくらか</b>。定期実行の予算管理</td></tr>
+        <tr><td><code>permission_denials</code></td><td>無人実行が権限で詰まったことの検知</td></tr>
+        <tr><td><code>usage.cache_creation_input_tokens</code> ／ <code>cache_read_input_tokens</code></td><td>コストの正体（今回 21,898 ／ 37,789）</td></tr>
+      </tbody>
+    </table></div>
+
+    <p><code>2+3</code>を聞いただけで<span class="em">$0.0749</span>。入力トークンは<b>2</b>しかない。金額を作っているのは、起動のたびに積まれるCLAUDE.md・スキルの説明文・ツール定義・プラグインで、対話なら1回積んで使い回せるものが、定期実行では毎回積み直される。</p>
+
+    <figure>
+      <figcaption>図1　同じ質問1回あたりのコスト（実測）</figcaption>
+      <div class="fig-scroll">
+      <svg viewBox="0 0 760 210" role="img" aria-label="条件ごとの1回あたりコスト">
+        <text x="0" y="30" font-size="12" fill="#1a1a1a">既定（Sonnet 5）</text>
+        <rect x="230" y="16" width="500" height="20" fill="#c9ccd1"/>
+        <text x="240" y="31" font-size="12" font-weight="700" fill="#1a1a1a">$0.0749</text>
+
+        <text x="0" y="75" font-size="12" fill="#1a1a1a">--strict-mcp-config</text>
+        <rect x="230" y="61" width="495" height="20" fill="#c9ccd1"/>
+        <text x="240" y="76" font-size="12" fill="#1a1a1a">$0.0742（ほぼ変わらず）</text>
+
+        <text x="0" y="120" font-size="12" fill="#1a1a1a">--model haiku</text>
+        <rect x="230" y="106" width="226" height="20" fill="#c9ccd1"/>
+        <text x="464" y="121" font-size="12" fill="#555555">$0.0339</text>
+
+        <text x="0" y="165" font-size="12" fill="#1a1a1a">haiku ＋ strict-mcp-config</text>
+        <rect x="230" y="151" width="174" height="20" fill="#173f66"/>
+        <text x="412" y="166" font-size="12" font-weight="700" fill="#173f66">$0.0260（65%減）</text>
+
+        <line x1="230" y1="8" x2="230" y2="181" stroke="#a8adb5" stroke-width="1"/>
+        <text x="230" y="200" font-size="11.5" fill="#8e8e8e">MCPを外しても効かないのは、今日はMCPサーバーを承認しておらず元々読み込んでいないため</text>
+      </svg>
+      </div>
+    </figure>
+    <p class="src">実測値。いずれも同じ質問（「2+3の答えだけを数字で返して」）を1回実行した結果。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>AIを呼ぶ回数を設計する</h2>
+    <p class="msg">事実の収集は決定的な処理に任せ、AIは異常時だけ呼ぶ。正常な日のコストが0になり、毎回呼ぶ設計より2桁安くなる。</p>
+
+    <figure>
+      <figcaption>図2　健康診断の流れ（濃紺は異常時だけ通る道）</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">事実を集める<small>テスト・依存・git</small></div>
+        <div class="chev">終了コードで判定<small>OK／NG</small></div>
+        <div class="chev on">異常時のみ claude -p<small>--model haiku --tools ""</small></div>
+        <div class="chev on">報告書を書く<small>checks/report-*.md</small></div>
+      </div></div>
+    </figure>
+
+    <div class="tbl"><table>
+      <caption>表2　運用コストの見通し（平日毎日・実測値からの試算）</caption>
+      <thead><tr><th>設計</th><th class="num">1回</th><th class="num">月（22回）</th><th class="num">年（261回）</th></tr></thead>
+      <tbody>
+        <tr><td>毎回AIに報告させる（既定モデル）</td><td class="num">$0.0749</td><td class="num">$1.65</td><td class="num">$19.55</td></tr>
+        <tr><td>毎回AIに報告させる（haiku）</td><td class="num">$0.0339</td><td class="num">$0.75</td><td class="num">$8.85</td></tr>
+        <tr class="total"><td>異常時だけAIを呼ぶ（今日の設計・月1回異常が出る前提）</td><td class="num">$0</td><td class="num">$0.03</td><td class="num">$0.41</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">「異常」の定義も設計対象。最初は未コミットがあればNGにしていたが、作業中は常にNGになる。毎日鳴る警告は誰も見なくなるので、未pushのコミット（PCが壊れたら失われる分）だけを異常に変えた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>スケジュールの3層</h2>
+    <p class="msg">同じ「繰り返し」でも、前回を覚えているか・人がいなくても動くかが違う。用途はここで決まる。</p>
+
+    <div class="fig-scroll"><div class="matrix" style="--mx-cols:3;--mx-label:110px">
+      <div class="mx-h"></div>
+      <div class="mx-h">hooks（Day6）</div>
+      <div class="mx-h">/loop</div>
+      <div class="mx-h">定期タスク</div>
+
+      <div class="mx-label"><small>01</small>きっかけ</div>
+      <div class="mx-cell">ツールの使用などのイベント</div>
+      <div class="mx-cell">動いているセッション自身</div>
+      <div class="mx-cell">時刻</div>
+
+      <div class="mx-label"><small>02</small>前回の記憶</div>
+      <div class="mx-cell">—</div>
+      <div class="mx-cell"><b>ある</b>（同じセッションが続く）</div>
+      <div class="mx-cell"><b>ない</b>（毎回まっさら）</div>
+
+      <div class="mx-label"><small>03</small>生存期間</div>
+      <div class="mx-cell">設定にある限り</div>
+      <div class="mx-cell">セッションを閉じたら消える</div>
+      <div class="mx-cell">ディスクに残る</div>
+
+      <div class="mx-label"><small>04</small>向く用途</div>
+      <div class="mx-cell">規約の強制・編集後のテスト</div>
+      <div class="mx-cell">作業中に待つ（CI完了待ち・ログ監視）</div>
+      <div class="mx-cell">毎日の点検・レポート</div>
+    </div></div>
+
+    <p>「毎回まっさら」という性質が、指示文の書き方を決める。会話の文脈は一切引き継がれないので、作業フォルダ・コマンド・出力形式・やってはいけないこと・迷った時の振る舞いまで全部書く。発火したセッションの先頭には、実際にこう入っていた——<code>This is an automated run of a scheduled task. The user is not present to answer questions.</code></p>
+
+    <div class="tbl"><table>
+      <caption>表3　今日登録した2つ</caption>
+      <thead><tr><th>登録先</th><th>設定</th><th>動く条件</th><th>実行の主体</th><th>結果の残り方</th></tr></thead>
+      <tbody>
+        <tr><td>アプリの定期タスク</td><td><code>0 9 * * 1-5</code></td><td>アプリ起動中（閉じていたら次回起動時）</td><td>Claudeのセッション（判断できる）</td><td>セッションとして残り通知が来る</td></tr>
+        <tr><td>Windowsのタスクスケジューラ</td><td><code>/SC DAILY /ST 09:30</code></td><td><b>アプリを開いていなくても動く</b></td><td>バッチがスクリプトを直接実行</td><td><code>checks/schtasks.log</code>に追記</td></tr>
+      </tbody>
+    </table></div>
+    <p class="src">アプリ側の指示文は <code>~/.claude/scheduled-tasks/&lt;タスクID&gt;/SKILL.md</code> に保存される。Day3で学んだスキルと同じ形式が、そのまま定期タスクの実体になっている。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>1回発火して確かめた</h2>
+    <p class="msg">仕組みが本当に働いているかは、異常を意図的に作って確かめる。「いつも緑」と「いつも赤」はどちらも見られなくなる。</p>
+
+    <div class="tbl"><table>
+      <caption>表4　発火の結果</caption>
+      <thead><tr><th>実行</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>Windowsのタスクスケジューラ（手動発火）</td><td><code>exit=0</code>。ログに結果が残った</td></tr>
+        <tr><td>アプリの定期タスク（1回目）</td><td><b>権限の確認待ちで20分以上停止。</b>本人が承認して完走（「異常なし（全7件）」）</td></tr>
+        <tr><td>アプリの定期タスク（2回目）</td><td>承認が記憶され、<b>確認なしで完走</b>（3往復・約2分）</td></tr>
+      </tbody>
+    </table></div>
+
+    <p>2回目の報告は「異常 1件（全7件）／ git の状態: 未push コミット1件」。直前に作ったコミットがpushされていないことを、<span class="em">仕組みが自力で見つけた</span>。pushしてから再実行すると「異常なし」に戻り、検知が本物であること（いつも同じ答えではないこと）と、直せば静かになることの両方を確認できた。</p>
+
+    <h3><code>/loop</code>を2周だけ回した</h3>
+    <ul>
+      <li>指定した<code>90s</code>はcronで表せないので<b>2分ごと</b>に丸められた（<code>*/2 * * * *</code>）</li>
+      <li>1周目はログ6行、2周目は7行。<b>ファイルを読み直さずに「前回は6行」と比較できた</b>——同じセッションが続いている証拠</li>
+      <li>実体はメモリだけでディスクには何も書かれない。セッションを閉じれば消え、放置しても7日で自動終了する</li>
+      <li>会話の文脈ごと毎回課金されるので、大きなセッションで長時間回すのは高い</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>無人実行だけで起きた3つのつまずき</h2>
+    <p class="msg">対話では表に出ない前提——人がいる・文字コード・カレントディレクトリ——が、無人実行で初めて牙を剥いた。</p>
+
+    <div class="tbl"><table>
+      <caption>表5　つまずきと対策</caption>
+      <thead><tr><th>症状</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>要約を頼んだのに「実行の承認がほしい」と返す／セッションが止まる</td><td>確認を押す人がいない</td><td><code>--tools ""</code>で道具を与えない。実行させたい場合は許可ルールを先に入れる</td></tr>
+        <tr><td>バッチが<code>exit=9009</code>で失敗</td><td><code>.cmd</code>をUTF-8で書いたが、cmd.exeはShift-JISとして読むため日本語コメントが壊れ、命令として解釈された</td><td><code>chcp 65001</code>を足しても直らず、<b>コメントを英数字だけ</b>にして解決</td></tr>
+        <tr><td>バッチが「認識されていません」</td><td>起動時のカレントディレクトリが想定と違う</td><td><code>%~dp0</code>（自分のある場所）を基準にして、絶対パスもカレント依存も排除</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>成果物と次のアクション</h2>
+    <p class="msg">今日の成果物はタグ<code>day12</code>に固定した。次は総合演習で、ここまでに揃った道具を1つの開発の流れに組み合わせる。</p>
+
+    <h3>成果物（GitHub・タグday12の時点）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day12/checks/health-check.js">checks/health-check.js</a>（健康診断。異常時だけAIを呼ぶ）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day12/checks/health-check.cmd">checks/health-check.cmd</a>（Windowsのタスクスケジューラから呼ぶ入口）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day12/.claude/settings.json">.claude/settings.json</a>（無人実行が止まらないよう許可を追加）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day12/.gitignore">.gitignore</a>（実行のたびに変わる記録を除外）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day12/study_plan_2weeks.md">study_plan_2weeks.md</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day12/2026-09-15/summary.md">2026-09-15/summary.md</a></li>
+    </ul>
+
+    <div class="tbl"><table>
+      <caption>表6　次のアクション</caption>
+      <thead><tr><th>アクション</th><th>ねらい</th><th>時期</th></tr></thead>
+      <tbody>
+        <tr><td>総合演習</td><td>CLAUDE.md・スキル・サブエージェント・hooks・MCP・プラグインを1プロジェクトに統合し、機能追加を最初から最後まで実施</td><td>Day13</td></tr>
+        <tr><td>明日9時の自動実行を確認</td><td>承認が記憶された状態で、人が触らずに完走するか</td><td>Day13 冒頭</td></tr>
+        <tr><td>MCPサーバーの扱いを決める</td><td>再起動時に<code>study-progress</code>を承認しておらず、現在は無効のまま</td><td>Day13</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day12 学習記録 — vibe-coding-study</span>
+    <span>コスト・所要時間はすべてこの日の実測値</span>
+  </footer>
+
+</div>
+</body>
+</html>
