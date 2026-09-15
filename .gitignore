@@ -4,3 +4,6 @@ node_modules/
 # 作者のPCでは個人のgit除外設定(~/.config/git/ignore)で隠れていたが、他の人がcloneすると
 # この行が無い限りコミットに混入する。
 .claude/settings.local.json
+# 定期実行が生成する記録。実行のたびに変わるので共有しない(仕組みだけを共有する)。
+checks/*.log
+checks/report-*.md

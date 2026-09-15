@@ -4,7 +4,8 @@
       "Bash(npm test *)",
       "Bash(git status *)",
       "Bash(git diff *)",
-      "Bash(git log *)"
+      "Bash(git log *)",
+      "Bash(node checks/health-check.js*)"
     ],
     "deny": [
       "Bash(git push --force *)",
