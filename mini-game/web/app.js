@@ -1,4 +1,5 @@
 import { createGame, guess, LEVELS } from "../src/game.js";
+import { MESSAGES } from "./messages.js";
 
 const formEl = document.getElementById("guess-form");
 const inputEl = document.getElementById("guess-input");
@@ -10,13 +11,6 @@ const levelLabelEl = document.getElementById("level-label");
 
 let game;
 
-const MESSAGES = {
-  low: "もっと大きい",
-  high: "もっと小さい",
-  far: "かなり離れている", // むずかしいだけ。遠い間は方向を教えない
-  correct: "正解",
-  lose: "失敗",
-};
 
 // 難易度ボタンはLEVELS表から作る(難易度を増やしてもUIは触らなくて済む)
 for (const [level, def] of Object.entries(LEVELS)) {
