@@ -1,16 +1,12 @@
-import { createGame, guess, MIN_NUMBER, MAX_NUMBER, MAX_TRIES } from "../src/game.js";
+import { createGame, guess, LEVELS } from "../src/game.js";
 
 const formEl = document.getElementById("guess-form");
 const inputEl = document.getElementById("guess-input");
 const logEl = document.getElementById("log");
 const remainingEl = document.getElementById("remaining");
 const restartEl = document.getElementById("restart");
-
-// 出題範囲の表示・入力制限はロジック側の定数から引く(UIに数値を埋め込まない)
-document.getElementById("min").textContent = MIN_NUMBER;
-document.getElementById("max").textContent = MAX_NUMBER;
-inputEl.min = MIN_NUMBER;
-inputEl.max = MAX_NUMBER;
+const levelsEl = document.getElementById("levels");
+const levelLabelEl = document.getElementById("level-label");
 
 let game;
 
@@ -21,11 +17,31 @@ const MESSAGES = {
   lose: "失敗",
 };
 
-function start() {
-  game = createGame();
+// 難易度ボタンはLEVELS表から作る(難易度を増やしてもUIは触らなくて済む)
+for (const [level, def] of Object.entries(LEVELS)) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = def.label;
+  button.dataset.level = level;
+  button.onclick = () => start(level);
+  levelsEl.appendChild(button);
+}
+
+// 出題範囲の表示・入力制限はgameから引く(UIに数値を埋め込まない)
+function start(level = "normal") {
+  game = createGame(level);
+  levelLabelEl.textContent = LEVELS[level].label;
+  document.getElementById("min").textContent = game.min;
+  document.getElementById("max").textContent = game.max;
+  inputEl.min = game.min;
+  inputEl.max = game.max;
+  for (const button of levelsEl.children) {
+    button.setAttribute("aria-pressed", String(button.dataset.level === level));
+  }
   logEl.innerHTML = "";
   inputEl.disabled = false;
-  remainingEl.textContent = MAX_TRIES;
+  inputEl.value = "";
+  remainingEl.textContent = game.maxTries;
   inputEl.focus();
 }
 
@@ -47,12 +63,13 @@ formEl.onsubmit = (e) => {
   e.preventDefault();
   const res = guess(game, Number(inputEl.value));
   addLog(inputEl.value, res);
-  remainingEl.textContent = MAX_TRIES - res.tries;
+  remainingEl.textContent = game.maxTries - res.tries;
   inputEl.value = "";
   if (game.finished) inputEl.disabled = true;
 };
 
-restartEl.onclick = start;
+// やり直すは今の難易度のまま作り直す
+restartEl.onclick = () => start(game.level);
 
 start();
 

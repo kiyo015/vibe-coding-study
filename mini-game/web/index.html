@@ -10,6 +10,8 @@
     .lose { color: #c33; font-weight: bold; }
     #file-warning { display: none; padding: 1rem; border: 2px solid #c33; background: #fee; }
     #file-warning code { background: #fff; padding: 0.1rem 0.3rem; }
+    #levels { margin-bottom: 0.5rem; }
+    #levels button[aria-pressed="true"] { font-weight: bold; text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -36,7 +38,8 @@
     }, 500);
   </script>
 
-  <p><span id="min"></span>〜<span id="max"></span>の数を当てる。残り<span id="remaining"></span>回。</p>
+  <div id="levels"></div>
+  <p><span id="level-label"></span>：<span id="min"></span>〜<span id="max"></span>の数を当てる。残り<span id="remaining"></span>回。</p>
   <form id="guess-form">
     <input id="guess-input" type="number" required />
     <button type="submit">推測</button>
