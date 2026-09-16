@@ -6,7 +6,7 @@
 export const LEVELS = {
   easy: { label: "やさしい", min: 1, max: 100, maxTries: 7 },
   normal: { label: "ふつう", min: 1, max: 500, maxTries: 9 },
-  hard: { label: "むずかしい", min: 1, max: 1000, maxTries: 10, nearRatio: 0.1 },
+  hard: { label: "むずかしい", min: 1, max: 1000, maxTries: 10, nearRatio: 0.05 },
 };
 
 // 難易度を指定してゲームを作る。乱数生成は外から差し替えられる(テストで固定値を使うため)

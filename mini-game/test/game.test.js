@@ -78,7 +78,7 @@ test("むずかしいでも、近い推測には方向を返す", () => {
   const game = createGame("hard", fixedRandom);
   assert.equal(guess(game, 450).result, "low"); // 差41 → 近いので方向が出る
   assert.equal(guess(game, 530).result, "high"); // 差39
-  assert.equal(guess(game, 591).result, "high"); // 差100ちょうどは「近い」側（境界は下のテストで確認）
+  assert.equal(guess(game, 541).result, "high"); // 差50はしきい値ちょうど＝「近い」側（境界は下のテストで確認）
 });
 
 test("far になる境界は範囲の広さ × nearRatio", () => {
