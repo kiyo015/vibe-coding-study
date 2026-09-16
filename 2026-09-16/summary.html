@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day13 総合演習 — 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);
+  gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;
+  align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:2px;
+  font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+.mx-cell ul{margin:0}
+.mx-cell li{margin-bottom:5px}
+b,strong{font-weight:700}
+.em{color:var(--accent);font-weight:700}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code{font-family:Consolas,Menlo,monospace;font-size:.9em;color:var(--ink-2)}
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons,.matrix{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">バイブコーディング学習記録 ／ Day13</p>
+    <h1>道具を全部通して1機能を作ったら、直したのはコードより「思い込み」と「古くなった文書」だった</h1>
+    <p class="lead">数当てゲームに難易度選択を追加する総合演習の記録。スキル・サブエージェント・プラグイン・健康診断を1つの開発の流れで使い、数値目標との衝突、レビュー指摘、健康診断の隠れた不具合を実測で解いた。</p>
+    <div class="doc-meta"><span>2026-09-16（水）</span><span>14日計画の13日目</span><span>タグ day13</span></div>
+  </header>
+
+  <section>
+    <h2>要点</h2>
+    <ol class="summary">
+      <li><b>数値目標に合わせに行くと、運ゲーか過剰適合に落ちる。</b>手数を削る案は情報理論上の限界を割り、スキルの資料が止めた。難易度の軸を「回数」と「ヒントの粒度」の2つにして、はっきり差のある3段階にした。</li>
+      <li><b>レビューで直したのは、コードより文書の陳腐化の方が多かった。</b>仕様書・テストのコメント・自分の安全宣言が、書いてから数時間で実態とずれていた。</li>
+      <li><b>健康診断の要約が壊れていた原因は、最初の見立てと違った。</b>「モデルの品質」ではなく、プロンプトがシェルで途中で切れていたことと、失敗の基準を渡していなかったこと。昨日入れたツール禁止も一度も効いていなかった。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">93<small>/84/51%</small></div><div class="l">3段階の実測勝率</div></div>
+      <div class="kpi"><div class="v">11<small>件</small></div><div class="l">レビュー指摘（実測で確認）</div></div>
+      <div class="kpi"><div class="v">20<small>件</small></div><div class="l">今日書いたテスト（16＋4）</div></div>
+      <div class="kpi"><div class="v">2<small>段</small></div><div class="l">健康診断の不具合の原因</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>題材と使った道具</h2>
+    <p class="msg">難易度選択は、これまでの道具が全部通る題材として選んだ。どの道具も「作業を速くする」より「気づかせる」場面で効いた。</p>
+
+    <div class="tbl"><table>
+      <caption>表1　今日の道具と効いた場面</caption>
+      <thead><tr><th>道具</th><th>効いた場面</th></tr></thead>
+      <tbody>
+        <tr><td>CLAUDE.md（Day1）</td><td>「ロジック層はDOMに触らない」を守ったまま拡張</td></tr>
+        <tr><td><code>game-balance</code>スキル（Day4）</td><td>参照資料が<b>手数削りの設計ミスを止めた</b></td></tr>
+        <tr><td><code>game-playtester</code>（Day5）</td><td>勝率を3回測定（初期値・上限回数の総当たり・粗いヒント込み）</td></tr>
+        <tr><td><code>dev-guard</code>プラグイン（Day6・10・11）</td><td>編集ごとに自動テスト。<b>TDDのRED確認を代行</b></td></tr>
+        <tr><td><code>team-reviewer</code>（Day11）</td><td>Important 6件・Minor 5件</td></tr>
+        <tr><td>健康診断（Day12）</td><td>未pushを検知。自身の不具合も今日発覚</td></tr>
+        <tr><td>MCP（Day8・9）</td><td>再有効化し、セッション中の再接続で動作確認</td></tr>
+      </tbody>
+    </table></div>
+
+    <figure>
+      <figcaption>図1　進め方（濃紺は数値と指摘で設計が動いた工程）</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">要件・仕様書<small>4問で確定</small></div>
+        <div class="chev">実装計画<small>2〜5分の粒度</small></div>
+        <div class="chev">TDDで実装<small>フックがRED確認</small></div>
+        <div class="chev on">測定と設計変更<small>playtester 3回</small></div>
+        <div class="chev on">レビューと確認<small>指摘を実測</small></div>
+      </div></div>
+    </figure>
+    <p class="note">テストを先に書くと<code>dev-guard</code>が「テストが失敗した」と差し戻す。一見TDDと衝突するが、その出力（<code>does not provide an export named 'LEVELS'</code>）がそのままRED確認になり、手動で<code>npm test</code>を打つ必要がなくなった。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>数値目標との衝突</h2>
+    <p class="msg">最初の案は上2段階に差がなく、手数を削って目標に寄せると約半分の出題が論理的に当たらなくなった。回数とは別の軸でヒントの粒度を落として解いた。</p>
+
+    <div class="tbl"><table>
+      <caption>表2　設計の変遷と実測勝率</caption>
+      <thead><tr><th>案</th><th class="num">easy</th><th class="num">normal</th><th class="num">hard</th><th>判断</th></tr></thead>
+      <tbody>
+        <tr><td>範囲と上限だけ（8/10/10回）</td><td class="num">99.97%</td><td class="num">98.94%</td><td class="num">82.4%</td><td>上2つに差がない</td></tr>
+        <tr><td>手数を削る（7/9/9回）</td><td class="num">93.3%</td><td class="num">84.2%</td><td class="num">49.5%</td><td>hardは半分が勝てない出題</td></tr>
+        <tr class="total"><td>回数＋hardは粗いヒント（7/9/10回＋nearRatio 0.05）</td><td class="num">93.3%</td><td class="num">84.2%</td><td class="num">51.5%</td><td>採用</td></tr>
+      </tbody>
+    </table></div>
+    <p class="src">目標は easy 90% / normal 70% / hard 40%。いずれも <code>game-playtester</code> による各難易度10000試行の実測。</p>
+
+    <p>1〜1000を9回の質問で特定するには、区別できる答えが最大2⁹=512通りしかない。実測49.5%はこの<b>理論上限とほぼ一致</b>した。一方で資料の「最悪手数ちょうどだとほぼ確実に負ける」は実測（8〜9割勝てる）と食い違っていたので、実測値で書き換えた。</p>
+
+    <figure>
+      <figcaption>図2　hardのヒント粒度（nearRatio）と勝率</figcaption>
+      <div class="fig-scroll">
+      <svg viewBox="0 0 760 210" role="img" aria-label="nearRatioごとのhardの勝率">
+        <text x="0" y="30" font-size="12" fill="#1a1a1a">0.05（±50で方向が出る）</text>
+        <rect x="220" y="16" width="232" height="20" fill="#173f66"/>
+        <text x="460" y="31" font-size="12" font-weight="700" fill="#173f66">51.5%（採用）</text>
+
+        <text x="0" y="75" font-size="12" fill="#1a1a1a">0.10（±100）</text>
+        <rect x="220" y="61" width="348" height="20" fill="#c9ccd1"/>
+        <text x="576" y="76" font-size="12" fill="#555555">77.4%</text>
+
+        <text x="0" y="120" font-size="12" fill="#1a1a1a">0.15（±150）</text>
+        <rect x="220" y="106" width="387" height="20" fill="#c9ccd1"/>
+        <text x="615" y="121" font-size="12" fill="#555555">86.1%</text>
+
+        <text x="0" y="165" font-size="12" fill="#1a1a1a">0.20（±200）</text>
+        <rect x="220" y="151" width="399" height="20" fill="#c9ccd1"/>
+        <text x="627" y="166" font-size="12" fill="#555555">88.7%</text>
+
+        <line x1="220" y1="8" x2="220" y2="181" stroke="#a8adb5" stroke-width="1"/>
+        <line x1="400" y1="8" x2="400" y2="181" stroke="#a8adb5" stroke-width="1" stroke-dasharray="3 3"/>
+        <text x="404" y="200" font-size="11.5" fill="#8e8e8e">目標40%</text>
+      </svg>
+      </div>
+    </figure>
+    <p class="note">0.03まで下げれば40%に届く可能性はあったが追わなかった。測定に使った打ち方は人間よりかなり体系的な虱潰しで、そこへ合わせ込むのは過剰適合になる。目標から外した理由は <code>docs/game-rules.md</code> に記録した。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>レビュー指摘と実測</h2>
+    <p class="msg">指摘はすべて実測してから直した。コードの穴は1つで、残りは自分が数時間前に書いた文書の陳腐化と、テストの保護不足だった。</p>
+
+    <div class="tbl"><table>
+      <caption>表3　team-reviewer の主な指摘</caption>
+      <thead><tr><th>指摘</th><th>実測</th><th>対応</th></tr></thead>
+      <tbody>
+        <tr><td><code>createGame("toString")</code>が例外にならない</td><td><b>再現</b>（<code>answer: NaN</code>のゲームが返る）</td><td><code>Object.hasOwn</code>で判定</td></tr>
+        <tr><td>「hardは手数が理論上足りている」は誤り</td><td>論理を検証し<b>妥当</b></td><td>文書と資料に注記</td></tr>
+        <tr><td>仕様書が自分自身と矛盾</td><td><b>再現</b></td><td>「初期案」と明示し定義元を指す</td></tr>
+        <tr><td>テストのコメントが旧しきい値のまま</td><td><b>再現</b></td><td>値を書かない表現に</td></tr>
+        <tr><td>目標との差を据え置いた理由が無い</td><td>そのとおり</td><td>理由を記録</td></tr>
+        <tr><td>lose優先・上側境界・farが答えを漏らさない、が未テスト</td><td>現状は正しいが保護が無い</td><td>テスト3件追加</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">コードは実行すれば嘘が暴かれるが、文書は誰も実行しないので嘘のまま残る。レビュー役に「ドキュメントとコードの食い違いも見て」と明示的に頼んだのが効いた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>健康診断の不具合（原因は2段）</h2>
+    <p class="msg">異常時のAI要約が「内容貼って」と返す不具合は、モデルの品質の問題ではなかった。1段目を直しても治らず、2段目の原因が見つかった。</p>
+
+    <div class="tbl"><table>
+      <caption>表4　原因と対策</caption>
+      <thead><tr><th>段</th><th>何が起きていたか</th><th>確かめ方</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>1. 運搬</td><td><code>claude.cmd</code>はcmd.exe経由でしか起動できず、引数は空白で連結されるだけ。受け取った引数は<code>["-p", "健康診断の結果。以下を要約して。"]</code>のみで、<b><code>--model</code>と<code>--tools ""</code>は消えていた</b></td><td>引数と標準入力を表示するだけの偽<code>.cmd</code>で本番と同じ経路を再現</td><td>プロンプトを<b>標準入力</b>で渡す</td></tr>
+        <tr><td>2. 中身</td><td><code>未コミット 0件 / 未push 7件</code>は状態の要約で、<b>基準が無いと失敗に見えない</b></td><td>フックを切って1変数だけ変えた（仮説は外れ）→ 基準を1行足した版で成功</td><td>失敗項目ごとに基準と出力を並べる</td></tr>
+      </tbody>
+    </table></div>
+    <p>1段目から分かったのは、<b>Day12で入れたツール禁止がスクリプト経由では一度も効いていなかった</b>こと。Day12の単体試験はGit Bashから直接起動していて、この経路を通っていなかった。「モデルの品質」で片付けていたら、この問題は隠れたままだった。</p>
+    <p>最後に、未pushの状態をわざと作って本物の<code>claude</code>で異常の経路を通し、(1)壊れているもの (2)原因の推測 (3)次の確認 がそろった報告書が出ることを確かめた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>テストは「狙った理由で落ちる」ことまで見る</h2>
+    <p class="msg">テストが通った、落ちた、だけでは何も確かめていないことがある。今日は2回、それに引っかかりかけた。</p>
+    <ul>
+      <li><b>偽りの成功。</b>健康診断のテストを修正前に走らせたら「1件成功」。テストが読み込んだ瞬間に本体が走り、<code>process.exit(0)</code>でテストごと終了していた。1件も実行されていない</li>
+      <li><b>的外れの失敗。</b>表示文のテストは最初「ファイルが無い」で落ちた。これでは足し忘れを捕まえられるか分からないので、わざと<code>far</code>を抜いた表を置き、「応答 "far" の表示文が無い」で落ちることを見てから足した</li>
+      <li>表示文のテストは応答の一覧を別に持たず、全難易度で1500回遊ばせて<b>実際に出た応答</b>を集める。ロジック側で応答が増えれば、遊んだ中に現れた時点で自動的に検知できる</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>成果物と次のアクション</h2>
+    <p class="msg">今日の成果物はタグ<code>day13</code>に固定した。明日は最終日で、14日分を振り返って次の学習テーマを決める。</p>
+
+    <h3>成果物（GitHub・タグday13の時点）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/mini-game/src/game.js">mini-game/src/game.js</a>（LEVELS表・粗いヒント）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/mini-game/web/app.js">web/app.js</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/mini-game/web/index.html">web/index.html</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/mini-game/web/messages.js">web/messages.js</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/mini-game/test/game.test.js">test/game.test.js</a>（15件） ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/mini-game/test/messages.test.js">test/messages.test.js</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/mini-game/docs/game-rules.md">docs/game-rules.md</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/mini-game/docs/specs/2026-09-16-difficulty-levels-design.md">仕様書</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/mini-game/docs/plans/2026-09-16-difficulty-levels.md">実装計画</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/.claude/skills/game-balance/references/difficulty-math.md">game-balance 参照資料</a>（実測で改訂）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/checks/health-check.js">checks/health-check.js</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/checks/health-check.test.js">health-check.test.js</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/study_plan_2weeks.md">study_plan_2weeks.md</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day13/2026-09-16/summary.md">2026-09-16/summary.md</a></li>
+    </ul>
+
+    <div class="tbl"><table>
+      <caption>表5　次のアクション</caption>
+      <thead><tr><th>アクション</th><th>ねらい</th><th>時期</th></tr></thead>
+      <tbody>
+        <tr><td>14日分の記録の読み返しと要点サマリ</td><td>MCPの<code>search_learnings</code>で横断検索しながら進める</td><td>Day14</td></tr>
+        <tr><td>「まだ弱い」領域を3つ特定</td><td>今日のように「最初の見立てが外れた」場所が候補になる</td><td>Day14</td></tr>
+        <tr><td>次の学習テーマを決める</td><td>2週間の学習の出口</td><td>Day14</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day13 学習記録 — vibe-coding-study</span>
+    <span>勝率・件数はすべてこの日の実測値</span>
+  </footer>
+
+</div>
+</body>
+</html>
