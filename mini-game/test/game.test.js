@@ -45,7 +45,7 @@ test("小さい推測は low、大きい推測は high", () => {
   assert.equal(guess(game, 400).result, "high");
 });
 
-test("上限回数は難易度ごとに変わる（やさしいは8回で lose）", () => {
+test("上限回数は難易度ごとに変わる（やさしいは LEVELS.easy.maxTries 回で lose）", () => {
   const game = createGame("easy", fixedRandom);
   let res;
   for (let i = 0; i < LEVELS.easy.maxTries; i++) {
@@ -64,7 +64,36 @@ test("範囲外・非整数の推測は、その難易度の範囲で例外", ()
   assert.throws(() => guess(easy, 1.5));
 
   const hard = createGame("hard", fixedRandom);
-  assert.equal(guess(hard, 600).result, "high"); // ふつうなら範囲外だが、むずかしい(答え491)では有効
+  assert.equal(guess(hard, 600).result, "far"); // ふつうなら範囲外だが、むずかしいでは有効な推測として処理される
+});
+
+test("むずかしいは、遠い推測に方向を教えず far を返す", () => {
+  // hard(1〜1000)の答えは491。nearRatio 0.1 → 差100超で far
+  const game = createGame("hard", fixedRandom);
+  assert.equal(guess(game, 100).result, "far"); // 差391
+  assert.equal(guess(game, 900).result, "far"); // 差409
+});
+
+test("むずかしいでも、近い推測には方向を返す", () => {
+  const game = createGame("hard", fixedRandom);
+  assert.equal(guess(game, 450).result, "low"); // 差41 → 近いので方向が出る
+  assert.equal(guess(game, 530).result, "high"); // 差39
+  assert.equal(guess(game, 591).result, "high"); // 差100ちょうどは「近い」側（境界は下のテストで確認）
+});
+
+test("far になる境界は範囲の広さ × nearRatio", () => {
+  const game = createGame("hard", fixedRandom);
+  const threshold = Math.floor((game.max - game.min + 1) * LEVELS.hard.nearRatio); // 100
+  assert.equal(guess(game, game.answer - threshold).result, "low"); // 差100 → 近い
+  assert.equal(guess(game, game.answer - threshold - 1).result, "far"); // 差101 → 遠い
+});
+
+test("やさしい・ふつうは常に方向を返す（粗いヒントは使わない）", () => {
+  for (const level of ["easy", "normal"]) {
+    const game = createGame(level, fixedRandom);
+    assert.equal(guess(game, game.min).result, "low");
+    assert.equal(LEVELS[level].nearRatio, undefined);
+  }
 });
 
 test("終了後の推測は例外", () => {

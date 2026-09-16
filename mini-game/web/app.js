@@ -13,6 +13,8 @@ let game;
 const MESSAGES = {
   low: "もっと大きい",
   high: "もっと小さい",
+  far: "かなり離れている", // むずかしいだけ。遠い間は方向を教えない
+
   correct: "正解",
   lose: "失敗",
 };
