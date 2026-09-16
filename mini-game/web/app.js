@@ -14,7 +14,6 @@ const MESSAGES = {
   low: "もっと大きい",
   high: "もっと小さい",
   far: "かなり離れている", // むずかしいだけ。遠い間は方向を教えない
-
   correct: "正解",
   lose: "失敗",
 };
@@ -30,15 +29,16 @@ for (const [level, def] of Object.entries(LEVELS)) {
 }
 
 // 出題範囲の表示・入力制限はgameから引く(UIに数値を埋め込まない)
-function start(level = "normal") {
+// 引数なしで呼ぶと createGame の既定難易度になる。UI側に既定値を書かない(定義元はgame.jsの1箇所)
+function start(level) {
   game = createGame(level);
-  levelLabelEl.textContent = LEVELS[level].label;
+  levelLabelEl.textContent = LEVELS[game.level].label;
   document.getElementById("min").textContent = game.min;
   document.getElementById("max").textContent = game.max;
   inputEl.min = game.min;
   inputEl.max = game.max;
   for (const button of levelsEl.children) {
-    button.setAttribute("aria-pressed", String(button.dataset.level === level));
+    button.setAttribute("aria-pressed", String(button.dataset.level === game.level));
   }
   logEl.innerHTML = "";
   inputEl.disabled = false;

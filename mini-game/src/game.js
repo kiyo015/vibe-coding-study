@@ -11,10 +11,12 @@ export const LEVELS = {
 
 // 難易度を指定してゲームを作る。乱数生成は外から差し替えられる(テストで固定値を使うため)
 export function createGame(level = "normal", randomFn = Math.random) {
-  const def = LEVELS[level];
-  if (!def) {
+  // hasOwn で見ること。LEVELS[level] の真偽だけで判定すると、"toString" のように
+  // Objectが元から持つプロパティ名が関数として返り、壊れたゲームが素通りする
+  if (!Object.hasOwn(LEVELS, level)) {
     throw new Error(`unknown level: ${level}`);
   }
+  const def = LEVELS[level];
   const answer = def.min + Math.floor(randomFn() * (def.max - def.min + 1));
   return {
     level,

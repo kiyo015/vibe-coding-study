@@ -30,6 +30,10 @@ test("難易度が変わると答えの範囲も変わる", () => {
 
 test("未知の難易度は例外", () => {
   assert.throws(() => createGame("insane", fixedRandom), /unknown level/);
+  // Objectが元から持つプロパティ名も難易度ではない(LEVELS[level]が関数を返して素通りしないこと)
+  for (const key of ["toString", "constructor", "valueOf"]) {
+    assert.throws(() => createGame(key, fixedRandom), /unknown level/);
+  }
 });
 
 test("正解すると correct を返し finished になる", () => {
@@ -68,7 +72,7 @@ test("範囲外・非整数の推測は、その難易度の範囲で例外", ()
 });
 
 test("むずかしいは、遠い推測に方向を教えず far を返す", () => {
-  // hard(1〜1000)の答えは491。nearRatio 0.1 → 差100超で far
+  // hard(1〜1000)の答えは491。しきい値は (max-min+1)*LEVELS.hard.nearRatio で、それを超えると far
   const game = createGame("hard", fixedRandom);
   assert.equal(guess(game, 100).result, "far"); // 差391
   assert.equal(guess(game, 900).result, "far"); // 差409
@@ -83,9 +87,29 @@ test("むずかしいでも、近い推測には方向を返す", () => {
 
 test("far になる境界は範囲の広さ × nearRatio", () => {
   const game = createGame("hard", fixedRandom);
-  const threshold = Math.floor((game.max - game.min + 1) * LEVELS.hard.nearRatio); // 100
-  assert.equal(guess(game, game.answer - threshold).result, "low"); // 差100 → 近い
-  assert.equal(guess(game, game.answer - threshold - 1).result, "far"); // 差101 → 遠い
+  const threshold = Math.floor((game.max - game.min + 1) * LEVELS.hard.nearRatio);
+  assert.equal(guess(game, game.answer - threshold).result, "low"); // 差はしきい値ちょうど → 近い
+  assert.equal(guess(game, game.answer - threshold - 1).result, "far"); // しきい値+1 → 遠い
+  // 上側も同じ(Math.absの取り違えを捕まえる)
+  assert.equal(guess(game, game.answer + threshold).result, "high");
+  assert.equal(guess(game, game.answer + threshold + 1).result, "far");
+});
+
+test("上限回数に達したら、far より lose を優先する", () => {
+  // 判定の順番(correct → lose → far)が崩れると、10手目にfarが返って終了しなくなる
+  const game = createGame("hard", fixedRandom);
+  let res;
+  for (let i = 0; i < LEVELS.hard.maxTries; i++) {
+    res = guess(game, 1); // 答え491から遠いのでfarが返り続ける
+  }
+  assert.equal(res.result, "lose");
+  assert.equal(res.answer, 491);
+  assert.equal(game.finished, true);
+});
+
+test("far は答えを漏らさない（answer を返すのは lose だけ）", () => {
+  const game = createGame("hard", fixedRandom);
+  assert.equal(guess(game, 100).answer, undefined);
 });
 
 test("やさしい・ふつうは常に方向を返す（粗いヒントは使わない）", () => {
