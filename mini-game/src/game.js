@@ -1,20 +1,34 @@
-// 難易度に関わる定数。変更時はdocs/game-rules.mdとテストも合わせて見直すこと(手順はgame-balanceスキル)
-export const MIN_NUMBER = 1;
-export const MAX_NUMBER = 500;
-export const MAX_TRIES = 10;
+// 難易度の定義。ここを変える時はdocs/game-rules.mdとテストも合わせて見直すこと(手順はgame-balanceスキル)
+export const LEVELS = {
+  easy: { label: "やさしい", min: 1, max: 100, maxTries: 8 },
+  normal: { label: "ふつう", min: 1, max: 500, maxTries: 10 },
+  hard: { label: "むずかしい", min: 1, max: 1000, maxTries: 10 },
+};
 
-// 乱数生成を外から差し替えられるようにする(テストで固定値を使うため)
-export function createGame(randomFn = Math.random) {
-  const answer = MIN_NUMBER + Math.floor(randomFn() * (MAX_NUMBER - MIN_NUMBER + 1));
-  return { answer, tries: 0, finished: false };
+// 難易度を指定してゲームを作る。乱数生成は外から差し替えられる(テストで固定値を使うため)
+export function createGame(level = "normal", randomFn = Math.random) {
+  const def = LEVELS[level];
+  if (!def) {
+    throw new Error(`unknown level: ${level}`);
+  }
+  const answer = def.min + Math.floor(randomFn() * (def.max - def.min + 1));
+  return {
+    level,
+    min: def.min,
+    max: def.max,
+    maxTries: def.maxTries,
+    answer,
+    tries: 0,
+    finished: false,
+  };
 }
 
 export function guess(game, value) {
   if (game.finished) {
     throw new Error("game is already finished");
   }
-  if (!Number.isInteger(value) || value < MIN_NUMBER || value > MAX_NUMBER) {
-    throw new Error(`guess must be an integer between ${MIN_NUMBER} and ${MAX_NUMBER}`);
+  if (!Number.isInteger(value) || value < game.min || value > game.max) {
+    throw new Error(`guess must be an integer between ${game.min} and ${game.max}`);
   }
 
   game.tries++;
@@ -23,7 +37,7 @@ export function guess(game, value) {
     game.finished = true;
     return { result: "correct", tries: game.tries };
   }
-  if (game.tries >= MAX_TRIES) {
+  if (game.tries >= game.maxTries) {
     game.finished = true;
     return { result: "lose", tries: game.tries, answer: game.answer };
   }
