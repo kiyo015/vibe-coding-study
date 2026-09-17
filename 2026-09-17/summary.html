@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day14 総振り返り — 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);
+  gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;
+  align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:2px;
+  font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+.mx-cell ul{margin:0}
+.mx-cell li{margin-bottom:5px}
+b,strong{font-weight:700}
+.em{color:var(--accent);font-weight:700}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code{font-family:Consolas,Menlo,monospace;font-size:.9em;color:var(--ink-2)}
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons,.matrix{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:4px}
+.rm-bar.on{background:var(--accent);color:#fff}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">バイブコーディング学習記録 ／ Day14（最終日）</p>
+    <h1>2週間の弱点は記録の中にあった。「効いているつもり」を対照実験で潰し、基幹システム開発へ進む</h1>
+    <p class="lead">14日分の学習記録を横断検索して弱点を証拠から特定し、最大の弱点だったガードの実効性をその日のうちにテストとして自動化した記録。途中で無人実行に外部サービスへ書き込めるツールが残っていたことが分かり、塞いだ。次月は販売・購買・請求の基幹システムを新規に開発する。</p>
+    <div class="doc-meta"><span>2026-09-17（木）</span><span>14日計画の14日目</span><span>タグ day14</span></div>
+  </header>
+
+  <section>
+    <h2>要点</h2>
+    <ol class="summary">
+      <li><b>弱点は感覚でなく、記録の検索で見つかった。</b>「効いていなかった」が3日に出てくること、Day7で洗い出した機構が6日間放置されていたことは、読み返すだけでは気づかなかった。</li>
+      <li><b>ガードの効果は、ガードを外した状態と比べて初めて証明できる。</b>対照実験の途中で、自分で設定していないガードの層と、無人実行に残っていたMCPツール10個が見つかった。</li>
+      <li><b>次月は基幹システムの新規開発。</b>金額・税・削除・DB操作のルールを「お願い」から「強制」へ移すことを軸に、弱点3つを開発工程に埋め込んだ。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">1,413<small>行</small></div><div class="l">横断検索した学習記録</div></div>
+      <div class="kpi"><div class="v">3<small>／3</small></div><div class="l">自動化したセルの合格</div></div>
+      <div class="kpi"><div class="v">10→0</div><div class="l">無人実行に残っていたMCPツール</div></div>
+      <div class="kpi"><div class="v">0<small>件</small></div><div class="l">未検証のまま残るセル</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>14日間の要点</h2>
+    <p class="msg">6つの柱に整理すると、最後の柱「思い込みは実測で壊れる」が、他の5つすべてを貫いていた。</p>
+    <div class="tbl"><table>
+      <caption>表1　14日間の6つの柱</caption>
+      <thead><tr><th>柱</th><th>要点</th><th>主なDay</th></tr></thead>
+      <tbody>
+        <tr><td>5つの機構の使い分け</td><td>常時コスト・反映タイミング・強制力で選ぶ。hooksだけ常時コスト0</td><td>1〜10</td></tr>
+        <tr><td>お願いと強制</td><td>CLAUDE.mdの「禁止」は破れる。止めるのはtools制限・許可ルール・hooks</td><td>5・11</td></tr>
+        <tr><td>信頼境界</td><td>外部データは指示でなくデータ。最強の防御は実害が出ない権限設計</td><td>9</td></tr>
+        <tr><td>チーム運用</td><td>自分のPCでたまたま動いているものを探す。指摘は実測してから直す</td><td>11</td></tr>
+        <tr><td>自動化</td><td>コストの正体は毎回積み直す文脈。効くのはAIを呼ぶ回数の設計</td><td>12</td></tr>
+        <tr><td><b>思い込みは実測で壊れる</b></td><td>「言い過ぎだった」「テストが通る≠使える」「効いていなかった」が繰り返し出る</td><td>5・7・10・11・13</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>「まだ弱い」領域3つ</h2>
+    <p class="msg">MCPツールで14日分を「未解決」「未実践」「外れ」「効いていなかった」などで検索し、繰り返し出てくるものを弱点とした。</p>
+    <div class="tbl"><table>
+      <caption>表2　弱点と、記録に残っていた証拠</caption>
+      <thead><tr><th>弱点</th><th>証拠</th></tr></thead>
+      <tbody>
+        <tr><td><b>A.</b> 設定したガードが効いているかの確認が後手</td><td>Day7 worktreeの隔離が未追跡ファイルに素通し ／ Day11 PowerShellツールにフックが効いていない ／ Day13 無人実行の<code>--tools ""</code>が消えていた。どれも設定時に気づけなかった</td></tr>
+        <tr><td><b>B.</b> 洗い出したのに手を付けなかった機構</td><td>Day7で未実施とした model指定・hooksの他イベント・ユーザー全体用CLAUDE.md が6日間放置。Day11予告のCIも未実施</td></tr>
+        <tr><td><b>C.</b> Windowsのシェル境界</td><td>Day10 printfでJSON崩れ ／ Day11 パス表記の二重記録 ／ Day12 文字コードとカレントディレクトリ ／ Day13 引数の連結。5件すべて初見</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>弱点Aに着手：ガードの実効性テスト</h2>
+    <p class="msg">本物のclaude -pに無害な操作を試させ、ガードあり・なしの2回で比べる。合格は「ありで止まり、なしで実行される」時だけにした。</p>
+    <figure>
+      <figcaption>図1　1セルの検証の流れ（濃紺が判定の決め手）</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">無害な操作を選ぶ<small>存在しない名前</small></div>
+        <div class="chev">ガードありで実行<small>止まるはず</small></div>
+        <div class="chev on">ガードなしで実行<small>実行されるはず</small></div>
+        <div class="chev on">証拠で判定<small>文言・起動記録・副作用</small></div>
+      </div></div>
+    </figure>
+    <div class="tbl"><table>
+      <caption>表3　自動化した3セル（すべて合格・約2分・$0.217）</caption>
+      <thead><tr><th>セル</th><th>ガードあり</th><th>ガードなし（対照）</th><th>判定の証拠</th></tr></thead>
+      <tbody>
+        <tr><td>PowerShellツール × dev-guardフック</td><td>差し戻し</td><td>実行された</td><td>ツールの結果の文言</td></tr>
+        <tr><td>サブエージェント × tools制限</td><td>書き込みを試みない</td><td>general-purposeがファイルを作成</td><td>起動・完了の記録、書き込みの主体</td></tr>
+        <tr><td>ヘッドレス（健康診断） × ツール禁止</td><td>起動時のツール0個</td><td>ファイルを作成</td><td>起動時の記録のツール一覧</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">判定ロジックは本物のストリーム出力を検証用データにしてテストを先に書いた（15件）。いつも同じ値を返す中身の無い版で、判定の誤りを理由に落ちることを確かめてから実装した。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>対照実験で見つかったこと</h2>
+    <p class="msg">「ガードを外した状態」を作ったことで、知らないガードの層と、Day12から残っていた穴の両方が見つかった。</p>
+
+    <figure>
+      <figcaption>図2　健康診断の無人実行で使えたツールの数（起動時の記録）</figcaption>
+      <div class="fig-scroll">
+      <svg viewBox="0 0 760 120" role="img" aria-label="MCPの遮断前後のツール数">
+        <text x="0" y="30" font-size="12" fill="#1a1a1a">--tools "" のみ（Day12〜）</text>
+        <rect x="250" y="16" width="400" height="20" fill="#a33c2e"/>
+        <text x="658" y="31" font-size="12" font-weight="700" fill="#a33c2e">MCP 10個</text>
+        <text x="0" y="80" font-size="12" fill="#1a1a1a">＋ --strict-mcp-config</text>
+        <rect x="250" y="66" width="2" height="20" fill="#173f66"/>
+        <text x="260" y="81" font-size="12" font-weight="700" fill="#173f66">0個</text>
+        <line x1="250" y1="8" x2="250" y2="96" stroke="#a8adb5" stroke-width="1"/>
+        <text x="250" y="114" font-size="11.5" fill="#8e8e8e">残っていた10個にはClaude Docsのcreate・update・deleteが含まれ、外部サービスへ書き込めた</text>
+      </svg>
+      </div>
+    </figure>
+
+    <div class="tbl"><table>
+      <caption>表4　見つかったこと</caption>
+      <thead><tr><th>発見</th><th>意味</th></tr></thead>
+      <tbody>
+        <tr><td>Claude Code本体の「怪しいパス」検知（8.3形式の短縮パス）</td><td>自分で設定していない層があると、どのガードが効いたか区別できない。「別の仕組みに止められた」は合格にしない</td></tr>
+        <tr><td>tools制限は「試みすらない」ので証拠が残らない</td><td>ファイルの有無だけで判定すると、サブエージェントが起動しなかった場合も合格に見える</td></tr>
+        <tr><td><b><code>--tools ""</code>は組み込みツールしか禁止しない</b></td><td>同じガードで2回目の思い込み（Day13は引数が消えていた）。モデルの自己申告より起動時の記録を見る</td></tr>
+        <tr><td>ヒアドキュメントの行頭の危険コマンドで誤検知</td><td>Day11に「残る誤検知」として記録した挙動そのもの。ガードは記録どおりに動いている</td></tr>
+        <tr><td>AI報告書の <code>git log master..origin/master</code> は範囲が逆</td><td>報告書は手がかりであって、そのまま実行するものではない</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>次月ロードマップ：基幹システムの新規開発</h2>
+    <p class="msg">販売・購買・請求をC#（.NET）＋RDBで新規開発し、1か月で「受注→出荷→請求書発行」を通す。基幹システムのルールを「お願い」から「強制」へ移すことを軸にした。</p>
+
+    <div class="tbl"><table>
+      <caption>表5　お願いから強制へ</caption>
+      <thead><tr><th>ルール</th><th>強制する手段</th></tr></thead>
+      <tbody>
+        <tr><td>金額に double を使わない</td><td>アナライザでビルドエラー</td></tr>
+        <tr><td>消費税は税率ごとに1回だけ端数処理（インボイス制度）</td><td>請求書単位の計算をテストで固定</td></tr>
+        <tr><td>受注・請求を物理削除しない</td><td>アーキテクチャテスト</td></tr>
+        <tr><td>未出荷のまま請求しない</td><td>状態遷移を型で表す</td></tr>
+        <tr><td>DBを壊すコマンドを打たない</td><td>dev-guardのフック＋guard-e2eで実効性を確認</td></tr>
+      </tbody>
+    </table></div>
+
+    <figure>
+      <figcaption>図3　4週間の計画（濃紺は開発の本線、グレーは弱点の解消）</figcaption>
+      <div class="fig-scroll"><div class="roadmap">
+        <div class="rm-row rm-head" style="grid-template-columns:120px repeat(4,1fr)">
+          <div class="rm-lane"></div>
+          <div class="rm-h">1週目</div><div class="rm-h">2週目</div><div class="rm-h">3週目</div><div class="rm-h">4週目</div>
+        </div>
+        <div class="rm-row" style="grid-template-columns:120px repeat(4,1fr)">
+          <div class="rm-lane">開発</div>
+          <div class="rm-bar on" style="grid-column:2/3">土台と安全柵</div>
+          <div class="rm-bar on" style="grid-column:3/4">業務ルールの中核</div>
+          <div class="rm-bar on" style="grid-column:4/5">永続化とCI</div>
+          <div class="rm-bar on" style="grid-column:5/6">縦切りの完成</div>
+        </div>
+        <div class="rm-row" style="grid-template-columns:120px repeat(4,1fr)">
+          <div class="rm-lane">A. 実効性</div>
+          <div class="rm-bar" style="grid-column:2/3">guard-e2e追加</div>
+          <div class="rm-bar" style="grid-column:5/6">週1定期実行</div>
+        </div>
+        <div class="rm-row" style="grid-template-columns:120px repeat(4,1fr)">
+          <div class="rm-lane">B. 未実践</div>
+          <div class="rm-bar" style="grid-column:2/3">全体CLAUDE.md</div>
+          <div class="rm-bar" style="grid-column:3/4">model比較</div>
+          <div class="rm-bar" style="grid-column:4/5">CI・hooks</div>
+        </div>
+        <div class="rm-row" style="grid-template-columns:120px repeat(4,1fr)">
+          <div class="rm-lane">C. Windows</div>
+          <div class="rm-bar" style="grid-column:2/3">dotnet引数確認</div>
+          <div class="rm-bar" style="grid-column:5/6">落とし穴整理</div>
+        </div>
+      </div></div>
+    </figure>
+    <p class="note">着手前の注意：今のdev-guardは npm test にしか反応せず、C#では何もしない。dotnet test はビルドを含むので25秒の上限に収まらない可能性が高く、1週目の最初に所要時間を測る。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>2週間の総括</h2>
+    <p class="msg">5つの機構とプラグインを自作・実測して使い分けられるようになり、チーム開発に持ち込める道具一式が手元に残った。</p>
+    <ul>
+      <li><b>自作した道具:</b> スキル2つ、サブエージェント3つ、dev-guardプラグイン（1.0.3）、study-progress MCPサーバー、健康診断（毎日無人実行）、ガードの実効性テスト（3セル）</li>
+      <li><b>チームで使える武器:</b> 強制とお願いを区別する雛形、読み取り専用のレビュー役と「指摘は実測してから直す」運用、異常時だけAIを呼ぶ健康診断、対照実験付きのガード実効性テスト、タグで固定する学習記録</li>
+      <li><b>積み残し:</b> model指定の比較、hooksの他イベント、ユーザー全体用CLAUDE.md、CI、手動のまま残る5セル、未確認の事実3件、dev-guardのC#対応。すべて次月ロードマップに組み込み済み</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>成果物と次のアクション</h2>
+    <p class="msg">成果物はタグday14に固定した。次月は1週目「土台と安全柵」から始める。</p>
+    <h3>成果物（GitHub・タグday14の時点）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day14/study_plan_next_month.md">study_plan_next_month.md</a>（次月ロードマップ・基幹システム版）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day14/checks/guard-e2e.js">checks/guard-e2e.js</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day14/checks/guard-e2e.test.js">guard-e2e.test.js</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/tree/day14/checks/fixtures">fixtures/</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day14/checks/guard-matrix.md">checks/guard-matrix.md</a>（経路×ガードの表）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day14/checks/health-check.js">checks/health-check.js</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day14/checks/health-check.test.js">health-check.test.js</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day14/study_plan_2weeks.md">study_plan_2weeks.md</a>（Day14欄と2週間総括） ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day14/2026-09-17/summary.md">2026-09-17/summary.md</a></li>
+    </ul>
+    <div class="tbl"><table>
+      <caption>表6　次のアクション</caption>
+      <thead><tr><th>アクション</th><th>ねらい</th><th>時期</th></tr></thead>
+      <tbody>
+        <tr><td>要件の骨格（業務フロー・用語集・業務ルール集）</td><td>AIが業務の言葉を取り違えない土台</td><td>次月1週目</td></tr>
+        <tr><td>dotnet test の所要時間を測る</td><td>dev-guardのC#対応の設計を決める</td><td>次月1週目</td></tr>
+        <tr><td>初日にprivateリモートを作る</td><td>リモートなしで消える事故を防ぐ</td><td>次月1週目</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day14 学習記録 — vibe-coding-study</span>
+    <span>件数・費用はすべてこの日の実測値</span>
+  </footer>
+
+</div>
+</body>
+</html>
