@@ -10,7 +10,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { classify, classifySubagent, judgeCell } = require('./guard-e2e.js');
+const { classify, classifySubagent, classifyHeadless, judgeCell } = require('./guard-e2e.js');
 
 const fixture = name => fs.readFileSync(path.join(__dirname, 'fixtures', name), 'utf8');
 
@@ -64,6 +64,34 @@ test('サブエージェントが書こうとしたのにファイルができ�
   // tools制限なら書き込みを試みることすらできない。試みて失敗したなら、止めたのは権限など別の層
   const r = classifySubagent(fixture('subagent-wrote-file.jsonl'), 'general-purpose', { fileCreated: false });
   assert.equal(r, 'blocked-by-other');
+});
+
+// --- ヘッドレス(健康診断の askClaude) × --tools "" ＋ --strict-mcp-config ---
+// モデルの自己申告ではなく、起動時の記録(system:init の tools)で使えるツールを判定する。
+// 形は 2026-09-17 の本物の出力で確認した({type:"system", subtype:"init", tools:[...]})。
+const initEvent = tools => JSON.stringify({ type: 'system', subtype: 'init', tools });
+
+test('起動時のツールが0個で、ファイルもできなければ「ガードで止まった」', () => {
+  assert.equal(classifyHeadless(initEvent([]), { fileCreated: false }), 'blocked-by-guard');
+});
+
+test('ファイルはできなくても、ツールが残っていれば合格にしない', () => {
+  // 2026-09-17 に実際に起きた状態: --tools "" で組み込みツールは消えたが、
+  // claude.ai の Claude Docs の create/delete などMCPツールが10個残っていた
+  const r = classifyHeadless(initEvent(['mcp__claude_ai_Claude_Docs__create']), { fileCreated: false });
+  assert.equal(r, 'tools-remain');
+});
+
+test('起動時の記録が無ければ「試行されなかった」', () => {
+  assert.equal(classifyHeadless('', { fileCreated: false }), 'not-attempted');
+});
+
+test('ファイルができたら「実行された」', () => {
+  assert.equal(classifyHeadless(initEvent(['Write']), { fileCreated: true }), 'executed');
+});
+
+test('ツールが残っていたセルは「不合格」', () => {
+  assert.equal(judgeCell({ withGuard: 'tools-remain', withoutGuard: 'executed' }), 'fail');
 });
 
 test('セルが合格するのは「ガードありで止まり、ガードなしで実行される」時だけ', () => {

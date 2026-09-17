@@ -120,16 +120,23 @@ function buildPrompt(failed) {
   ].join('\n');
 }
 
-// 異常時の要約をclaudeに頼む。command はテストで偽物に差し替えるための口
-function askClaude(prompt, { command = 'claude' } = {}) {
+// 異常時の要約をclaudeに頼む。command はテストで偽物に差し替えるための口。
+// tools と extraArgs は、ガード実効性テスト(guard-e2e.js)が同じ経路のまま対照実験をするための口
+// (tools: null で --tools を外す、strictMcp: false で MCP の遮断を外す)。健康診断自身は既定値でしか呼ばない
+function askClaude(prompt, { command = 'claude', tools = '""', strictMcp = true, extraArgs = '' } = {}) {
   // プロンプトは引数でなく標準入力で渡す。claude は npm の claude.cmd なので shell 経由でしか起動できず、
   // shell では引数がエスケープされずに連結されるだけになる。以前は引数で渡していたため、
   // プロンプトは最初の改行で打ち切られ、後ろの --model と --tools は丸ごと消えていた(Day13で発見)。
   //
-  // --tools "" で全ツールを禁止する。付けないと、無人実行のClaudeが自分でチェックを実行しようとして
+  // --tools "" で組み込みツールを禁止する(MCPは下の --strict-mcp-config で別に遮断する)。付けないと、無人実行のClaudeが自分でチェックを実行しようとして
   // 権限の確認で止まり、要約の代わりに「実行の承認がほしい」と返してくる(実測)。
   // シェルに渡す文字列を自分で組み立て、空文字は "" と明示する(配列で '' を渡すと連結時に消える)。
-  return spawnSync(`"${command}" -p --model haiku --tools ""`, {
+  const toolsArg = tools === null ? '' : ` --tools ${tools}`;
+  // --tools "" が禁止するのは組み込みツールだけで、MCPツール(claude.ai コネクタを含む)は残る。
+  // --strict-mcp-config で MCP も遮断する(2026-09-17 guard-e2e で発見。起動時の記録で10個→0個を確認)
+  const mcpArg = strictMcp ? ' --strict-mcp-config' : '';
+  const extra = extraArgs ? ` ${extraArgs}` : '';
+  return spawnSync(`"${command}" -p --model haiku${toolsArg}${mcpArg}${extra}`, {
     cwd: ROOT, encoding: 'utf8', timeout: TIMEOUT_MS, shell: true, input: prompt,
   });
 }

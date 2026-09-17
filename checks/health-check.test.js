@@ -61,8 +61,26 @@ test('プロンプトは、渡した情報がすべてで追加を求めない�
   assert.match(prompt, /追加の情報は無い/);
 });
 
-test('モデル指定とツール禁止(--tools に空文字)が消えずに届く', () => {
+// ガード実効性テスト(guard-e2e.js)の対照実験のために、同じ呼び出し経路のまま --tools "" だけを外せるようにする。
+// 別の呼び方で確かめると、Day13のように「試した経路と本番の経路が違う」ことになるため。
+test('対照実験用に --tools と --strict-mcp-config を外し、追加の引数を付けられる(それでも経路は同じ)', () => {
+  const r = askClaude(PROMPT, { command: makeFakeClaude(), tools: null, strictMcp: false, extraArgs: '--allowedTools Write --output-format json' });
+  const received = JSON.parse(r.stdout);
+  assert.deepEqual(received.args, ['-p', '--model', 'haiku', '--allowedTools', 'Write', '--output-format', 'json']);
+  assert.equal(received.stdin, PROMPT);
+});
+
+test('追加の引数を付けても、ツール禁止は既定のまま届く', () => {
+  const r = askClaude(PROMPT, { command: makeFakeClaude(), extraArgs: '--allowedTools Write' });
+  const received = JSON.parse(r.stdout);
+  assert.deepEqual(received.args, ['-p', '--model', 'haiku', '--tools', '', '--strict-mcp-config', '--allowedTools', 'Write']);
+});
+
+// 背景(2026-09-17 guard-e2e で発見): --tools "" が禁止するのは組み込みツールだけで、MCPツールは残る。
+// 起動時の記録(init)では、--tools "" のみだと MCPツールが10個(claude.ai の Claude Docs の create/delete を含む)
+// 使える状態だった。--strict-mcp-config を足すと0個になった。
+test('モデル指定・組み込みツールの禁止・MCPの遮断が、すべて消えずに届く', () => {
   const r = askClaude(PROMPT, { command: makeFakeClaude() });
   const received = JSON.parse(r.stdout);
-  assert.deepEqual(received.args, ['-p', '--model', 'haiku', '--tools', '']);
+  assert.deepEqual(received.args, ['-p', '--model', 'haiku', '--tools', '', '--strict-mcp-config']);
 });
