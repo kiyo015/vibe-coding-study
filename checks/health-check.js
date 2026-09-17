@@ -20,6 +20,8 @@ const CHECKS = [
   ['ガードのテスト(pre-bash-guard)', 'node --test plugins/dev-guard/hooks/pre-bash-guard.test.js', '.'],
   ['フックのテスト(post-edit-test)', 'node --test plugins/dev-guard/hooks/post-edit-test.test.js', '.'],
   ['健康診断自体のテスト', 'node --test checks/health-check.test.js', '.'],
+  // ガードの実効性テストの判定ロジックだけを見る(本物のclaudeを呼ぶ guard-e2e.js 本体は費用がかかるので含めない)
+  ['ガード実効性テストの判定ロジック', 'node --test checks/guard-e2e.test.js', '.'],
 ];
 const TEST_CRITERION = '終了コードが0であること(テストが全件成功)';
 
