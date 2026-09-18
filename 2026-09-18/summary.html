@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day15 基幹システム開発の開始 — 作業記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);
+  gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;
+  align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:2px;
+  font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+.mx-cell ul{margin:0}
+.mx-cell li{margin-bottom:5px}
+b,strong{font-weight:700}
+.em{color:var(--accent);font-weight:700}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code{font-family:Consolas,Menlo,monospace;font-size:.9em;color:var(--ink-2)}
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons,.matrix{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:4px}
+.rm-bar.on{background:var(--accent);color:#fff}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">基幹システム開発記録 ／ Day15</p>
+    <h1>基幹システム開発の初日。測ってから道具を合わせ、機能を決める前にテーブルの形を決めた</h1>
+    <p class="lead">販売・購買・請求の基幹システム sales-core の開発を始めた記録。環境を調べてリポジトリの骨格を作り、C#のテスト時間を測って dev-guard を対応させた。途中で機能範囲を5段階に広げ、設計の前にER図を作った。</p>
+    <div class="doc-meta"><span>2026-09-18（金）</span><span>基幹システム開発 段階1の1日目</span><span>タグ day15（Study・sales-core）</span></div>
+  </header>
+
+  <section>
+    <h2>要点</h2>
+    <ol class="summary">
+      <li><b>設計は計測から決めた。</b>C#はソリューション全体のテストが編集直後に30秒〜1分29秒かかり、dev-guardの上限25秒を必ず超える。対応するテストプロジェクトだけなら12.3秒で収まる。</li>
+      <li><b>機能を広げ、5段階に分けた。</b>画面と権限 → 販売の完結 → 購買と在庫 → 帳票と外部連携の順。画面はBlazor、ログインはASP.NET Core Identity。</li>
+      <li><b>機能を決める前に、テーブルの形を決める論点があった。</b>請求方式・分納・倉庫の数・単価の決め方を先に決めてER図を描き、計画と並べて食い違いを2つ直した。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">12.3<small>秒</small></div><div class="l">編集直後のテスト（対応プロジェクトのみ）</div></div>
+      <div class="kpi"><div class="v">16.8<small>秒</small></div><div class="l">失敗テストの差し戻しまで</div></div>
+      <div class="kpi"><div class="v">5<small>段階</small></div><div class="l">約78日の開発計画</div></div>
+      <div class="kpi"><div class="v">7<small>枚</small></div><div class="l">ER図（構文確認済み）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>環境調査と技術選定</h2>
+    <p class="msg">読み取りだけで手元の環境と既存資産を調べた。PostgreSQLが稼働中で、既存プロジェクトも同じ構成だったので、DBの選定はほぼ決まった。</p>
+    <div class="tbl"><table>
+      <caption>表1　調査結果と決定</caption>
+      <thead><tr><th>項目</th><th>結果</th><th>決定</th></tr></thead>
+      <tbody>
+        <tr><td>.NET SDK</td><td>8.0.421</td><td>.NET 8</td></tr>
+        <tr><td>PostgreSQL</td><td>18が稼働中</td><td>PostgreSQL 18</td></tr>
+        <tr><td>Docker・LocalDB</td><td>なし</td><td>テスト用DBはローカルPGにテスト専用DB</td></tr>
+        <tr><td>既存 equipment-management</td><td>PG＋EF Core 8。接続文字列を appsettings.json に記述</td><td>新規は <code>dotnet user-secrets</code></td></tr>
+        <tr><td>リモート</td><td>既存にはリモートなし</td><td><b>初日にGitHubのprivateリポジトリを作成</b></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>dotnet test の所要時間</h2>
+    <p class="msg">ソリューション全体では dev-guard の上限（25秒）を超える。編集したプロジェクトに対応するテストだけに絞れば収まる。</p>
+    <figure>
+      <figcaption>図1　dotnet test の所要時間（実測、秒）</figcaption>
+      <div class="fig-scroll">
+      <svg viewBox="0 0 760 290" role="img" aria-label="dotnet testの所要時間">
+        <text x="0" y="30" font-size="12" fill="#1a1a1a">初回・全体（ビルド込み）</text>
+        <rect x="220" y="16" width="401" height="20" fill="#c9ccd1"/>
+        <text x="629" y="31" font-size="12" fill="#555555">89.3</text>
+        <text x="0" y="70" font-size="12" fill="#1a1a1a">変更なし・全体</text>
+        <rect x="220" y="56" width="108" height="20" fill="#c9ccd1"/>
+        <text x="336" y="71" font-size="12" fill="#555555">24.0</text>
+        <text x="0" y="110" font-size="12" fill="#1a1a1a">編集直後・対応テストのみ</text>
+        <rect x="220" y="96" width="55" height="20" fill="#173f66"/>
+        <text x="283" y="111" font-size="12" font-weight="700" fill="#173f66">12.3（採用）</text>
+        <text x="0" y="150" font-size="12" fill="#1a1a1a">Domain.Testsのみ</text>
+        <rect x="220" y="136" width="42" height="20" fill="#c9ccd1"/>
+        <text x="270" y="151" font-size="12" fill="#555555">9.4</text>
+        <text x="0" y="190" font-size="12" fill="#1a1a1a">変更なし・--no-build</text>
+        <rect x="220" y="176" width="33" height="20" fill="#c9ccd1"/>
+        <text x="261" y="191" font-size="12" fill="#555555">7.3</text>
+        <text x="0" y="230" font-size="12" fill="#1a1a1a">編集直後・ビルドのみ</text>
+        <rect x="220" y="216" width="26" height="20" fill="#c9ccd1"/>
+        <text x="254" y="231" font-size="12" fill="#555555">5.9</text>
+        <line x1="220" y1="8" x2="220" y2="246" stroke="#a8adb5" stroke-width="1"/>
+        <line x1="332" y1="8" x2="332" y2="246" stroke="#a33c2e" stroke-width="1" stroke-dasharray="3 3"/>
+        <text x="336" y="264" font-size="11.5" fill="#a33c2e">dev-guardの上限 25秒</text>
+      </svg>
+      </div>
+    </figure>
+    <p class="src">sales-core（6プロジェクト、テスト各1件）での実測。テストが増えるので、C#の上限は60秒・フック自体は90秒に引き上げた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>dev-guard 1.1.0：C#対応</h2>
+    <p class="msg">編集したファイルのプロジェクトから、命名規約で対応する .Tests プロジェクトを探して走らせる。実物で成功時9.1秒、失敗時16.8秒で差し戻した。</p>
+    <figure>
+      <figcaption>図2　編集後テストの流れ</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">.cs を編集<small>PostToolUse</small></div>
+        <div class="chev">.csproj を遡って探す<small>SalesCore.Domain</small></div>
+        <div class="chev on">対応する .Tests<small>SalesCore.Domain.Tests</small></div>
+        <div class="chev">dotnet test<small>--no-restore</small></div>
+        <div class="chev">失敗なら差し戻し<small>decision: block</small></div>
+      </div></div>
+    </figure>
+    <p class="note">テストを先に6件書き、「関数が無い」で落ちることを確認してから実装した（計15件）。対応する .Tests が無いプロジェクトでは何もしない（関係ないテストを走らせない）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>機能範囲の拡大と段階構成</h2>
+    <p class="msg">販売の完結・購買と在庫・画面と権限・帳票と外部連携をすべて含め、期間を延ばして5段階に分けた。</p>
+    <div class="tbl"><table>
+      <caption>表2　段階構成（平日約78日）</caption>
+      <thead><tr><th>段階</th><th>Day</th><th class="num">日数</th><th>内容</th><th>終わった時点で動くもの</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>15〜34</td><td class="num">20</td><td>基盤と縦切り</td><td>受注 → 分納出荷 → 締め請求書の発行（API）</td></tr>
+        <tr><td>2</td><td>35〜49</td><td class="num">15</td><td>画面と権限</td><td>ログインし、役割に応じた画面で操作できる</td></tr>
+        <tr><td>3</td><td>50〜63</td><td class="num">14</td><td>販売の完結</td><td>見積から入金・消込まで。売掛金残高</td></tr>
+        <tr><td>4</td><td>64〜79</td><td class="num">16</td><td>購買と在庫</td><td>発注から支払まで。在庫が無ければ出荷不可</td></tr>
+        <tr><td>5</td><td>80〜92</td><td class="num">13</td><td>帳票と外部連携</td><td>PDF、会計向け仕訳、銀行入金の取り込み</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">順番は「使える形を先に」を選んだ。業務ルールが増えるたびに画面の手直しが増える弱点は、画面を薄く保つ（判断はAPIとDomainに置く）ことで抑える。日単位の計画は各段階の最初に作る。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>ER図を先に作った</h2>
+    <p class="msg">後から変えると表の構造ごと作り直しになる4点を先に決め、全段階分を7枚の図にした。計画と並べて、段階の割り当ての食い違いを2つ直した。</p>
+    <div class="tbl"><table>
+      <caption>表3　テーブルの形を決めた業務上の決定</caption>
+      <thead><tr><th>論点</th><th>決定</th><th>構造への影響</th></tr></thead>
+      <tbody>
+        <tr><td>請求</td><td>締め請求。出荷先と請求先を分ける</td><td>得意先が請求先を自己参照。請求書は請求先×締め日</td></tr>
+        <tr><td>分納</td><td>あり</td><td>受注明細に出荷済み数量、出荷明細が受注明細を参照</td></tr>
+        <tr><td>倉庫</td><td>複数</td><td>在庫を商品×倉庫で持つ</td></tr>
+        <tr><td>単価</td><td>得意先別あり（期間つき）</td><td>受注時点の単価・税率を明細に写す</td></tr>
+      </tbody>
+    </table></div>
+    <div class="tbl"><table>
+      <caption>表4　計画と並べて見つかった食い違い</caption>
+      <thead><tr><th>表</th><th>誤り</th><th>修正</th></tr></thead>
+      <tbody>
+        <tr><td>倉庫</td><td>出荷が参照するのに段階2に割り当てていた</td><td>段階1で1件だけ登録して使う</td></tr>
+        <tr><td>得意先別単価</td><td>段階1では不要なのに早い段階に割り当てていた</td><td>段階3へ。段階1は標準単価</td></tr>
+      </tbody>
+    </table></div>
+    <p class="src">7枚ともMermaid 11で構文チェックと描画を確認。CLAUDE.mdからは@で取り込まずパスで参照（約500行を常時コストにしないため）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>つまずきと気づき</h2>
+    <p class="msg">シェル経由の文字列のエスケープで2回転んだ。Day14で特定した弱点C（Windowsのシェル境界）そのものだった。</p>
+    <div class="tbl"><table>
+      <caption>表5　つまずき</caption>
+      <thead><tr><th>症状</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>dev-guardの実物確認で何も返らない</td><td>Windowsパスのバックスラッシュがシェルで崩れた</td><td>スラッシュ区切りで渡す</td></tr>
+        <tr><td>ER図の検証ページが構文エラー</td><td>シェル経由で書いたJavaScriptの改行記号が崩れた</td><td>生成スクリプトをファイルに書く</td></tr>
+        <tr><td>ローカルHTMLでスクリプトが動かない</td><td>ファイルとして開くと静的表示になる</td><td>簡易サーバー経由で開く（確認後に停止）</td></tr>
+      </tbody>
+    </table></div>
+    <ul>
+      <li>複数行・バックスラッシュ・引用符を含むものは、<b>シェルに渡さずファイルに書く</b>を習慣にする</li>
+      <li>計画にない作業（日単位化・範囲拡大・ER図）で1日の大半を使った。予定との差は計画シートに「予定と違う点」として残した</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>成果物と次のアクション</h2>
+    <p class="msg">成果物は両リポジトリのタグday15に固定した。次はDay16で、業務ルール集とER図の未決事項を決める。</p>
+    <h3>sales-core（製品コード）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day15/CLAUDE.md">CLAUDE.md</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day15/.claude/settings.json">.claude/settings.json</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day15/docs/domain/er-diagram.md">docs/domain/er-diagram.md</a>（ER図・7枚）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day15/docs/specs/2026-09-18-scope-and-phases-design.md">docs/specs/2026-09-18-scope-and-phases-design.md</a>（範囲と段階の設計）</li>
+    </ul>
+    <h3>Study（記録と道具）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day15/study_plan_next_month.md">study_plan_next_month.md</a>（基幹システム開発計画）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day15/plugins/dev-guard/hooks/post-edit-test.js">dev-guard の post-edit-test.js</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day15/plugins/dev-guard/hooks/post-edit-test.test.js">テスト</a>（1.1.0）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day15/.claude/skills/daily-closeout/SKILL.md">daily-closeout</a>（2リポジトリ対応） ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day15/2026-09-18/summary.md">summary.md</a></li>
+    </ul>
+    <div class="tbl"><table>
+      <caption>表6　次のアクション</caption>
+      <thead><tr><th>Day</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>16</td><td>要件の骨格：業務フロー・用語集・業務ルール集。ER図の未決5点（桁と端数処理、売上計上基準、締め日と締め後の訂正、承認基準額、仕入先請求書の照合）を決める</td></tr>
+        <tr><td>17</td><td>DBを壊すコマンドのガード</td></tr>
+        <tr><td>18</td><td>プラグインの配布方法、~/.claude/CLAUDE.md への個人設定の分離</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day15 作業記録 — sales-core ／ vibe-coding-study</span>
+    <span>時間はすべてこの日の実測値</span>
+  </footer>
+
+</div>
+</body>
+</html>
