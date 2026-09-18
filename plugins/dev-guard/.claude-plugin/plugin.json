@@ -1,7 +1,7 @@
 {
   "name": "dev-guard",
-  "version": "1.0.3",
-  "description": "開発中の安全装置。Bash・PowerShellで取り返しのつかないコマンド(force push・reset --hard・rm -rf)を実行前にブロックし、コードファイルの編集後にはそのファイルが属するプロジェクトのテストを自動実行する。",
+  "version": "1.1.0",
+  "description": "開発中の安全装置。Bash・PowerShellで取り返しのつかないコマンド(force push・reset --hard・rm -rf)を実行前にブロックし、コードファイルの編集後にはそのファイルが属するプロジェクトのテストを自動実行する(JavaScript/TypeScriptはnpm test、C#は対応する.Testsプロジェクトのdotnet test)。",
   "author": {
     "name": "kiyo015"
   },
@@ -25,7 +25,7 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/post-edit-test.js\"",
-            "timeout": 30
+            "timeout": 90
           }
         ]
       }

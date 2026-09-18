@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { findTestableProject, describeFailure, TEST_TIMEOUT_MS } = require('./post-edit-test.js');
+const { findTestableProject, findTestTarget, describeFailure, TEST_TIMEOUT_MS } = require('./post-edit-test.js');
 
 // { 相対パス: 中身 } からファイル群を一時フォルダに作り、そのフォルダを返す
 function makeTree(files) {
@@ -66,6 +66,68 @@ test('プロジェクトルートの表記がずれていても、ルート内�
 test('プロジェクトルートの外にあるファイルは対象外', () => {
   const base = makeTree({ 'other/package.json': WITH_TEST, 'other/x.js': '', 'proj/.keep': '' });
   assert.equal(findTestableProject(path.join(base, 'other/x.js'), path.join(base, 'proj')), null);
+});
+
+// --- C#(.NET)対応 ---
+// 2026-09-18 実測: 編集直後にソリューション全体を走らせると30秒〜1分29秒かかり、上限を超える。
+// 編集したプロジェクトに対応するテストプロジェクトだけなら12.3秒で収まる。
+// 対応付けは命名規約 <プロジェクト名>.Tests による。
+
+const CSPROJ = '<Project Sdk="Microsoft.NET.Sdk"></Project>';
+
+test('C#: 編集したファイルのプロジェクトに対応する .Tests プロジェクトを走らせる', () => {
+  const base = makeTree({
+    'src/App/App.csproj': CSPROJ,
+    'src/App/Order.cs': '',
+    'tests/App.Tests/App.Tests.csproj': CSPROJ,
+  });
+  const target = findTestTarget(path.join(base, 'src/App/Order.cs'), base);
+  assert.equal(target.name, 'App.Tests');
+  assert.match(target.command, /^dotnet test /);
+  assert.match(target.command, /--no-restore/);
+  assert.ok(target.command.includes(path.join(base, 'tests/App.Tests/App.Tests.csproj')));
+});
+
+test('C#: テストプロジェクト自身を編集したら、そのプロジェクトを走らせる', () => {
+  const base = makeTree({
+    'tests/App.Tests/App.Tests.csproj': CSPROJ,
+    'tests/App.Tests/OrderTests.cs': '',
+  });
+  const target = findTestTarget(path.join(base, 'tests/App.Tests/OrderTests.cs'), base);
+  assert.equal(target.name, 'App.Tests');
+});
+
+test('C#: 対応するテストプロジェクトが無ければ何もしない', () => {
+  // テストが無いプロジェクトの編集で、関係ないテストを走らせない
+  const base = makeTree({
+    'src/App/App.csproj': CSPROJ,
+    'src/App/Order.cs': '',
+    'tests/Other.Tests/Other.Tests.csproj': CSPROJ,
+  });
+  assert.equal(findTestTarget(path.join(base, 'src/App/Order.cs'), base), null);
+});
+
+test('C#: プロジェクトルートの外にあるファイルは対象外', () => {
+  const base = makeTree({
+    'outside/App/App.csproj': CSPROJ,
+    'outside/App/Order.cs': '',
+    'outside/tests/App.Tests/App.Tests.csproj': CSPROJ,
+    'root/.keep': '',
+  });
+  assert.equal(findTestTarget(path.join(base, 'outside/App/Order.cs'), path.join(base, 'root')), null);
+});
+
+test('JavaScript: これまでどおり npm test を、そのプロジェクトのフォルダで走らせる', () => {
+  const base = makeTree({ 'app/package.json': WITH_TEST, 'app/src/a.js': '' });
+  const target = findTestTarget(path.join(base, 'app/src/a.js'), base);
+  assert.equal(target.command, 'npm test');
+  assert.equal(path.relative(target.cwd, path.join(base, 'app')), '');
+  assert.equal(target.name, 'app');
+});
+
+test('対象外の拡張子は何も返さない', () => {
+  const base = makeTree({ 'app/package.json': WITH_TEST, 'app/README.md': '' });
+  assert.equal(findTestTarget(path.join(base, 'app/README.md'), base), null);
 });
 
 test('タイムアウトは「テストが失敗した」と区別して伝える', () => {
