@@ -7,3 +7,6 @@ node_modules/
 # 定期実行が生成する記録。実行のたびに変わるので共有しない(仕組みだけを共有する)。
 checks/*.log
 checks/report-*.md
+# 手元のバックアップ用の圧縮ファイル(sales-core_0918.zipなど)。製品コードは
+# sales-coreリポジトリが正なので、学習記録側には含めない。
+*.zip

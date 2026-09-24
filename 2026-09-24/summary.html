@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day16 学習記録 — 要件の骨格</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);
+  gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;
+  align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:2px;
+  font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+.mx-cell ul{margin:0}
+.mx-cell li{margin-bottom:5px}
+
+b,strong{font-weight:700}
+.em{color:var(--accent);font-weight:700}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons,.roadmap,.matrix{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day16 ／ 基幹システム開発</p>
+    <h1>要件の骨格 — コードを書く前に、業務の決まりごとを1か所に確定させる</h1>
+    <p class="lead">ER図を書いた時に保留していた論点を全部決め、AIが実装で迷わないための「唯一の定義元」を文書として作った日。決めた内容が実際にAIの回答を変えているかを、別セッションで測って確認した。</p>
+    <div class="doc-meta"><span>2026-09-24</span><span>対象: sales-core（販売・購買・請求）</span><span>段階1 / Day16</span></div>
+  </header>
+
+  <section>
+    <h2>エグゼクティブサマリー</h2>
+    <ol class="summary">
+      <li><b>保留していた8点を確定し、派生する1点も先に決めた。</b>単価・数量に小数を許したことで「明細金額の丸め方」が新たに必要になり、消費税と揃えて四捨五入とした。</li>
+      <li><b>業務ルール集・用語集・業務フローの3文書を作り、ER図に反映した。</b>「仕入先請求書と照合してから支払う」と決めたことで、ER図に表が2つ足りないことが判明した。</li>
+      <li><b>完了条件を別セッションで測って確認した。</b>文脈をリセットしたヘッドレス実行で3問質問し、3問とも業務ルール集どおりの答えが返った。</li>
+      <li><b>設定が効いていない状態を1件発見し、解消した。</b>sales-coreのワークスペースが未信頼で、許可ルール6件が無視されていた。本人の承認後、拒否ゼロまで確認した。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>保留していた論点を決める</h2>
+    <p class="msg">業務の判断が要るため保留していた8点を確定させ、実装時に迷う箇所を先に潰した。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表1: 確定した業務上の決定と、その理由</caption>
+      <thead><tr><th>論点</th><th>決定</th><th>なぜそう決めたか</th></tr></thead>
+      <tbody>
+        <tr><td>消費税の端数処理</td><td><b>四捨五入</b>（税率ごとに1回だけ）</td><td>適格請求書（インボイス制度）の要件。明細ごとに税額を出して合計すると1円単位でずれる</td></tr>
+        <tr><td>売上の計上基準</td><td><b>出荷基準</b>（出荷を確定した日）</td><td>検収の報告を得意先から受け取らない運用のため</td></tr>
+        <tr><td>締め日</td><td><b>得意先ごとに選ぶ</b>（5・10・15・20・25日・月末）</td><td>得意先の都合に合わせる必要がある</td></tr>
+        <tr><td>締め後の誤り</td><td><b>翌月に赤黒で調整</b>。確定した請求書は変えない</td><td>発行済みの請求書を書き換えると、得意先の手元の書類と食い違う</td></tr>
+        <tr><td>受注の承認</td><td><b>税抜100万円以上</b>は承認まで出荷不可</td><td>基準額は変わりうるので、コードでなく設定として持つ</td></tr>
+        <tr><td>仕入先の請求書</td><td><b>自社の仕入計上と照合してから支払う</b></td><td>一致しないものを支払わないため</td></tr>
+        <tr><td>単価</td><td>小数2桁まで <code>numeric(15,2)</code></td><td>単位当たり価格に銭が出る商品がある</td></tr>
+        <tr><td>数量</td><td>小数3桁まで <code>numeric(15,3)</code></td><td>重量・長さで売る商品がある</td></tr>
+        <tr class="total"><td>（派生）明細金額</td><td><b>明細ごとに1回、四捨五入して円単位</b></td><td>単価×数量に端数が出るため新たに必要になった。消費税と丸め方を揃えた</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: sales-core/docs/domain/business-rules.md（決定日 2026-09-24）</p>
+
+    <p class="note">8点を答えて終わりにせず、「その決定から何が導かれるか」を辿った。単価と数量に小数を許した時点で、明細金額の丸めが必ず問題になる。実装で迷う前に決めた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>作った文書と、常時読み込みの選び方</h2>
+    <p class="msg">4文書のうち、金額の誤りに直結する業務ルール集だけをCLAUDE.mdから常時読み込み、残りはパス参照にした。</p>
+
+    <figure>
+      <figcaption>図表2: 文書の分量と、CLAUDE.mdからの参照方法</figcaption>
+      <svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="文書ごとの行数の横棒グラフ">
+        <line x1="150" y1="18" x2="150" y2="214" stroke="#a8adb5" stroke-width="1"/>
+
+        <text x="142" y="40" text-anchor="end" font-size="12.5" fill="#1a1a1a" font-weight="700">business-rules</text>
+        <rect x="150" y="26" width="90" height="22" fill="#173f66"/>
+        <text x="250" y="42" font-size="12.5" fill="#173f66" font-weight="700">102行</text>
+        <text x="305" y="42" font-size="11.5" fill="#173f66" font-weight="700">← @ で常時読み込み</text>
+
+        <text x="142" y="88" text-anchor="end" font-size="12.5" fill="#555555">business-flow</text>
+        <rect x="150" y="74" width="69" height="22" fill="#c9ccd1"/>
+        <text x="229" y="90" font-size="12.5" fill="#555555">78行</text>
+        <text x="305" y="90" font-size="11.5" fill="#8e8e8e">必要な時に読む</text>
+
+        <text x="142" y="136" text-anchor="end" font-size="12.5" fill="#555555">glossary</text>
+        <rect x="150" y="122" width="53" height="22" fill="#c9ccd1"/>
+        <text x="213" y="138" font-size="12.5" fill="#555555">60行</text>
+        <text x="305" y="138" font-size="11.5" fill="#8e8e8e">必要な時に読む</text>
+
+        <text x="142" y="184" text-anchor="end" font-size="12.5" fill="#555555">er-diagram</text>
+        <rect x="150" y="170" width="492" height="22" fill="#c9ccd1"/>
+        <text x="652" y="186" font-size="12.5" fill="#555555">558行</text>
+        <text x="305" y="208" font-size="11.5" fill="#8e8e8e">常時読み込むと毎回の会話が重くなる</text>
+      </svg>
+      <p class="src">出所: 各ファイルの行数（wc -l、2026-09-24時点）。<code>@</code> で書いた参照は全文が常に文脈に載る（Day2の計測による）</p>
+    </figure>
+
+    <div class="tbl">
+    <table>
+      <caption>図表3: 文書の役割と読むタイミング</caption>
+      <thead><tr><th>文書</th><th class="num">行数</th><th>役割</th><th>いつ読むか</th></tr></thead>
+      <tbody>
+        <tr><td><b>business-rules.md</b></td><td class="num">102</td><td>業務上の決まりごとの<b>唯一の定義元</b></td><td>常時（<code>@</code>で読み込み）</td></tr>
+        <tr><td>glossary.md</td><td class="num">60</td><td>用語とコード上の名前（英語）の対応</td><td>業務の言葉を扱うとき</td></tr>
+        <tr><td>business-flow.md</td><td class="num">78</td><td>販売・購買の流れ、状態遷移（図4枚）</td><td>順序や状態を扱うとき</td></tr>
+        <tr><td>er-diagram.md</td><td class="num">558</td><td>テーブル構造（図7枚。46行を更新）</td><td>テーブルを追加・変更するとき</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>用語集は「AIが言葉を取り違えない」ために作る</h2>
+    <p class="msg">同じものを別の名前で呼ぶと実装がぶれる。特に紛らわしい組み合わせを、違いが分かる形で定義した。</p>
+
+    <div class="fig-scroll"><div class="matrix" style="--mx-label:128px;--mx-cols:2">
+      <div class="mx-h"></div>
+      <div class="mx-h">前者</div>
+      <div class="mx-h">後者</div>
+
+      <div class="mx-label"><small>01</small>受注 と 売上</div>
+      <div class="mx-cell">注文を受けた段階。<b>まだ売上ではない</b></div>
+      <div class="mx-cell">出荷を確定した段階。ここで計上する</div>
+
+      <div class="mx-label"><small>02</small>出荷先 と 請求先</div>
+      <div class="mx-cell">商品を送る先（支店など）</div>
+      <div class="mx-cell">請求書を送る先（本社など）。<b>同じとは限らない</b></div>
+
+      <div class="mx-label"><small>03</small>入荷 と 検収</div>
+      <div class="mx-cell">届いただけの記録</div>
+      <div class="mx-cell">確認して合格とした数量。<b>仕入になるのはこちら</b></div>
+
+      <div class="mx-label"><small>04</small>在庫 と 引当可能数</div>
+      <div class="mx-cell">実際にある数</div>
+      <div class="mx-cell">そこから引当済みを引いた数</div>
+
+      <div class="mx-label"><small>05</small>取消 と 削除</div>
+      <div class="mx-cell">状態を変えるか赤伝を立てる</div>
+      <div class="mx-cell"><b>削除はしない</b>（物理削除の禁止）</div>
+    </div></div>
+    <p class="src">出所: sales-core/docs/domain/glossary.md「紛らわしい組み合わせ」</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>決定がER図に波及した</h2>
+    <p class="msg">業務の決定を先にしたことで、ER図に表が2つ足りず、参照先が1つ違っていたことが分かった。</p>
+
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">Day15<small>ER図を書く</small></div>
+      <div class="chev">決められない論点が<small>5点あぶり出される</small></div>
+      <div class="chev on">Day16<small>業務の決定をする</small></div>
+      <div class="chev on">ER図の過不足が<small>見つかり、直す</small></div>
+    </div></div>
+    <p class="src">図表4: 今日たどった順序。ER図 → 決めごと → ER図の修正、と1往復した</p>
+
+    <ul>
+      <li><code>supplier_invoices</code>（仕入先から受け取った請求書）を追加</li>
+      <li><code>supplier_invoice_matches</code>（自社の仕入計上との照合結果）を追加</li>
+      <li><code>payment_allocations</code>（支払の消し込み）の参照先を、発注から<b>仕入先請求書</b>に付け替え</li>
+    </ul>
+
+    <div class="tbl">
+    <table>
+      <caption>図表5: 設計の順序と、それぞれで得られるもの</caption>
+      <thead><tr><th>順序</th><th>得られるもの</th><th>足りないもの</th></tr></thead>
+      <tbody>
+        <tr><td>ER図だけ先</td><td>決めるべき論点が具体的に出る</td><td>決めていないので正しいか判断できない</td></tr>
+        <tr><td>決めごとだけ先</td><td>判断はできる</td><td>何を決めるべきかを網羅できない</td></tr>
+        <tr class="total"><td>ER図 → 決めごと → ER図の修正</td><td>両方</td><td>1往復ぶんの手間（許容する）</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>完了条件を、別のセッションで測る</h2>
+    <p class="msg">同じセッション内で確認しても、会話の履歴に決定内容が残っているため文書を読まずに答えられてしまう。文脈をリセットして初めて、文書が効いているかが分かる。</p>
+
+    <p>今日の完了条件は「新しいセッションで『請求書の端数処理はどうする？』と聞くと、業務ルール集の内容で答えが返る」。ヘッドレス実行（<code>claude -p --model haiku --strict-mcp-config</code>）で3問質問した。</p>
+
+    <p class="note">返ってきた答え —<br>
+    1. <b>消費税の端数処理</b>：税率ごとに1回、四捨五入。明細ごとには行わない（インボイス要件）<br>
+    2. <b>売上計上</b>：出荷確定日に計上<br>
+    3. <b>締め日</b>：得意先ごと選択（5日・10日・15日・20日・25日・月末）</p>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v">3<small>/3</small></div><div class="l">業務ルールどおりの回答</div></div>
+      <div class="kpi"><div class="v">11<small>枚</small></div><div class="l">構文エラーなしの図（業務フロー4・ER図7）</div></div>
+      <div class="kpi"><div class="v">287<small>行</small></div><div class="l">追加した文書の行数（5ファイル）</div></div>
+    </div>
+    <p class="src">出所: ヘッドレス実行の結果（2026-09-24）、Mermaid 11で全ブロックを <code>mermaid.parse()</code> に通し <code>mermaid.run()</code> で描画、コミット 13f494b の差分</p>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>つまずき — 設定が効いていなかった</h2>
+    <p class="msg">sales-coreのワークスペースが未信頼のまま運用されており、書いてあった許可ルール6件が丸ごと無視されていた。</p>
+
+    <p><b>症状。</b>ヘッドレス実行の<b>標準エラー出力</b>に警告が出ていた。</p>
+    <p class="note"><code>Ignoring 6 permissions.allow entries from .claude/settings.json: this workspace has not been trusted.</code></p>
+
+    <p><b>原因。</b>Day15で <code>.claude/settings.json</code> に許可ルールを6件書いたが、そのワークスペースで一度も対話起動して信頼を承認していなかった。「設定ファイルに書いた」と「設定が効いている」が別だという、Day11・Day14で繰り返し学んだことが再発した。今回は<b>警告が標準エラー出力にしか出ない</b>ため、標準出力だけを見ていたら気付かなかった。</p>
+
+    <p><b>対策。</b>本人が信頼を承認したうえで、3つの方法で解消を確認した。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表6: 解消の確認方法と結果</caption>
+      <thead><tr><th>確認方法</th><th>結果</th><th>何の証拠か</th></tr></thead>
+      <tbody>
+        <tr><td><code>~/.claude.json</code>の該当プロジェクト</td><td><code>hasTrustDialogAccepted: true</code></td><td>承認が記録されている</td></tr>
+        <tr><td>再度ヘッドレス実行し標準エラー出力を見る</td><td>警告が出ない</td><td>無視されなくなった</td></tr>
+        <tr class="total"><td><code>git status</code>を実行させ<code>permission_denials</code>を見る</td><td><code>[]</code>（拒否ゼロ）</td><td><b>許可が実際に働いている</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: <code>claude -p --output-format json</code> の実行結果（費用 $0.036）</p>
+
+    <p class="note">3つ目が本命。警告が消えたことは「無視されなくなった」証拠でしかなく、「許可が実際に働く」証拠ではない。許可対象のコマンドを実行させ、拒否が起きないことまで見た。信頼の承認そのものは本人が行い、代理で回避はしていない。</p>
+
+    <h3>もう1件 — シェルのエスケープ</h3>
+    <p>Windowsのパスを含むスクリプトを <code>node -e</code> でシェル経由に渡し、バックスラッシュが消えた。Day15でも同じことをしている。対策として、パスは<b>スラッシュ区切り</b>で書き、少しでも長いスクリプトは<b>ファイルに書いてから実行する</b>ことにした。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>今日学んだこと</h2>
+    <p class="msg">定義元を1か所に決めておくことは、人間相手より AI と作る時のほうが効く。</p>
+
+    <h3>「唯一の定義元」を決めると、変更の手順も決まる</h3>
+    <p>業務ルール集の冒頭に「ここを変える時は、コード・テスト・この文書を必ず一緒に直す」と書いた。定義元が複数あると、どれが正しいか分からなくなる。人間なら「たぶんこちらが新しい」と察するが、<b>AIは両方読んで矛盾したまま実装する</b>。Day24で <code>domain-rule-change</code> スキルとして手順化する。</p>
+
+    <h3>警告は標準エラー出力に出る</h3>
+    <p>今回の信頼の警告は、標準出力（AIの回答）には一切出なかった。自動化した処理で標準出力だけを拾っていると、この種の警告は永久に見えない。Day28以降でCIを組む時は<b>標準エラー出力も記録に残す</b>。</p>
+
+    <h3>決定の理由を一緒に書くと、後で変えられる</h3>
+    <p>「四捨五入」とだけ書くと、後から見た人が「なぜ切り捨てではないのか」を判断できない。「インボイス制度の要件」と理由を添えたので、制度が変われば直せる。逆に<b>理由の書けない決定は、決め方を疑ったほうがいい</b>。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>次のアクション</h2>
+    <p class="msg">Day17はDBを壊すコマンドのガード。持ち越しはない（ワークスペースの信頼は今日解消した）。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表7: Day17の作業と完了条件</caption>
+      <thead><tr><th>作業</th><th>内容</th><th>担当</th></tr></thead>
+      <tbody>
+        <tr><td>ガードの追加（TDD）</td><td><code>dotnet ef database drop</code>、<code>dotnet ef migrations remove</code>、SQLの <code>DROP</code>・<code>TRUNCATE</code></td><td>Claude</td></tr>
+        <tr><td>E2Eセルの追加</td><td>sales-core向けに「DB破壊コマンド」「秘密情報ファイルの読み取り禁止」の2セル</td><td>Claude</td></tr>
+        <tr><td>対照実験</td><td>ガードを外すと不合格になることまで確認する</td><td>Claude</td></tr>
+        <tr class="total"><td><b>完了条件</b></td><td>追加した2セルが対照実験付きで合格し、<code>guard-matrix.md</code> に反映されている</td><td>—</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>成果物</h3>
+    <p><b>sales-core（製品コード）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day16/docs/domain/business-rules.md">docs/domain/business-rules.md</a> — 業務ルール集（唯一の定義元・102行）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day16/docs/domain/glossary.md">docs/domain/glossary.md</a> — 用語集（60行）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day16/docs/domain/business-flow.md">docs/domain/business-flow.md</a> — 業務フロー（図4枚・78行）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day16/docs/domain/er-diagram.md">docs/domain/er-diagram.md</a> — ER図（仕入先請求書と照合を追加・558行）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day16/CLAUDE.md">CLAUDE.md</a> — 業務ルール集を <code>@</code> で常時読み込むよう更新</li>
+    </ul>
+    <p><b>Study（学習記録）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day16/study_plan_next_month.md">study_plan_next_month.md</a> — Day16の実施内容と実測値を追記</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day16/2026-09-24/summary.md">2026-09-24/summary.md</a> — この記録のMarkdown版</li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day16 学習記録 — 要件の骨格</span>
+    <span>2026-09-24 ／ sales-core コミット 13f494b ／ タグ day16</span>
+  </footer>
+
+</div>
+</body>
+</html>
