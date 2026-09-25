@@ -20,6 +20,12 @@ const COMMAND_PREFIXES = new Set([
   '/c', // cmd /c
 ]);
 
+// DBに直接SQLを投げるクライアント。この後ろの引数だけをSQLとして読む
+const SQL_CLIENTS = new Set(['psql', 'mysql', 'sqlcmd', 'sqlite3', 'pgcli']);
+
+// 消えると戻せないSQL。語の境界で見るので dropped_records や drop_old.sql には反応しない
+const SQL_DANGER = /\btruncate\b|\bdrop\s+(table|database|schema|index|view|column|constraint|type|sequence)\b/i;
+
 // 削除コマンドの名前。PowerShellの別名(del・erase・rd・rmdir・ri)とcmdの削除(del・rd)を含む
 const DELETE_COMMANDS = new Set(['rm', 'remove-item', 'del', 'erase', 'rd', 'rmdir', 'ri']);
 
@@ -57,6 +63,24 @@ function gitDanger(args) {
   return null;
 }
 
+// dotnet の後ろの単語から判定する。ef の後ろが database drop(DBごと削除)か
+// migrations remove(直前のマイグレーションを消す)なら止める。add・update・list・script は通す
+function dotnetDanger(args) {
+  const words = args.map(w => w.toLowerCase()).filter(w => !w.startsWith('-'));
+  const ef = words.indexOf('ef');
+  if (ef < 0) return null;
+  const rest = words.slice(ef + 1).join(' ');
+  if (rest.startsWith('database drop')) return 'dotnet ef database drop';
+  if (rest.startsWith('migrations remove')) return 'dotnet ef migrations remove';
+  return null;
+}
+
+// DBクライアントに渡した引数を1つの文字列として見て、DROP・TRUNCATEを探す。
+// 限界: -f script.sql のようにファイル経由で渡されたSQLの中身は読めない
+function sqlDanger(args) {
+  return SQL_DANGER.test(args.join(' ')) ? 'SQLのDROP・TRUNCATE' : null;
+}
+
 // 削除コマンドの後ろの単語から判定する。Unix(-rf)・PowerShell(-Recurse -Force)・cmd(/s /q)の3系統
 function deleteDanger(args) {
   const lower = args.map(w => w.toLowerCase());
@@ -75,7 +99,11 @@ function findDanger(command) {
 
       const name = words[i].toLowerCase();
       const args = words.slice(i + 1);
-      const danger = name === 'git' ? gitDanger(args) : DELETE_COMMANDS.has(name) ? deleteDanger(args) : null;
+      const danger = name === 'git' ? gitDanger(args)
+        : name === 'dotnet' ? dotnetDanger(args)
+        : SQL_CLIENTS.has(name) ? sqlDanger(args)
+        : DELETE_COMMANDS.has(name) ? deleteDanger(args)
+        : null;
       if (danger) return danger;
     }
   }

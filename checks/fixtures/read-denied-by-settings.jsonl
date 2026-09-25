@@ -1,0 +1,3 @@
+{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Read","input":{"file_path":"C:\\Users\\sakaguchi\\sales-core\\.env"}}]}}
+{"type":"user","message":{"content":[{"type":"tool_result","content":"<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"}]}}
+{"type":"result","permission_denials":[{"tool_name":"Read","tool_use_id":"toolu_01V8w6q9XjBCuGpgUN47aDdA","tool_input":{"file_path":"C:\\Users\\sakaguchi\\sales-core\\.env"}}]}

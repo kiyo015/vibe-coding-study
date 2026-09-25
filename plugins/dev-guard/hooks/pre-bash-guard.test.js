@@ -62,6 +62,18 @@ const MUST_BLOCK = [
   'echo $(git reset --hard)',
   // レビュー指摘5: PowerShellの省略形(大文字)
   'Remove-Item -Rec -Fo node_modules',
+  // Day17: DBを壊すコマンド。開発DBを作り直すだけのつもりでも、入っているデータは戻らない
+  'dotnet ef database drop',
+  'dotnet ef database drop --force --project src/SalesCore.Infrastructure',
+  'dotnet ef migrations remove',
+  'dotnet ef migrations remove --project src/SalesCore.Infrastructure --force',
+  'dotnet build && dotnet ef database drop',
+  'bash -c "dotnet ef database drop"',
+  // Day17: SQLのDROP・TRUNCATE(psqlなどのDBクライアント経由)
+  'psql -c "DROP TABLE sales_orders"',
+  'psql -d salescore -c "TRUNCATE TABLE stock_movements"',
+  'psql -c "drop database salescore"',
+  'psql -c "ALTER TABLE invoices DROP COLUMN total_amount"',
 ];
 
 const MUST_ALLOW = [
@@ -87,6 +99,18 @@ const MUST_ALLOW = [
   "git commit -m \"$(cat <<'EOF'\nguard\n\n- rm -fr / git push -f を検知\nEOF\n)\"",
   // レビュー指摘6: git rm はインデックスから外すだけ(--cached)の用途がある
   'git rm -r -f --cached node_modules',
+  // Day17: 同じ dotnet ef でも、作る・進める・見るだけの操作は日常的に使う
+  'dotnet ef migrations add InitialCreate',
+  'dotnet ef database update',
+  'dotnet ef migrations list',
+  'dotnet ef migrations script',
+  'dotnet test',
+  // Day17: 読み取りのSQLは通す。DROP・TRUNCATEを語として含まない文字列も通す
+  'psql -c "SELECT * FROM sales_orders"',
+  'psql -c "SELECT * FROM dropped_records"',
+  // Day17: DBクライアント以外のコマンドの引数にSQLの語が出てきても、それはコマンドではない
+  'git commit -m "ガードに DROP TABLE と dotnet ef database drop を追加"',
+  'grep -rn "TRUNCATE" docs',
 ];
 
 for (const command of MUST_BLOCK) {

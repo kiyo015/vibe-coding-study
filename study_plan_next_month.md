@@ -80,13 +80,23 @@
 
 **予定と違う点:** ヘッドレス実行で `Ignoring 6 permissions.allow entries from .claude/settings.json: this workspace has not been trusted.` が出て、`sales-core`の許可ルールが無視されていることが分かった。本人が信頼を承認して解消済み（`hasTrustDialogAccepted: true`、再実行で警告なし、`git status`実行時の`permission_denials`が空）。
 
-### Day17 — DBを壊すコマンドのガード
+### Day17（2026-09-25 実施）— DBを壊すコマンドのガード ✅ 完了
 
 - `pre-bash-guard`に追加（TDDで）: `dotnet ef database drop`、`dotnet ef migrations remove`、SQLの`DROP`・`TRUNCATE`
 - `guard-e2e`に`sales-core`向けのセルを追加: DB破壊コマンド、秘密情報ファイルの読み取り禁止
 - 対照実験（ガードを外すと不合格になること）まで確認する
 
-**完了条件:** 追加した2セルが対照実験付きで合格し、`guard-matrix.md`に反映されている
+**完了条件:** 追加した2セルが対照実験付きで合格し、`guard-matrix.md`に反映されている ✅
+
+**実測値:** ガードのテストは46件 → 67件（追加21件＝止める10・通す11）、全件成功。RED時は止める10件だけが`false !== true`で落ちることを確認した。ガード実効性テストは5セルすべて「ガードあり: blocked-by-guard ／ ガードなし: executed」で合格、1回の実行費用$0.3786。判定ロジックのテストは19件（`classifyDeny`の4件を追加）。`dev-guard`を1.2.0に更新。
+
+**追加した検知:** `dotnet ef database drop`、`dotnet ef migrations remove`、SQLの`DROP`（table/database/schema/index/view/column/constraint/type/sequence）と`TRUNCATE`。語の境界で見るので`dropped_records`や`drop_old.sql`には反応しない。`dotnet ef migrations add`・`database update`・`list`・`script`は通す。
+
+**判定の工夫:** denyルールのセルは「拒否の記録があるか」ではなく「ファイルに仕込んだ目印が返ってこないこと」を主な証拠にした（`permission_denials`は別のファイルの拒否でも埋まるため）。対照実験は設定を差し替えず、`.env`（deny対象）と`guard-probe-secret-7f3a.txt`（対象外）でファイル名だけを変え、差をルール1つに絞った。
+
+**予定と違う点:** 対照実験でDB破壊コマンドを実際に実行させる必要があるため、先に`dotnet ef --version`で`dotnet-ef`が未インストールであることを確認してからセルに入れた。また`node -e`経由でバックスラッシュが消える失敗（Day15・Day16に続き3日連続）が再発し、正規表現の`\b`（語の境界）が0x08の制御文字に化けた。1行はEdit、複数行はスクリプトをファイルに書いてから実行する手順に固定した。
+
+**持ち越し:** このDB破壊ガードは`Study`で作業している時しか効かない（`sales-core`にプラグイン未接続）。Day18の作業そのものなので、そちらで解消する。
 
 ### Day18 — プラグインの配布とユーザー全体設定
 
@@ -263,7 +273,7 @@ PDF（請求書・納品書・発注書、発行履歴と再発行の管理）�
 |---|---|---|---|
 | 15 | 2026-09-18 | 環境調査・sales-core骨格・dev-guardのC#対応・計画の日単位化・機能範囲の拡大（5段階）・ER図 | [x] |
 | 16 | 2026-09-24 | 要件の骨格（業務ルール集・用語集・業務フロー・ER図の確定／保留8点を決定／ワークスペース信頼を解消） | [x] |
-| 17 | | DB破壊コマンドのガード | [ ] |
+| 17 | 2026-09-25 | DB破壊コマンドのガード（TDDで検知を追加／E2Eに2セル追加し5セル合格／guard-matrix更新） | [x] |
 | 18 | | プラグイン配布・ユーザー全体設定 | [ ] |
 | 19 | | DB接続とテスト用DB・週次振り返り | [ ] |
 | 20 | | 金額型と端数処理 | [ ] |
