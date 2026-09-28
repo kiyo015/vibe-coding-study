@@ -12,7 +12,7 @@ description: バイブコーディングの学習・実開発(Study と sales-co
 | リポジトリ | 役割 |
 |---|---|
 | `C:\Users\sakaguchi\Study` | **記録の置き場所**。日別フォルダの成果物と計画シート。GitHub: `kiyo015/vibe-coding-study` |
-| `C:\Users\sakaguchi\sales-core` | 基幹システムの製品コード。GitHub: `kiyo015/sales-core`（private） |
+| `C:\Users\sakaguchi\sales-core` | 基幹システムの製品コード。GitHub: `kiyo015/sales-core`（公開。学習のエビデンスとして公開している） |
 
 **記録は常にStudy側に作る**（製品コードと記録を分ける方針）。その日に`sales-core`を触っていれば、両方のリポジトリをコミットし、**同じタグ`day{N}`を両方に打つ**（成果物リンクをどちらのリポジトリでも固定するため）。Studyしか触っていない日は、Studyだけで完結してよい。
 

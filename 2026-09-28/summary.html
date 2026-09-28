@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day18 学習記録 — プラグインの配布とユーザー全体設定</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);
+  gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;
+  align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:2px;
+  font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+.mx-cell ul{margin:0}
+.mx-cell li{margin-bottom:5px}
+
+b,strong{font-weight:700}
+.em{color:var(--accent);font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons,.roadmap,.matrix{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day18 ／ 基幹システム開発</p>
+    <h1>プラグインの配布とユーザー全体設定 — 安全柵を製品リポジトリに届ける</h1>
+    <p class="lead">Day17で作ったDB破壊ガードは Study で作業している時しか効かなかった。dev-guard を絶対パスなしで sales-core に配布し、そこで実際にフックが発火することを対照実験つきで確かめた。個人の好みとチームの決まりも別のファイルに分けた。</p>
+    <div class="doc-meta"><span>2026-09-28</span><span>対象: dev-guard 1.2.0 ／ sales-core ／ ~/.claude/CLAUDE.md</span><span>段階1 / Day18</span></div>
+  </header>
+
+  <section>
+    <h2>エグゼクティブサマリー</h2>
+    <ol class="summary">
+      <li><b>dev-guard を GitHub からタグ固定で配布した。</b>既存の公開リポジトリをそのままマーケットプレイスにしたので、新しく作るものはゼロ。sales-core の設定に絶対パスは無い。</li>
+      <li><b>sales-core でフックが発火することを対照実験で示した。</b>E2Eに1セル足し、6セルすべて合格（$0.4515）。</li>
+      <li><b>マーケットプレイスの登録は名前ごとに1つで、開くたびに行き来する。</b>それでも読み込まれる版は両プロジェクトとも意図どおりだった。仮説の半分が外れた。</li>
+      <li><b>個人とチームを「揃っている必要があるか」で分けた。</b>会話の言語は個人、文書の言語はチーム。新しいセッションが両方を出典つきで読めていることを確認した。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>配布方式を決める</h2>
+    <p class="msg">既存の公開リポジトリ vibe-coding-study をそのまま GitHub のマーケットプレイスとして使い、バージョンはタグで固定した。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表1: sales-core から dev-guard を参照する方法の比較</caption>
+      <thead><tr><th>方法</th><th>評価</th></tr></thead>
+      <tbody>
+        <tr><td>Study の絶対パスを書く</td><td>他の人のPCには存在しない。完了条件に反する</td></tr>
+        <tr><td><code>"path": "../Study"</code></td><td>「隣に Study がある」配置に依存。メンバーは Study を持っていない</td></tr>
+        <tr><td>dev-guard を独立リポジトリに切り出す</td><td>テスト・E2E・健康診断の置き場所が分かれる。今は利点が無い</td></tr>
+        <tr class="total"><td>vibe-coding-study を GitHub のマーケットプレイスにする</td><td><code>marketplace.json</code> は既にあり公開済み。<b>追加で作るものがゼロ</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">Study で開発<small>作業中のコード</small></div>
+      <div class="chev on">タグを打つ<small>dev-guard-v1.2.0</small></div>
+      <div class="chev">GitHub<small>公開リポジトリ</small></div>
+      <div class="chev on">sales-core を信頼<small>未信頼なら黙って無視</small></div>
+      <div class="chev">自動で入る<small>手動インストール不要</small></div>
+    </div></div>
+    <p class="src">図表2: dev-guard が sales-core に届くまでの経路。更新は sales-core の <code>ref</code> を上げるPRで行う</p>
+
+    <p class="note"><b>タグで固定した理由。</b>Study のリポジトリは学習記録も含めて毎日更新される。最新版を指すと、プラグインの変更がレビューなしで製品リポジトリに流れ込む。安全柵こそ「いつの間にか変わった」を避けたい。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>読み込まれたか、発火するかを測る</h2>
+    <p class="msg">変更前の基準値を先に取り、変更後と比べた。さらに「読み込まれた」と「止める」は別なので、対照実験つきのE2Eで発火まで確かめた。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表3: sales-core で読み込まれたプラグイン（init イベントの plugins）</caption>
+      <thead><tr><th></th><th>読み込まれたもの</th></tr></thead>
+      <tbody>
+        <tr><td>変更前</td><td>ユーザー全体の5個（ponytail・superpowers・genshijin・dig・claude-code-setup）。<b>dev-guard は無い</b></td></tr>
+        <tr class="total"><td>変更後</td><td>上の5個 ＋ <b>dev-guard</b>（<code>cache/vibe-study/dev-guard/1.2.0</code>＝GitHubのタグ固定版）</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="tbl">
+    <table>
+      <caption>図表4: ガードの実効性テスト（2026-09-28の実行結果）</caption>
+      <thead><tr><th>経路 × ガード</th><th>ガードあり</th><th>ガードなし（対照）</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td>PowerShellツール × フック</td><td>blocked-by-guard</td><td>executed</td><td>pass</td></tr>
+        <tr><td>Bashツール × フック（DB破壊・Study）</td><td>blocked-by-guard</td><td>executed</td><td>pass</td></tr>
+        <tr><td><b>Bashツール × フック（DB破壊・sales-core・GitHub配布）</b></td><td>blocked-by-guard</td><td>executed</td><td><b>pass</b>（新規）</td></tr>
+        <tr><td>Readツール × denyルール（秘密情報・sales-core）</td><td>blocked-by-guard</td><td>executed</td><td>pass</td></tr>
+        <tr><td>サブエージェント × tools制限</td><td>blocked-by-guard</td><td>executed</td><td>pass</td></tr>
+        <tr><td>ヘッドレス × --tools "" ＋ --strict-mcp-config</td><td>blocked-by-guard</td><td>executed</td><td>pass</td></tr>
+        <tr class="total"><td>6セル ／ 1回の実行費用</td><td colspan="2">全セル合格・未検証セルは0</td><td class="num">$0.4515</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: <code>node checks/guard-e2e.js</code>。コードの変更は <code>probeToolHook</code> に作業フォルダの引数 <code>cwd</code> を1つ足しただけ</p>
+
+    <p class="note">対照ではガードを外して <code>dotnet ef database drop --force</code> を実際に実行させる。先に sales-core で <code>dotnet ef --version</code> と <code>dotnet tool list</code> を打ち、<code>dotnet-ef</code> が無い（ローカルツールも0件）ことを確認してからセルに入れた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>実測で見つけたこと — 登録は行き来する</h2>
+    <p class="msg">マーケットプレイスの登録はマシン全体で名前ごとに1つ。開いたプロジェクトが毎回上書きするが、読み込まれる版はどちらも意図どおりだった。</p>
+
+    <p>sales-core を開いた直後、<code>known_marketplaces.json</code> の <code>vibe-study</code> が directory から github に上書きされていた。「最後に開いたプロジェクト次第で読み込まれる版が変わるのではないか」と仮説を立て、交互に開いて確かめた。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表5: プロジェクトを交互に開いた結果</caption>
+      <thead><tr><th class="num">順番</th><th>開いたプロジェクト</th><th>登録ファイル</th><th>読み込まれた dev-guard</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>sales-core</td><td>github（タグ固定）</td><td>キャッシュの 1.2.0</td></tr>
+        <tr><td class="num">2</td><td>Study</td><td><b>directory に戻った</b></td><td>Study の作業中のコード</td></tr>
+        <tr><td class="num">3</td><td>sales-core</td><td><b>github に戻った</b></td><td>キャッシュの 1.2.0</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>仮説の前半（登録は行き来する）は当たり、<b>後半（読み込む版が狂う）は外れた</b>。Study は開発用に作業中のコードを、sales-core は安定したタグ固定版を読む。影響を受けるのは両方を持つプラグイン作者のマシンだけなので、直さずに限界として記録した。E2E の実行中にもこの行き来が何度も起きていて、その中で全セルが通ったことが裏付けになった。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>個人設定とチームの決まりを分ける</h2>
+    <p class="msg">置き場所は項目の種類ではなく「誰が書いても揃っている必要があるか」で決まる。</p>
+
+    <p>sales-core の CLAUDE.md は「個人の好みは <code>~/.claude/CLAUDE.md</code> に書く」と案内していたのに、<b>案内先のファイルが存在しなかった</b>。</p>
+
+    <div class="fig-scroll"><div class="matrix" style="--mx-label:150px;--mx-cols:2">
+      <div class="mx-h"></div>
+      <div class="mx-h">置いたもの</div>
+      <div class="mx-h">理由</div>
+
+      <div class="mx-label alt"><small>個人</small>~/.claude/CLAUDE.md</div>
+      <div class="mx-cell"><ul><li>応答は日本語</li><li>本人が行う操作（ログイン・Secrets登録・信頼の承認・公開設定の切り替え）</li></ul></div>
+      <div class="mx-cell">本人の好みと、本人との約束。どのプロジェクトでも同じ。全プロジェクトで常に読まれるので短く保った</div>
+
+      <div class="mx-label"><small>チーム</small>sales-core/CLAUDE.md</div>
+      <div class="mx-cell"><ul><li>文書・コメント・コミットメッセージは日本語、識別子は英語</li><li>用語は glossary.md に揃える</li><li>dev-guard の入手と更新の手順</li></ul></div>
+      <div class="mx-cell">メンバーごとに言語が違うと、リポジトリの文書が混ざる。<b>結果が他のメンバーに影響するものはチーム側</b></div>
+    </div></div>
+    <p class="src">図表6: 個人とチームの分け方。個人設定には「リポジトリに言語の決まりがあれば、そちらに従う」と書き、チームの決まりを上書きしないようにした</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表7: 完了条件の検証</caption>
+      <thead><tr><th>確認</th><th>方法</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>絶対パスが無い</td><td>settings.json をドライブ文字・<code>/c/</code>・<code>Users</code> で検索</td><td>なし</td></tr>
+        <tr><td>個人の好みが残っていない</td><td>CLAUDE.md を「応答・口調・敬語・ログイン・信頼の承認」で検索</td><td>案内文1行のみ</td></tr>
+        <tr class="total"><td>両方の指示が読まれている</td><td><code>--tools ""</code>（ファイルを読めない状態）で新しいセッションに質問</td><td>出典のファイル名つきで両方とも正答</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>つまずきと気づき</h2>
+    <p class="msg">書き換えの結果は、目で見るまで信用しない。公開リポジトリの前提は、実測で安全を確かめた上で決める。</p>
+
+    <h3>見出しを二重にした</h3>
+    <p><code>guard-matrix.md</code> の更新で、Edit の置換範囲に見出しを含めていないのに置換後の文字列に見出しを書き、「次に自動化するセル」が2回入った。grep で出現位置を数えて気付き、「想定した並びかどうか」を確認してから消すスクリプトで直した。</p>
+
+    <h3>sales-core は意図的に公開している</h3>
+    <p>PUBLIC であることを報告したところ、学習のエビデンスを公開するため意図的に公開しているとの回答だった。計画シートと daily-closeout スキルの「private」を直し（3か所）、「非公開化を提案しない。その代わり秘密情報は絶対にコミットしない」を記憶に保存した。</p>
+
+    <h3>ローカルDBの接続文字列は公開しても入られないか</h3>
+    <div class="tbl">
+    <table>
+      <caption>図表8: PostgreSQL への外部からの接続経路（実測）</caption>
+      <thead><tr><th>確認したこと</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>待ち受けアドレス（netstat）</td><td><code>0.0.0.0:5432</code>：全インターフェースで待ち受けている</td></tr>
+        <tr><td><code>pg_hba.conf</code></td><td><code>127.0.0.1/32</code> と <code>::1/128</code> だけ許可：<b>他のPCからは認証の前に拒否</b></td></tr>
+        <tr><td>ファイアウォール</td><td>5432番の受信許可ルールなし、ネットワークは「パブリック」：<b>外からの接続は届かない</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>外からの接続は2段階で止まる。条件は、パスワードを他で使い回していないことと、<code>postgres</code>（スーパーユーザー）で接続しないこと。それでも接続文字列は user-secrets に置く。パスワードやポートは開発者ごとに違い、1つをコミットしても他のメンバーの環境では動かないため。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>次のアクション</h2>
+    <p class="msg">Day19はDB接続。専用ロールを作り、接続文字列を user-secrets に置く最初の本番になる。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表9: Day19の作業と完了条件</caption>
+      <thead><tr><th>作業</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>接続の準備</td><td>専用ロール <code>salescore_dev</code> を作り、接続文字列を user-secrets に置く（<code>postgres</code> では接続しない）</td></tr>
+        <tr><td>EF Core の導入</td><td>Npgsql を入れ、空のマイグレーションを1本通す</td></tr>
+        <tr><td>テスト用DB</td><td>テスト専用DBを作り、結合テストがトランザクションのロールバックで独立することを実証する</td></tr>
+        <tr><td>週次振り返り</td><td>1週目の振り返り。未完了を2週目の先頭に書き写す</td></tr>
+        <tr class="total"><td><b>完了条件</b></td><td>結合テストを2回連続で実行しても、DBの状態が積み上がらない</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v">6<small>/6</small></div><div class="l">E2Eのセル合格</div></div>
+      <div class="kpi"><div class="v">0<small>件</small></div><div class="l">sales-core設定の絶対パス</div></div>
+      <div class="kpi"><div class="v">$0.67</div><div class="l">今日の費用（E2E $0.4515 を含む）</div></div>
+    </div>
+
+    <h3>成果物</h3>
+    <p><b>sales-core（製品コード）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day18/.claude/settings.json">.claude/settings.json</a> — dev-guard を GitHub からタグ固定で取得する設定</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day18/CLAUDE.md">CLAUDE.md</a> — 書き方の決まり・安全柵の入手と更新・DB破壊ガードの行を更新</li>
+    </ul>
+    <p><b>Study（学習記録・E2E）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day18/checks/guard-e2e.js">checks/guard-e2e.js</a> — sales-core・GitHub配布のセルを追加</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day18/checks/guard-matrix.md">checks/guard-matrix.md</a> — sales-core の行と、登録が行き来する件を記録</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day18/study_plan_next_month.md">study_plan_next_month.md</a> — Day18 の実施内容と実測値、公開の記述を修正</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day18/.claude/skills/daily-closeout/SKILL.md">daily-closeout/SKILL.md</a> — 公開の記述を修正</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day18/2026-09-28/summary.md">2026-09-28/summary.md</a> — この記録のMarkdown版</li>
+    </ul>
+    <p><b>リポジトリの外</b> — <code>~/.claude/CLAUDE.md</code>（個人設定・新規。コミットしない）、タグ <code>dev-guard-v1.2.0</code>（sales-core が参照する版）</p>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day18 学習記録 — プラグインの配布とユーザー全体設定</span>
+    <span>2026-09-28 ／ dev-guard 1.2.0 ／ タグ day18</span>
+  </footer>
+
+</div>
+</body>
+</html>
