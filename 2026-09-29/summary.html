@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day19 学習記録 — DB接続とテスト用DBの実証</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);
+  gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;
+  align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:2px;
+  font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+.mx-cell ul{margin:0}
+.mx-cell li{margin-bottom:5px}
+
+b,strong{font-weight:700}
+.em{color:var(--accent);font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons,.roadmap,.matrix{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day19 ／ 基幹システム開発（1週目の最終日）</p>
+    <h1>DB接続とテスト用DBの実証 — 積み上がらない理由を、対照実験で示す</h1>
+    <p class="lead">EF Core を入れて空のマイグレーションを開発用DBに通し、結合テストがトランザクションのロールバックで独立することを示した。その前に、ツールを入れることで安全の前提が崩れる箇所を見つけ、先に直した。1週目の振り返りもこの日に行った。</p>
+    <div class="doc-meta"><span>2026-09-29</span><span>対象: sales-core ／ PostgreSQL 18 ／ EF Core 8</span><span>段階1 / Day19</span></div>
+  </header>
+
+  <section>
+    <h2>エグゼクティブサマリー</h2>
+    <ol class="summary">
+      <li><b>結合テストは3回続けて実行しても成功し、状態が積み上がらない。</b>トランザクションを外した版では2回目に <code>Expected: 0 / Actual: 1</code> で落ちることを先に見たので、積み上がらない理由がロールバックだと言える。</li>
+      <li><b>ツールを入れる前に、対照実験の安全の前提が崩れることに気付いて直した。</b>dotnet-ef を入れると、ガードを外した対照実験が本当に開発用DBを消せた。E2Eの前後で開発用DBが無事なことも実測した。</li>
+      <li><b>パスワードを一度も見ずに、接続が正しいことを確かめた。</b>ロールとDBの作成、接続文字列の設定は本人が行い、こちらはマイグレーションの適用が通ることで確認した。</li>
+      <li><b>1週目は予定の作業をすべて完了し、持ち越しは無い。</b>ガードのテストは46件から68件、実効性テストは3セルから6セルになった。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>安全の前提が崩れる箇所を、先に直す</h2>
+    <p class="msg">対照実験の安全の根拠は「dotnet-ef が入っていない」という環境の事実だった。今日ツールを入れると、その根拠が崩れる。</p>
+
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">Day17<small>根拠：dotnet-ef が無い</small></div>
+      <div class="chev">Day19<small>dotnet-ef と DbContext を入れる</small></div>
+      <div class="chev">根拠が崩れる<small>対照実験で本当に消える</small></div>
+      <div class="chev on">根拠をコマンド側へ<small>--dry-run ＋ 存在しない指定</small></div>
+      <div class="chev on">前後で実測<small>開発用DBは無事</small></div>
+    </div></div>
+    <p class="src">図表1: 安全の根拠を「環境」から「コマンド自体」に移した流れ。ツールを入れる前に直した</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表2: 対照実験で実行させるコマンド</caption>
+      <thead><tr><th></th><th>コマンド</th><th>安全の根拠</th></tr></thead>
+      <tbody>
+        <tr><td>Day17〜18</td><td><code>dotnet ef database drop --force</code></td><td>環境に dotnet-ef が無い（ツールを入れると崩れる）</td></tr>
+        <tr class="total"><td>Day19〜</td><td><code>dotnet ef database drop --dry-run --project guard-probe-does-not-exist-7f3a</code></td><td>消さずに表示するだけ ＋ DbContext が見つからない。<b>環境に頼らない</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="tbl">
+    <table>
+      <caption>図表3: guard-e2e の実行前後の開発用DB</caption>
+      <thead><tr><th>時点</th><th>マイグレーション</th></tr></thead>
+      <tbody>
+        <tr><td>実行前</td><td><code>20260929021329_Initial</code>（適用済み）</td></tr>
+        <tr><td>実行後</td><td><code>20260929021329_Initial</code>（<b>適用済みのまま</b>）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">E2Eは6セルすべて合格（$0.5336）。sales-core のセルでは、ガードを外した対照実行で dotnet-ef が実際に動いた。直していなければ、ここで開発用DBが消えていた</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>EF Core と DB 接続の準備</h2>
+    <p class="msg">ツールはリポジトリに固定し、パスワードは本人だけが扱う。接続できたかは、パスワードを見ずにマイグレーションの適用で確かめた。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表4: 導入したもの</caption>
+      <thead><tr><th>パッケージ・ツール</th><th>版</th><th>場所</th><th>理由</th></tr></thead>
+      <tbody>
+        <tr><td>Npgsql.EntityFrameworkCore.PostgreSQL</td><td>8.0.11</td><td>Infrastructure</td><td>DB との接続は Infrastructure の責務</td></tr>
+        <tr><td>Microsoft.EntityFrameworkCore.Design</td><td>8.0.31</td><td>Api</td><td><code>dotnet ef</code> がスタートアップ側に要求する</td></tr>
+        <tr><td>dotnet-ef（ツール）</td><td>8.0.31</td><td><code>.config/dotnet-tools.json</code></td><td>ローカルツール。<code>dotnet tool restore</code> で全員が同じ版</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="fig-scroll"><div class="matrix" style="--mx-label:130px;--mx-cols:2">
+      <div class="mx-h"></div>
+      <div class="mx-h">やったこと</div>
+      <div class="mx-h">理由</div>
+
+      <div class="mx-label alt"><small>本人</small>DBの準備</div>
+      <div class="mx-cell"><ul><li>専用ロール <code>salescore_dev</code> と、開発用・テスト用の2つのDBを作成</li><li>パスワードを設定し、接続文字列を user-secrets に2つ入れる</li></ul></div>
+      <div class="mx-cell">スーパーユーザーで接続しない。パスワードはこちらが見ない（<code>dotnet user-secrets list</code> も実行しない）</div>
+
+      <div class="mx-label"><small>Claude</small>マイグレーション</div>
+      <div class="mx-cell"><ul><li>空のマイグレーション <code>Initial</code> を作る</li><li><b>SQL を確認してから</b>開発用DBに適用する</li></ul></div>
+      <div class="mx-cell">作るのは履歴用の表1つだけと確認した。適用が通ったことで、接続文字列が正しいことも分かった</div>
+    </div></div>
+    <p class="src">図表5: 役割の分担。API は接続文字列が無ければ「CLAUDE.md の『DBの準備』に従って」と案内して止まる</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>結合テストが開発用DBを触らないようにする</h2>
+    <p class="msg">接続先のDB名が _test で終わらなければ、テストは始まる前に止まる。テストを先に書き、落ちることを見てから実装した。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表6: 安全装置のテスト（RED で拒否の4件が落ち、GREEN で5件すべて成功）</caption>
+      <thead><tr><th>接続先のDB名</th><th>期待</th><th>ねらい</th></tr></thead>
+      <tbody>
+        <tr><td><code>salescore_dev</code></td><td>拒否</td><td>開発用DB</td></tr>
+        <tr><td><code>salescore</code></td><td>拒否</td><td>接尾辞なし</td></tr>
+        <tr><td><code>salescore_test_backup</code></td><td>拒否</td><td><code>_test</code> を<b>含む</b>が末尾ではない。「含むか」で判定すると通ってしまう</td></tr>
+        <tr><td>（指定なし）</td><td>拒否</td><td>DB名が無い</td></tr>
+        <tr><td><code>salescore_test</code></td><td>受け入れ</td><td>テスト用DB</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p class="note"><b>読み返して見つけた落とし穴。</b><code>AddUserSecrets(assembly, optional: true)</code> は、テストのアセンブリに user-secrets の ID が無いと<b>黙って何も読まない</b>。すると「接続文字列が設定されていない」という原因と違うエラーが出る。テストプロジェクトに API と同じ ID を付け、属性が実際に生成されたことをビルド結果で確かめた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>ロールバックによる独立を、対照実験で示す</h2>
+    <p class="msg">検証用の表をトランザクションの外に作り、「開始時点で0行」を確かめる。2回続けて通ることが、状態が積み上がらないことの証拠になる。</p>
+
+    <p>各テストは開始時にトランザクションを始め、終わったらコミットせずに捨てる。表をトランザクションの<b>中</b>で作ると、ロールバックで表ごと消えて、戻し損ねても何も検出できない。<b>外</b>に作っておけば、戻し損ねた行が残り、次の実行で失敗する。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表7: 結合テストを続けて実行した結果</caption>
+      <thead><tr><th>回</th><th>トランザクションなし（RED・対照）</th><th>トランザクションあり（GREEN）</th></tr></thead>
+      <tbody>
+        <tr><td>1回目</td><td>成功</td><td>成功</td></tr>
+        <tr><td>2回目</td><td><b>失敗：<code>Expected: 0 / Actual: 1</code></b></td><td>成功</td></tr>
+        <tr><td>3回目</td><td>—</td><td>成功</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: <code>dotnet test tests/SalesCore.Integration.Tests</code>（2026-09-29）。RED で積み上がりを検出できることを先に見てから GREEN にした</p>
+
+    <h3>RED で残った1行の後始末</h3>
+    <div class="fig-scroll"><div class="matrix" style="--mx-label:150px;--mx-cols:1">
+      <div class="mx-h"></div>
+      <div class="mx-h">判断</div>
+
+      <div class="mx-label alt">psql で消す</div>
+      <div class="mx-cell">パスワードが要る。知らないし、知るべきでもない</div>
+
+      <div class="mx-label alt">TRUNCATE</div>
+      <div class="mx-cell"><b>自分のガードが止める</b></div>
+
+      <div class="mx-label">一時的なテストで DELETE</div>
+      <div class="mx-cell">user-secrets の接続を使う。消した行数がちょうど1であることも確かめ、実行後にファイルを削除した</div>
+    </div></div>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>1週目（Day15〜19）の振り返り</h2>
+    <p class="msg">予定の作業はすべて完了した。繰り返した失敗は3つで、そのうち「安全の前提が環境の変化で崩れる」は今日見つけた新しい教訓。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表8: 1週目の始めと終わり</caption>
+      <thead><tr><th>指標</th><th>始め</th><th>終わり</th></tr></thead>
+      <tbody>
+        <tr><td>ガードの単体テスト</td><td>46件</td><td>68件</td></tr>
+        <tr><td>ガードの実効性テスト（対照実験つき）</td><td>3セル</td><td>6セル（未検証セル0）</td></tr>
+        <tr><td>sales-core のテスト</td><td>空のテストのみ</td><td>Domain 1件・結合 6件</td></tr>
+        <tr><td>業務の決めごと</td><td>ER図の保留5点</td><td>業務ルール集で8点＋派生1点</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="fig-scroll"><div class="matrix" style="--mx-label:150px;--mx-cols:2">
+      <div class="mx-h"></div>
+      <div class="mx-h">起きたこと</div>
+      <div class="mx-h">いまの対策</div>
+
+      <div class="mx-label alt"><small>Day15〜17</small>バックスラッシュの消失</div>
+      <div class="mx-cell">シェル経由の書き換えで <code>\b</code> が制御文字に化けた</div>
+      <div class="mx-cell">Day18 から Write・Edit ツールで書く。再発なし</div>
+
+      <div class="mx-label alt"><small>Day16・17</small>設定したつもり</div>
+      <div class="mx-cell">未信頼で許可ルールが無視、ガードが未接続</div>
+      <div class="mx-cell">どちらも実測で発見。基準値と対照実験で確かめる</div>
+
+      <div class="mx-label"><small>Day19</small>安全の前提の崩れ</div>
+      <div class="mx-cell">ツールを入れて、対照実験が本当にDBを消せる状態に</div>
+      <div class="mx-cell"><b>環境を変える時に、安全の根拠が何に依存しているかを見直す</b></div>
+    </div></div>
+    <p class="src">図表9: 1週目に繰り返した失敗。見つかった課題（DB破壊ガードの抜けなど）は、2週目の先頭に扱う日を書いた</p>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>次のアクション</h2>
+    <p class="msg">2週目は業務ルールの中核。Day20 は Money 型と端数処理で、丸めの実装を1か所だけにする。</p>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v">3<small>/3</small></div><div class="l">結合テストの連続実行</div></div>
+      <div class="kpi"><div class="v">6<small>/6</small></div><div class="l">E2Eのセル合格</div></div>
+      <div class="kpi"><div class="v">$0.53</div><div class="l">今日の費用（E2Eのみ）</div></div>
+    </div>
+
+    <div class="tbl">
+    <table>
+      <caption>図表10: Day20の作業と完了条件</caption>
+      <thead><tr><th>作業</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>Money 型</td><td><code>decimal</code> のみ。端数処理は業務ルール集の方式（四捨五入）に従い、<code>Money</code> の中だけで行う</td></tr>
+        <tr><td>境界値のテスト</td><td>ちょうど0.5円などの境界</td></tr>
+        <tr class="total"><td><b>完了条件</b></td><td>端数処理のテストが境界値を含めて通る。丸めの実装が1か所にしかない</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>成果物</h3>
+    <p><b>sales-core（製品コード）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day19/src/SalesCore.Infrastructure/Persistence/SalesCoreDbContext.cs">SalesCoreDbContext.cs</a> — 空の DbContext</li>
+      <li><a href="https://github.com/kiyo015/sales-core/tree/day19/src/SalesCore.Infrastructure/Persistence/Migrations">Persistence/Migrations/</a> — 空のマイグレーション <code>Initial</code></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day19/src/SalesCore.Api/Program.cs">Program.cs</a> — 接続文字列の読み込みと、無いときの案内</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day19/tests/SalesCore.Integration.Tests/TestDatabase.cs">TestDatabase.cs</a> — 接続文字列の読み込みと <code>_test</code> の安全装置</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day19/tests/SalesCore.Integration.Tests/DatabaseTest.cs">DatabaseTest.cs</a> — テストごとのトランザクションとロールバック</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day19/tests/SalesCore.Integration.Tests/TransactionIsolationTests.cs">TransactionIsolationTests.cs</a> — 状態が積み上がらないことのテスト</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day19/.config/dotnet-tools.json">.config/dotnet-tools.json</a> — dotnet-ef 8.0.31</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day19/CLAUDE.md">CLAUDE.md</a> — DBの準備・マイグレーションのコマンド・結合テストのきまり</li>
+    </ul>
+    <p><b>Study（学習記録・E2E）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day19/checks/guard-e2e.js">checks/guard-e2e.js</a> — 対照実験のコマンドを2重に安全な形へ</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day19/plugins/dev-guard/hooks/pre-bash-guard.test.js">pre-bash-guard.test.js</a> — E2E のコマンドが止まり続けることの回帰テスト（68件）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day19/checks/guard-matrix.md">checks/guard-matrix.md</a> — 「安全の根拠は環境が変わると崩れる」</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day19/study_plan_next_month.md">study_plan_next_month.md</a> — Day19 の実施内容、1週目の振り返り</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day19/2026-09-29/summary.md">2026-09-29/summary.md</a> — この記録のMarkdown版</li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day19 学習記録 — DB接続とテスト用DBの実証、週次振り返り</span>
+    <span>2026-09-29 ／ EF Core 8.0.31 ／ タグ day19</span>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -68,6 +68,8 @@ const MUST_BLOCK = [
   'dotnet ef migrations remove',
   'dotnet ef migrations remove --project src/SalesCore.Infrastructure --force',
   'dotnet build && dotnet ef database drop',
+  // guard-e2e の対照実験が使う形(Day19)。これが止まらなくなるとE2Eの前提が崩れる
+  'dotnet ef database drop --dry-run --project guard-probe-does-not-exist-7f3a',
   'bash -c "dotnet ef database drop"',
   // Day17: SQLのDROP・TRUNCATE(psqlなどのDBクライアント経由)
   'psql -c "DROP TABLE sales_orders"',
