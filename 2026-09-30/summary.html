@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day20 学習記録 — 金額型と端数処理</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);
+  gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;
+  align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:2px;
+  font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+.mx-cell ul{margin:0}
+.mx-cell li{margin-bottom:5px}
+
+b,strong{font-weight:700}
+.em{color:var(--accent);font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons,.roadmap,.matrix{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day20 ／ 基幹システム開発（2週目の初日）</p>
+    <h1>金額型と端数処理 — テストが誤った丸めを捕まえることを、誤りを入れて確かめる</h1>
+    <p class="lead">Money 型を TDD で作り、2種類のありがちな誤った丸めで各テストの役割を確かめた。途中で Smart App Control による DLL のブロックを切り分けた。後半は按分と返品の端数の決めごとを加え、返品を含む金額の決め方を1万件の検証で選び直した。</p>
+    <div class="doc-meta"><span>2026-09-30</span><span>対象: sales-core ／ SalesCore.Domain</span><span>段階1 / Day20</span></div>
+  </header>
+
+  <section>
+    <h2>エグゼクティブサマリー</h2>
+    <ol class="summary">
+      <li><b>丸めは Money.Round の1か所だけになり、境界値を含む23件のテストが通った。</b>丸め方は四捨五入（0.5は0から遠い側）。.NET の既定の銀行丸めは使わない。</li>
+      <li><b>テストは2種類の誤った丸めを捕まえる。</b>銀行丸めは7件、「0.5を足して切り捨て」は4件が失敗した。1.5のテストだけでは銀行丸めを見逃すことも分かった。</li>
+      <li><b>予想外の失敗は Smart App Control による DLL のブロックだった。</b>ハッシュごとに1つずつ切り分け、設定だけを変えて同じ DLL で再実行し、原因を確定した。</li>
+      <li><b>返品を含む金額は「累計差分」で決めた。</b>最後の出荷で差額調整する方式は1万件中10件で1円ずれ、累計差分は0件。式の形から必ず一致する。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>落とし穴：.NET の既定は四捨五入ではない</h2>
+    <p class="msg">Math.Round と decimal.Round は、丸め方を指定しないと銀行丸めになる。業務ルールの四捨五入とは、ちょうど .5 のときに結果が変わる。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表1: 銀行丸めと四捨五入</caption>
+      <thead><tr><th class="num">値</th><th class="num">銀行丸め（.NETの既定）</th><th class="num">四捨五入（業務ルール）</th><th>備考</th></tr></thead>
+      <tbody>
+        <tr><td class="num">0.5</td><td class="num">0</td><td class="num">1</td><td>結果が違う</td></tr>
+        <tr><td class="num">1.5</td><td class="num">2</td><td class="num">2</td><td><b>同じ結果。このテストだけでは誤りを見逃す</b></td></tr>
+        <tr><td class="num">2.5</td><td class="num">2</td><td class="num">3</td><td>結果が違う</td></tr>
+        <tr><td class="num">-2.5</td><td class="num">-2</td><td class="num">-3</td><td>0から遠い側に寄せると正負で対称</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">赤伝は元の伝票の符号を反転したもの。丸めが正負で対称（<code>Round(-x) == -Round(x)</code>）でなければ、赤伝と黒伝が打ち消し合わず1円残る。そこで <code>MidpointRounding.AwayFromZero</code> を明示した。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>テストが誤りを捕まえることを、誤りを入れて確かめる</h2>
+    <p class="msg">同じ23件のテストに対して、中身の違う4つの実装を流した。2種類の誤りを、それぞれ別のテストが捕まえている。</p>
+
+    <figure>
+      <figcaption>図表2: 実装ごとの失敗件数（23件中）</figcaption>
+      <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="実装ごとの失敗件数の横棒グラフ">
+        <line x1="210" y1="12" x2="210" y2="188" stroke="#a8adb5" stroke-width="1"/>
+        <text x="200" y="36" text-anchor="end" font-size="12.5" fill="#555555">空の実装（RED）</text>
+        <rect x="210" y="22" width="360" height="22" fill="#c9ccd1"/>
+        <text x="580" y="38" font-size="12.5" fill="#555555">12件</text>
+
+        <text x="200" y="80" text-anchor="end" font-size="12.5" fill="#555555">銀行丸め（対照①）</text>
+        <rect x="210" y="66" width="210" height="22" fill="#c9ccd1"/>
+        <text x="430" y="82" font-size="12.5" fill="#555555">7件　ちょうど .5 で失敗</text>
+
+        <text x="200" y="124" text-anchor="end" font-size="12.5" fill="#555555">Floor(x+0.5)（対照②）</text>
+        <rect x="210" y="110" width="120" height="22" fill="#c9ccd1"/>
+        <text x="340" y="126" font-size="12.5" fill="#555555">4件　負の数と対称性で失敗</text>
+
+        <text x="200" y="168" text-anchor="end" font-size="12.5" fill="#1a1a1a" font-weight="700">正しい実装（GREEN）</text>
+        <rect x="210" y="154" width="3" height="22" fill="#173f66"/>
+        <text x="222" y="170" font-size="12.5" fill="#173f66" font-weight="700">0件（23件すべて成功）</text>
+      </svg>
+      <p class="src">出所: <code>dotnet test tests/SalesCore.Domain.Tests</code>（2026-09-30）。対照②は Smart App Control に止められない DLL（<code>Math.Floor</code> 版）で取得</p>
+    </figure>
+
+    <div class="fig-scroll"><div class="matrix" style="--mx-label:150px;--mx-cols:2">
+      <div class="mx-h"></div>
+      <div class="mx-h">捕まえるテスト</div>
+      <div class="mx-h">捕まえられないテスト</div>
+
+      <div class="mx-label alt"><small>対照①</small>銀行丸め</div>
+      <div class="mx-cell">0.5・2.5・100.5 など、切り捨てた側が偶数になる .5</div>
+      <div class="mx-cell">1.5（結果が同じ）、正負の対称性（銀行丸めも対称）</div>
+
+      <div class="mx-label alt"><small>対照②</small>Floor(x+0.5)</div>
+      <div class="mx-cell">負の数（-2.5 → -2）、正負の対称性（黒3円に赤-2円で1円残る）</div>
+      <div class="mx-cell">正の .5（Floor 版でも切り上がる）</div>
+    </div></div>
+    <p class="src">図表3: 空の実装でも通っていた対称性のテストは、対照②で初めて役割が分かった</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>予想外の失敗 — Smart App Control を切り分ける</h2>
+    <p class="msg">Floor 版で、Round を使わないテストまで落ちた。結果を信じずに失敗の中身を読むと、テストではなく DLL の読み込みが止められていた。</p>
+
+    <p class="note"><code>System.IO.FileLoadException : ...SalesCore.Domain.dll. アプリケーション制御ポリシーによってこのファイルがブロックされました。 (0x800711C7)</code></p>
+
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">失敗の中身を読む<small>DLL の読み込みで停止</small></div>
+      <div class="chev">証拠を集める<small>SAC=強制、ログに3033・3077</small></div>
+      <div class="chev">仮説<small>DLL の中身ごとに判定</small></div>
+      <div class="chev">1つずつ変える<small>ハッシュと結果を対応づけ</small></div>
+      <div class="chev on">設定だけ変える<small>同じ DLL で成功＝確定</small></div>
+    </div></div>
+
+    <div class="tbl">
+    <table>
+      <caption>図表4: DLL のハッシュと結果（C# は決定的ビルドなので、同じソースなら同じハッシュ）</caption>
+      <thead><tr><th>試したこと</th><th>ハッシュ</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>Floor 版（<code>decimal.Floor</code>）</td><td><code>b928…</code></td><td>ブロック</td></tr>
+        <tr><td>再ビルドせずに再実行 ×2</td><td><code>b928…</code></td><td>ブロック</td></tr>
+        <tr><td>正しい版に戻す</td><td><code>80a7…</code></td><td>通る（最初に通ったものと同じ）</td></tr>
+        <tr><td>Floor 版にもう一度</td><td><code>b928…</code></td><td>ブロック</td></tr>
+        <tr><td>書き方だけ変える（<code>Math.Floor</code>）</td><td><code>65a2…</code></td><td>通る</td></tr>
+        <tr class="total"><td>本人が Smart App Control をオフ → 止められていた結合テストの DLL を再ビルドせず再実行</td><td><code>0544…</code></td><td>結合6件・Domain23件すべて成功</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">Microsoft の説明: 署名の無いアプリをクラウドで安全と判断できなければブロックし、個別に除外する方法は無い。セキュリティ設定なので、変更は本人が行った</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>按分と返品の決めごと</h2>
+    <p class="msg">割り振った金額の合計は、元の金額と1円もずれずに一致させる。返品を含めると、最後の出荷だけ差額調整する方式では足りなかった。</p>
+
+    <div class="fig-scroll"><div class="matrix" style="--mx-label:150px;--mx-cols:1">
+      <div class="mx-h"></div>
+      <div class="mx-h">決めたこと（2026-09-30）</div>
+
+      <div class="mx-label">按分の端数</div>
+      <div class="mx-cell">比率で割って四捨五入し、合計との差は<b>金額が最大のもの</b>（同額なら先頭）に寄せる。1,000円の3等分は 334・333・333円</div>
+
+      <div class="mx-label">伝票全体への値引き</div>
+      <div class="mx-cell"><b>扱わない</b>。値引きは明細単位なので、税率ごとの按分は要らない</div>
+
+      <div class="mx-label">分納・返品の金額</div>
+      <div class="mx-cell"><b>累計差分</b>：動いた後の累計数量×単価の四捨五入 − 動く前の累計数量×単価の四捨五入。分割入荷と仕入の返品も同じ</div>
+    </div></div>
+
+    <figure>
+      <figcaption>図表5: ランダムな出荷・返品の並び1万件で、売上合計が「手元の数量×単価の四捨五入」とずれた件数</figcaption>
+      <svg viewBox="0 0 700 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="方式ごとの不一致件数">
+        <line x1="260" y1="12" x2="260" y2="138" stroke="#a8adb5" stroke-width="1"/>
+        <text x="250" y="36" text-anchor="end" font-size="12.5" fill="#555555">A: 最後の出荷で差額調整</text>
+        <rect x="260" y="22" width="300" height="22" fill="#c9ccd1"/>
+        <text x="570" y="38" font-size="12.5" fill="#555555">10件</text>
+
+        <text x="250" y="80" text-anchor="end" font-size="12.5" fill="#555555">C: A＋全部返品は残額を戻す</text>
+        <rect x="260" y="66" width="300" height="22" fill="#c9ccd1"/>
+        <text x="570" y="82" font-size="12.5" fill="#555555">10件</text>
+
+        <text x="250" y="124" text-anchor="end" font-size="12.5" fill="#1a1a1a" font-weight="700">B: 累計差分（採用）</text>
+        <rect x="260" y="110" width="3" height="22" fill="#173f66"/>
+        <text x="272" y="126" font-size="12.5" fill="#173f66" font-weight="700">0件（式の形から必ず一致）</text>
+      </svg>
+      <p class="src">出所: <code>2026-09-30/return-allocation.js</code>（単価・受注数・並びをランダムに生成、金額は銭の整数で計算）</p>
+    </figure>
+
+    <div class="tbl">
+    <table>
+      <caption>図表6: 累計差分の例（単価 33.33円 × 受注3個）</caption>
+      <thead><tr><th>動き</th><th class="num">動いた後の累計</th><th>計算</th><th class="num">金額</th></tr></thead>
+      <tbody>
+        <tr><td>1個出荷</td><td class="num">1個</td><td>33 − 0</td><td class="num">33円</td></tr>
+        <tr><td>1個出荷</td><td class="num">2個</td><td>67 − 33</td><td class="num"><b>34円</b></td></tr>
+        <tr><td>1個出荷</td><td class="num">3個</td><td>100 − 67</td><td class="num">33円</td></tr>
+        <tr><td>1個返品</td><td class="num">2個</td><td>67 − 100</td><td class="num">-33円</td></tr>
+        <tr><td>1個返品</td><td class="num">1個</td><td>33 − 67</td><td class="num"><b>-34円</b></td></tr>
+        <tr><td>1個返品</td><td class="num">0個</td><td>0 − 33</td><td class="num">-33円</td></tr>
+        <tr class="total"><td colspan="3">全部出荷すると 100円（受注明細の金額）、全部返品すると 0円</td><td class="num">0円</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">すべてを足すと途中の項が打ち消し合うので、合計はどの時点でも必ず一致する。代わりに1回分が単価×数量と1円違うことがある（34円）。方式Cのように特別な場合を足す直し方では、一部を返品した状態のずれが残った。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>今日学んだこと</h2>
+    <p class="msg">境界値もテストも決めごとも、「誤りがあったら結果が変わるか」で確かめる。</p>
+    <ul>
+      <li><b>境界値は「誤りが結果を変える値」を選ぶ。</b>1.5は境界値に見えるが、銀行丸めを捕まえられない</li>
+      <li><b>テストの価値は、誤った実装を入れて確かめる。</b>空の実装で通ったテストも、誤りを入れて初めて役割が分かった</li>
+      <li><b>失敗したら、まず失敗の中身を読む。</b>落ちたのはテストではなく DLL の読み込みだった</li>
+      <li><b>特別な場合を足す直し方は、見落とした場合で漏れる。</b>合計が必ず一致する形の式に変えると、根本から消える</li>
+      <li><b>質問には計算で答える。</b>1万件に10件という頻度のずれは、手で数例試すだけでは見つからない</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>次のアクション</h2>
+    <p class="msg">Day21 は消費税。税率ごとに1回だけ四捨五入し、ランダムな明細で請求額が常に一致することを確かめる。</p>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v">23<small>/23</small></div><div class="l">Money のテスト</div></div>
+      <div class="kpi"><div class="v">1<small>か所</small></div><div class="l">丸めを行う場所</div></div>
+      <div class="kpi"><div class="v">0<small>件</small></div><div class="l">累計差分の不一致（1万件中）</div></div>
+    </div>
+
+    <div class="tbl">
+    <table>
+      <caption>図表7: この先の予定</caption>
+      <thead><tr><th>日</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>Day21</td><td>消費税。税率ごとに1回だけ四捨五入、軽減税率8%の混在。伝票値引きは扱わないので按分は無い</td></tr>
+        <tr><td>Day22</td><td>受注の状態遷移と分納。<b>分納・返品の累計差分</b>を実装し、ランダムな並びで合計が常に一致することを C# のテストで確かめる</td></tr>
+        <tr><td>Day23</td><td>アナライザで、Money 以外での丸めをビルドエラーにする</td></tr>
+        <tr class="total"><td>Day21の完了条件</td><td>税率混在・端数の出る金額で、請求書単位の税額が合う</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>成果物</h3>
+    <p><b>sales-core（製品コード）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day20/src/SalesCore.Domain/Money.cs">Money.cs</a> — 円単位の金額と四捨五入（丸めはここだけ）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day20/tests/SalesCore.Domain.Tests/MoneyTests.cs">MoneyTests.cs</a> — 23件（境界値・対称性・明細金額）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day20/docs/domain/business-rules.md">business-rules.md</a> — 丸めの方式、分納・返品と按分の決めごと</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day20/CLAUDE.md">CLAUDE.md</a> — Smart App Control によるブロックへの注意</li>
+    </ul>
+    <p><b>Study（学習記録）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day20/2026-09-30/return-allocation.js">2026-09-30/return-allocation.js</a> — 分納・返品の方式を比べた検証（1万件）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day20/study_plan_next_month.md">study_plan_next_month.md</a> — Day20 の実測値、Day22 に累計差分を追加</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day20/2026-09-30/summary.md">2026-09-30/summary.md</a> — この記録のMarkdown版</li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day20 学習記録 — 金額型と端数処理</span>
+    <span>2026-09-30 ／ Money.Round（AwayFromZero） ／ タグ day20</span>
+  </footer>
+
+</div>
+</body>
+</html>
