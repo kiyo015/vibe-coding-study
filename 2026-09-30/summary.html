@@ -105,6 +105,8 @@ svg text{font-family:inherit}
 b,strong{font-weight:700}
 .em{color:var(--accent);font-weight:700}
 code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
 a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
 a:hover{text-decoration-color:var(--accent)}
 
@@ -338,6 +340,38 @@ a:hover{text-decoration-color:var(--accent)}
       <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day20/study_plan_next_month.md">study_plan_next_month.md</a> — Day20 の実測値、Day22 に累計差分を追加</li>
       <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day20/2026-09-30/summary.md">2026-09-30/summary.md</a> — この記録のMarkdown版</li>
     </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">付録</span>分納・返品の方式を比べた検証の中身</h2>
+    <p class="msg">図表5の根拠。スクリプト本体は添付せず、比べた式と実行結果をここに載せる。</p>
+
+    <p>金額は円、単価は銭（1/100円）の整数で持ち、誤差を出さない。四捨五入は 0 から遠い側へ（<code>Money.Round</code> と同じ）。</p>
+<pre>// 方式A: 途中の出荷は単価×数量を四捨五入、残数量がゼロになる出荷は差額。返品は単価×数量を四捨五入
+if (q > 0 &amp;&amp; net + q === orderQty) amount = orderAmount - sum;       // 最後の出荷
+else amount = Math.sign(q) * lineAmount(priceSen, Math.abs(q));
+
+// 方式C: 方式Aに「残数量が0になる返品は、残っている売上の全額を戻す」を足す
+else if (q &lt; 0 &amp;&amp; net + q === 0) amount = -sum;
+
+// 方式B(累計差分): 動いた後の累計数量の金額 − 動く前の累計数量の金額。出荷も返品も同じ式
+amount = lineAmount(priceSen, net + q) - lineAmount(priceSen, net);</pre>
+
+    <p>単価 33.33円・受注3個での実行結果（A と B）:</p>
+<pre>A 1個ずつ出荷                   各回=[33, 33, 34]                 合計=100  正しい金額=100  OK
+B 1個ずつ出荷                   各回=[33, 34, 33]                 合計=100  正しい金額=100  OK
+A 1個ずつ出荷 → 1個ずつ全部返品 各回=[33, 33, 34, -33, -33, -33]  合計=1    正しい金額=0    NG(+1円)
+B 1個ずつ出荷 → 1個ずつ全部返品 各回=[33, 34, 33, -33, -34, -33]  合計=0    正しい金額=0    OK
+A 一括出荷 → 1個ずつ全部返品   各回=[100, -33, -33, -33]         合計=1    正しい金額=0    NG(+1円)
+B 一括出荷 → 1個ずつ全部返品   各回=[100, -33, -34, -33]         合計=0    正しい金額=0    OK
+A 一括出荷 → 1個返品 → 再出荷  各回=[100, -33, 33]               合計=100  正しい金額=100  OK
+B 一括出荷 → 1個返品 → 再出荷  各回=[100, -33, 33]               合計=100  正しい金額=100  OK
+A 1個ずつ出荷 → 2個返品        各回=[33, 33, 34, -67]            合計=33   正しい金額=33   OK
+B 1個ずつ出荷 → 2個返品        各回=[33, 34, 33, -67]            合計=33   正しい金額=33   OK
+
+ランダム 10000件（最終状態が不一致）      : A 10件 / B 0件 / C 10件
+ランダム 10000件（途中のどこかで不一致）  : A 10件 / B 0件 / C 10件</pre>
+    <p class="src">ランダムの条件: 単価 0.01〜999.99円、受注数 1〜9個、出荷・返品を1〜8回（出荷は残数量まで、返品は出荷済み数量まで）。乱数の種を固定しているので、何度実行しても同じ結果になる。スクリプト本体は GitHub（<a href="https://github.com/kiyo015/vibe-coding-study/blob/day20/2026-09-30/return-allocation.js">タグ day20</a>）で読める。ファイル・ネットワーク・他のプロセスには触れない計算だけのスクリプト</p>
   </section>
 
   <footer class="doc-footer">
