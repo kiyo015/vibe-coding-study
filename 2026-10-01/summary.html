@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day21 学習記録 — 消費税</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);
+  gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;
+  align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:2px;
+  font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+.mx-cell ul{margin:0}
+.mx-cell li{margin-bottom:5px}
+
+b,strong{font-weight:700}
+.em{color:var(--accent);font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons,.roadmap,.matrix{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day21 ／ 基幹システム開発</p>
+    <h1>消費税 — 税率ごとに1回だけ丸める。検証の道具も疑う</h1>
+    <p class="lead">消費税の計算を TDD で作り、インボイス制度の要件（税率ごとに1回だけ端数処理）をテストで固定した。誤りの頻度を数える途中で、検証に使っていた乱数の品質の問題に気付き、Day20 の報告の数字を訂正した。</p>
+    <div class="doc-meta"><span>2026-10-01</span><span>対象: sales-core ／ SalesCore.Domain</span><span>段階1 / Day21</span></div>
+  </header>
+
+  <section>
+    <h2>エグゼクティブサマリー</h2>
+    <ol class="summary">
+      <li><b>消費税は税率ごとに1回だけ四捨五入する形で実装し、13件のテストが通った。</b>ランダムな請求書1万件でも、税率ごとの対象額・税額・請求額がすべて合う。</li>
+      <li><b>「明細ごとに丸めて合計する」誤りは、2件のテストが捕まえる。</b>ほかの固定の例は誤った実装でも通るので、丸めの位置で結果が変わる例を意図して入れる必要がある。</li>
+      <li><b>その誤りは、請求書の約53%で税額を狂わせる。</b>差は最大5円。稀な端のケースではない。</li>
+      <li><b>Day20 の報告の数字を訂正した。</b>検証の乱数の品質が低く、採らなかった方式のずれを「1万件中10件」と過小評価していた。正しくは1,563件。採用した方式（累計差分）と結論は変わらない。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>規則：税率ごとに1回だけ丸める</h2>
+    <p class="msg">明細ごとに税額を丸めて合計すると、同じ請求書でも税額が変わる。インボイス制度の要件は、税率ごとに1回。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表1: 105円（10%）の明細が3行ある請求書</caption>
+      <thead><tr><th>計算の仕方</th><th>計算</th><th class="num">税額</th></tr></thead>
+      <tbody>
+        <tr><td>明細ごとに丸めて足す（誤り）</td><td>10.5 → 11 を3回</td><td class="num">33円</td></tr>
+        <tr class="total"><td>税率ごとに1回（要件）</td><td>315 × 10% ＝ 31.5 →</td><td class="num">32円</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>実装は、明細を税率ごとにまとめ、対象額の合計に税率を掛けてから <code>Money.Round</code> を1回呼ぶ。丸めを行う場所は、引き続き <code>Money.cs</code> の1か所だけ。</p>
+    <ul>
+      <li>税率の高い順に並べる（10% → 8% → 0%）</li>
+      <li>税率0%の明細は対象額だけを集計し、税額は0円</li>
+      <li>赤伝（負の金額）は同じ税率に足し込む。対象額が負なら税額も負で、0から遠い側へ寄せる</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>テストが誤りを捕まえることを確かめる</h2>
+    <p class="msg">「明細ごとに丸める」実装を入れると、13件中2件だけが失敗した。ほかの固定の例は、誤った実装でも通る。</p>
+
+    <figure>
+      <figcaption>図表2: 実装ごとの失敗件数（消費税のテスト13件中）</figcaption>
+      <svg viewBox="0 0 700 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="実装ごとの失敗件数">
+        <line x1="230" y1="12" x2="230" y2="138" stroke="#a8adb5" stroke-width="1"/>
+        <text x="220" y="36" text-anchor="end" font-size="12.5" fill="#555555">空の実装（RED）</text>
+        <rect x="230" y="22" width="360" height="22" fill="#c9ccd1"/>
+        <text x="600" y="38" font-size="12.5" fill="#555555">12件</text>
+
+        <text x="220" y="80" text-anchor="end" font-size="12.5" fill="#555555">明細ごとに丸める（対照）</text>
+        <rect x="230" y="66" width="60" height="22" fill="#c9ccd1"/>
+        <text x="300" y="82" font-size="12.5" fill="#555555">2件　105円×3行の例と、ランダム1万件</text>
+
+        <text x="220" y="124" text-anchor="end" font-size="12.5" fill="#1a1a1a" font-weight="700">税率ごとに1回（GREEN）</text>
+        <rect x="230" y="110" width="3" height="22" fill="#173f66"/>
+        <text x="242" y="126" font-size="12.5" fill="#173f66" font-weight="700">0件（Domain 36件・結合 6件すべて成功）</text>
+      </svg>
+      <p class="src">出所: <code>dotnet test</code>（2026-10-01）</p>
+    </figure>
+
+    <p class="note"><b>税率混在のテスト（1000・500・300・280円）は、誤った実装でも通る。</b>その金額では、明細ごとに丸めても税率ごとに丸めても同じ答えになるため。Day20 の「1.5 では銀行丸めを捕まえられない」と同じ教訓で、固定の例は「誤りで結果が変わる値」を意図して選ぶ必要がある。</p>
+
+    <p><b>ランダムのテストの期待値は、製品コードとは別の方法で出した。</b>製品コードは <code>decimal</code> と <code>Money</code>、期待値は <code>long</code> の整数計算だけ。同じ式で期待値を作ると、式が誤っていても両方が同じように誤り、テストが通ってしまう。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>誤りの頻度：請求書の約53%で税額が狂う</h2>
+    <p class="msg">明細ごとに丸めた税額と、税率ごとに1回丸めた税額を、ランダムな請求書1万件で比べた。一致するのは半分以下。</p>
+
+    <figure>
+      <figcaption>図表3: 税額の差（明細ごと − 税率ごと）の分布。1請求書 1〜30行、1行 -50,000〜500,000円</figcaption>
+      <svg viewBox="0 0 700 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="税額の差の分布">
+        <line x1="110" y1="10" x2="110" y2="320" stroke="#a8adb5" stroke-width="1"/>
+        <text x="100" y="30" text-anchor="end" font-size="12" fill="#555555">-4円</text><rect x="110" y="18" width="1" height="18" fill="#c9ccd1"/><text x="120" y="32" font-size="12" fill="#555555">2件</text>
+        <text x="100" y="60" text-anchor="end" font-size="12" fill="#555555">-3円</text><rect x="110" y="48" width="3" height="18" fill="#c9ccd1"/><text x="122" y="62" font-size="12" fill="#555555">33件</text>
+        <text x="100" y="90" text-anchor="end" font-size="12" fill="#555555">-2円</text><rect x="110" y="78" width="35" height="18" fill="#c9ccd1"/><text x="154" y="92" font-size="12" fill="#555555">369件</text>
+        <text x="100" y="120" text-anchor="end" font-size="12" fill="#555555">-1円</text><rect x="110" y="108" width="162" height="18" fill="#c9ccd1"/><text x="281" y="122" font-size="12" fill="#555555">1,687件</text>
+        <text x="100" y="150" text-anchor="end" font-size="12" fill="#1a1a1a" font-weight="700">0円（一致）</text><rect x="110" y="138" width="450" height="18" fill="#173f66"/><text x="569" y="152" font-size="12" fill="#173f66" font-weight="700">4,696件（47.0%）</text>
+        <text x="100" y="180" text-anchor="end" font-size="12" fill="#555555">+1円</text><rect x="110" y="168" width="224" height="18" fill="#c9ccd1"/><text x="343" y="182" font-size="12" fill="#555555">2,341件</text>
+        <text x="100" y="210" text-anchor="end" font-size="12" fill="#555555">+2円</text><rect x="110" y="198" width="67" height="18" fill="#c9ccd1"/><text x="186" y="212" font-size="12" fill="#555555">702件</text>
+        <text x="100" y="240" text-anchor="end" font-size="12" fill="#555555">+3円</text><rect x="110" y="228" width="14" height="18" fill="#c9ccd1"/><text x="133" y="242" font-size="12" fill="#555555">146件</text>
+        <text x="100" y="270" text-anchor="end" font-size="12" fill="#555555">+4円</text><rect x="110" y="258" width="2" height="18" fill="#c9ccd1"/><text x="121" y="272" font-size="12" fill="#555555">22件</text>
+        <text x="100" y="300" text-anchor="end" font-size="12" fill="#555555">+5円</text><rect x="110" y="288" width="1" height="18" fill="#c9ccd1"/><text x="120" y="302" font-size="12" fill="#555555">2件</text>
+      </svg>
+      <p class="src">出所: <code>evidence/2026-10-01-tax-per-line-vs-per-rate.js</code>（1万件、乱数は mulberry32 で種を固定）。食い違うのは 5,304件（53.0%）、差の最大は5円。小口の商品（1行 1〜3,000円）でも 53.2%</p>
+    </figure>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>検証の道具を疑う — Day20 の数字の訂正</h2>
+    <p class="msg">最初の集計の分布が不自然だった。乱数を替えると滑らかになり、同じ乱数を使っていた Day20 の検証の数字も大きく変わった。</p>
+
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">分布が不自然<small>+5円=30件、+4円=1件</small></div>
+      <div class="chev">乱数を疑う<small>下位ビットの周期が短い</small></div>
+      <div class="chev on">乱数を替える<small>滑らかな山形に</small></div>
+      <div class="chev">Day20 も同じ乱数<small>測り直す</small></div>
+      <div class="chev on">数字を訂正<small>経緯ごと残す</small></div>
+    </div></div>
+
+    <div class="tbl">
+    <table>
+      <caption>図表4: 分納・返品の方式を比べた検証（1万件中、売上合計がずれた件数）</caption>
+      <thead><tr><th>方式</th><th class="num">Day20 の報告</th><th class="num">測り直し</th></tr></thead>
+      <tbody>
+        <tr><td>A: 最後の出荷で差額調整</td><td class="num">10件</td><td class="num"><b>1,563件（15.6%）</b></td></tr>
+        <tr><td>C: A＋全部返品は残額を戻す</td><td class="num">10件</td><td class="num"><b>1,171件（11.7%）</b></td></tr>
+        <tr class="total"><td>B: 累計差分（採用）</td><td class="num">0件</td><td class="num">0件</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p><b>結論（方式Bを採用）は変わらない。</b>方式Bが0件になるのは式の形から決まり、乱数に左右されない。誤っていたのは、採らなかった方式がどのくらいずれるかの数字。線形合同法の最下位ビットは0と1を交互に繰り返すだけなので、「出荷か返品か」の選択が交互に決まり、ずれが起きる並びがほとんど作られていなかった。</p>
+
+    <p class="note">訂正した場所は4つ（業務ルール集、計画シート、Day20 の記録の md と html）。数字を直したうえで「初版では10件と書いていた」という経緯を残した。メールで送った Day20 の報告は、訂正版の HTML で差し替える。C# のランダムテストは .NET の <code>System.Random</code> を使っているので、この問題は無い。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>今日学んだこと</h2>
+    <p class="msg">件数の多さは、検証の正しさを保証しない。</p>
+    <ul>
+      <li><b>検証の道具も疑う。</b>1万件でも、乱数が偏っていれば同じような場面ばかりを試している。気付けたのは、合計の件数だけでなく差の分布を出力していたから</li>
+      <li><b>結論が道具に依存するかを切り分ける。</b>方式Bの0件は式の形から決まり、方式Aの件数は乱数に左右される。前者を根拠にしていたので、結論は崩れなかった</li>
+      <li><b>誤りを見つけたら、経緯ごと残す。</b>数字だけを直すと、前の版を読んだ人には何が変わったか分からない</li>
+      <li><b>固定の例は「誤りで結果が変わる値」を意図して選ぶ。</b>もっともらしい例を並べるだけでは、誤った実装が素通りする</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>次のアクション</h2>
+    <p class="msg">Day22 は受注の状態遷移と分納。累計差分を実装し、C# のランダムテストで確かめる。</p>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v">36<small>/36</small></div><div class="l">Domain のテスト（Money 23＋消費税 13）</div></div>
+      <div class="kpi"><div class="v">53<small>%</small></div><div class="l">明細ごとに丸めると狂う請求書</div></div>
+      <div class="kpi"><div class="v">1<small>か所</small></div><div class="l">丸めを行う場所</div></div>
+    </div>
+
+    <div class="tbl">
+    <table>
+      <caption>図表5: Day22の作業と完了条件</caption>
+      <thead><tr><th>作業</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>状態遷移</td><td>受注 → 出荷 → 請求の遷移を型で表す。飛び越し・逆戻りを不可能にする。取消は状態として表す</td></tr>
+        <tr><td>分納</td><td>受注明細の出荷済み数量で「一部出荷」「出荷済」を判定。受注数を超える出荷を不可能にする</td></tr>
+        <tr><td>分納・返品の金額</td><td>累計差分で実装し、出荷と返品をどう並べても売上の合計が一致することを C# のランダムテストで確かめる</td></tr>
+        <tr class="total"><td><b>完了条件</b></td><td>未出荷のまま請求しようとするコードが、コンパイルかテストで落ちる</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>成果物</h3>
+    <p><b>sales-core（製品コード）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day21/src/SalesCore.Domain/TaxRate.cs">TaxRate.cs</a> — 消費税率（0〜100%、小数2桁まで）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day21/src/SalesCore.Domain/TaxCalculator.cs">TaxCalculator.cs</a> — 税率ごとに集計し、1回だけ四捨五入</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day21/tests/SalesCore.Domain.Tests/TaxCalculatorTests.cs">TaxCalculatorTests.cs</a> — 13件（固定の例とランダム1万件）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day21/docs/domain/business-rules.md">business-rules.md</a> — 消費税の計算規則、Day20 の数字の訂正</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day21/CLAUDE.md">CLAUDE.md</a> — 「消費税を明細ごとに丸める」を強制（テスト）に</li>
+    </ul>
+    <p><b>Study（学習記録）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day21/evidence/2026-10-01-tax-per-line-vs-per-rate.js">evidence/2026-10-01-tax-per-line-vs-per-rate.js</a> — 明細ごとと税率ごとの食い違いを数える検証</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day21/evidence/2026-09-30-return-allocation.js">evidence/2026-09-30-return-allocation.js</a> — 乱数を替えて測り直した版</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day21/2026-09-30/summary.html">2026-09-30/summary.html</a> — Day20 の記録の訂正版</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day21/2026-10-01/summary.md">2026-10-01/summary.md</a> — この記録のMarkdown版</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">付録</span>検証の中身</h2>
+    <p class="msg">図表3・4の根拠。スクリプト本体は添付せず、式と実行結果をここに載せる。</p>
+
+    <p>金額は円の整数、税率は1万分率で持ち、四捨五入は0から遠い側へ。乱数は mulberry32 で種を固定しているので、何度実行しても同じ結果になる。</p>
+<pre>// 明細ごと(誤り): 1行ずつ税額を丸めて足す
+perLine += roundHalfAway(yen * bp, 10000);
+// 税率ごと(正): 税率ごとの対象額の合計に、1回だけ税率を掛けて丸める
+perRate = Σ roundHalfAway(taxableByRate[bp] * bp, 10000);</pre>
+
+<pre>明細 1〜30行、1行 -50,000〜500,000円(赤伝を含む)
+  食い違う請求書: 5304 / 10000 件 (53.0%)
+  差の最大: 5円 / 差の平均(絶対値): 0.68円
+  差の分布(明細ごと − 税率ごと): -4円=2件, -3円=33件, -2円=369件, -1円=1687件, 0円=4696件,
+                                  +1円=2341件, +2円=702件, +3円=146件, +4円=22件, +5円=2件
+明細 1〜30行、1行 1〜3,000円(小口の商品)
+  食い違う請求書: 5319 / 10000 件 (53.2%)
+  差の最大: 4円 / 差の平均(絶対値): 0.69円
+  差の分布(明細ごと − 税率ごと): -4円=2件, -3円=35件, -2円=288件, -1円=1607件, 0円=4681件,
+                                  +1円=2404件, +2円=810件, +3円=158件, +4円=15件</pre>
+
+    <p>乱数を替える前と後（上段の末尾が不自然）:</p>
+<pre>線形合同法の剰余: ... -1円=1664件, 0円=4502件, +1円=2471件, +2円=803件, +3円=157件, +4円=1件,  +5円=30件
+mulberry32      : ... -1円=1687件, 0円=4696件, +1円=2341件, +2円=702件, +3円=146件, +4円=22件, +5円=2件</pre>
+
+    <p>Day20 の分納・返品の検証を測り直した結果:</p>
+<pre>線形合同法の剰余（Day20 の報告）: 最終状態が不一致     A 10件   / B 0件 / C 10件
+mulberry32（測り直し）          : 最終状態が不一致     A 1563件 / B 0件 / C 1171件
+                                  途中のどこかで不一致 A 2327件 / B 0件 / C 2327件</pre>
+    <p class="src">スクリプト本体は GitHub（タグ day21 の <code>evidence/</code>）で読める。どちらもファイル・ネットワーク・他のプロセスに触れない、計算だけのスクリプト</p>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day21 学習記録 — 消費税</span>
+    <span>2026-10-01 ／ TaxCalculator（税率ごとに1回） ／ タグ day21</span>
+  </footer>
+
+</div>
+</body>
+</html>

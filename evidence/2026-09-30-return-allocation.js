@@ -60,8 +60,16 @@ for (const [name, moves] of cases) {
 }
 
 // ランダムな出荷・返品の並びで、合計が「残数量の正しい金額」と一致するかを数える
-let seed = 20260930;
-const rand = n => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed % n; };
+// 乱数は mulberry32(種を固定)。2026-09-30 の初版は線形合同法の剰余を使っていたが、
+// 下位ビットの周期が短く結果が偏るので、2026-10-01 に替えて測り直した。
+let state = 20260930;
+function random01() {
+  state = (state + 0x6D2B79F5) | 0;
+  let t = Math.imul(state ^ (state >>> 15), 1 | state);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+const rand = n => Math.floor(random01() * n);
 const trials = 10000;
 const ng = { A: 0, B: 0, C: 0 };
 // 途中の状態(1回動くたび)でも「残数量の正しい金額」と一致しているか
