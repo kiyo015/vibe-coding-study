@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day22 学習記録 — 受注の状態遷移と分納</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.ok{color:var(--accent);font-weight:700}
+td.ng{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+b,strong{font-weight:700}
+.em{color:var(--accent);font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day22 ／ 基幹システム開発</p>
+    <h1>受注の状態遷移と分納 — 未出荷のまま請求するコードは、書けない</h1>
+    <p class="lead">受注 → 出荷 → 売上 → 請求の流れを Domain に作った。請求書は売上からしか作れず、売上は出荷の確定からしか生まれない。分納と返品の金額は累計差分で実装し、ランダムな並び1万件で売上の合計が常に合うことを確かめた。</p>
+    <div class="doc-meta"><span>2026-10-02</span><span>対象: sales-core ／ SalesCore.Domain</span><span>段階1 / Day22</span></div>
+  </header>
+
+  <section>
+    <h2>エグゼクティブサマリー</h2>
+    <ol class="summary">
+      <li><b>未出荷のまま請求しようとする書き方は、12通り試してすべてコンパイルエラーになった。</b>請求書の入口は売上だけを受け取り、売上は外のコードから作れない。</li>
+      <li><b>状態の飛び越し・逆戻り・受注数量を超える出荷は、テストで止まる。</b>状態 × 操作の全20通りを並べた。誤った実装14種を入れて、すべて検出された。</li>
+      <li><b>分納と返品の金額は累計差分で実装した。</b>出荷 24,688回・返品 26,849回のすべてで、売上の合計が「手元の数量 × 単価の四捨五入」に一致した。うち 15.7% は、動いた分だけを丸める方式ならずれていた。</li>
+      <li><b>実装のときに決めた業務の決まりが4点あり、本人の確認を待っている。</b>返品しても受注の状態は戻さない、など。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>何を型で止め、何をテストで止めるか</h2>
+    <p class="msg">型にしたのは「請求書は売上からしか作れない」という境界1つ。受注の状態は、表を網羅するテストで守る。</p>
+
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">受注<small>受付 → 承認済</small></div>
+      <div class="chev">出荷指示<small>数量は動かない</small></div>
+      <div class="chev on">出荷確定<small>ここで売上が生まれる</small></div>
+      <div class="chev on">売上<small>外からは作れない</small></div>
+      <div class="chev on">請求書<small>売上だけを受け取る</small></div>
+    </div></div>
+    <p class="src">図表1: 請求までの流れ。濃い部分が型で守られている境界</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表2: 守りたいことと、止め方</caption>
+      <thead><tr><th>守りたいこと</th><th>止め方</th><th>仕組み</th></tr></thead>
+      <tbody>
+        <tr class="total"><td>未出荷のまま請求しない</td><td>コンパイル</td><td>請求書の入口は売上だけを受け取る。売上のコンストラクタは公開していない</td></tr>
+        <tr><td>状態を飛び越えない・逆戻りしない</td><td>テスト</td><td>受注は1つのクラスで、状態は enum。許されない操作は例外になる</td></tr>
+        <tr><td>受注数量を超えて出荷しない</td><td>テスト</td><td>指示のときと確定のときの両方で確かめる</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>受注の状態ごとに別のクラスを作れば、状態の飛び越しもコンパイルで止まる。採らなかったのは、Day25 に EF Core で保存するとき、状態が変わるたびにクラスを載せ替える必要が出て重くなるため。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>状態 × 操作の全20通り</h2>
+    <p class="msg">「できること」の例は自然に書く。「できないこと」は、表にして並べないと抜ける。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表3: 受注の状態ごとに、できる操作</caption>
+      <thead><tr><th>状態</th><th class="c">承認</th><th class="c">取消</th><th class="c">出荷指示</th><th class="c">返品</th></tr></thead>
+      <tbody>
+        <tr><td>受付</td><td class="c ok">できる</td><td class="c ok">できる</td><td class="c ng">できない</td><td class="c ng">できない</td></tr>
+        <tr><td>承認済</td><td class="c ng">できない</td><td class="c ok">できる</td><td class="c ok">できる</td><td class="c ng">できない</td></tr>
+        <tr><td>一部出荷</td><td class="c ng">できない</td><td class="c ng">できない</td><td class="c ok">できる</td><td class="c ok">できる</td></tr>
+        <tr><td>出荷済</td><td class="c ng">できない</td><td class="c ng">できない</td><td class="c ng">できない</td><td class="c ok">できる</td></tr>
+        <tr><td>取消</td><td class="c ng">できない</td><td class="c ng">できない</td><td class="c ng">できない</td><td class="c ng">できない</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: <code>SalesOrderTests</code> の「状態ごとに許される操作だけができる」。できない操作は例外になり、状態が変わらないことまで確かめる</p>
+
+    <p class="note"><b>承認の飛び越し（受付のまま出荷）と、出荷後の取消を捕まえたのは、この表の1行ずつだけだった。</b>個別の例だけを書いていたら、どちらの誤りも素通りしていた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>テストが誤りを捕まえることを確かめる</h2>
+    <p class="msg">空の実装で通ってしまったテストが5件あった。3件は検証が弱く、直した。そのうえで誤った実装14種を入れ、すべて検出された。</p>
+
+    <figure>
+      <figcaption>図表4: 実装ごとの失敗件数（新規のテスト68件中）</figcaption>
+      <svg viewBox="0 0 700 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="実装ごとの失敗件数">
+        <line x1="230" y1="12" x2="230" y2="138" stroke="#a8adb5" stroke-width="1"/>
+        <text x="220" y="36" text-anchor="end" font-size="12.5" fill="#555555">空の実装（最初のRED）</text>
+        <rect x="230" y="22" width="334" height="22" fill="#c9ccd1"/>
+        <text x="574" y="38" font-size="12.5" fill="#555555">63件（5件が通過）</text>
+
+        <text x="220" y="80" text-anchor="end" font-size="12.5" fill="#555555">空の実装（テスト強化後）</text>
+        <rect x="230" y="66" width="350" height="22" fill="#c9ccd1"/>
+        <text x="590" y="82" font-size="12.5" fill="#555555">66件（2件が通過）</text>
+
+        <text x="220" y="124" text-anchor="end" font-size="12.5" fill="#1a1a1a" font-weight="700">実装後（GREEN）</text>
+        <rect x="230" y="110" width="3" height="22" fill="#173f66"/>
+        <text x="242" y="126" font-size="12.5" fill="#173f66" font-weight="700">0件（Domain 104件・結合 6件すべて成功）</text>
+      </svg>
+      <p class="src">出所: <code>dotnet test</code>（2026-10-02）。最後まで通過した2件（初期状態、入口の形）は、対照実験 M11・M10 で検出を確認</p>
+    </figure>
+
+    <div class="tbl">
+    <table>
+      <caption>図表5: 対照実験。誤った実装を1つずつ入れたときの失敗件数（104件中）</caption>
+      <thead><tr><th>番号</th><th>入れた誤り</th><th class="num">失敗</th></tr></thead>
+      <tbody>
+        <tr><td>M01</td><td>出荷ごとに金額を丸める（累計差分にしない）</td><td class="num">2</td></tr>
+        <tr><td>M02</td><td>返品ごとに金額を丸める</td><td class="num">2</td></tr>
+        <tr><td>M03</td><td>承認していない受注でも出荷できる</td><td class="num">1</td></tr>
+        <tr><td>M04</td><td>受注数量を超えるかを確かめない</td><td class="num">4</td></tr>
+        <tr><td>M05</td><td>一部出荷の受注を取り消せる</td><td class="num">1</td></tr>
+        <tr><td>M06</td><td>確定した出荷をもう一度確定できる</td><td class="num">2</td></tr>
+        <tr><td>M07</td><td>確定のときに全行を先に確かめない</td><td class="num">2</td></tr>
+        <tr><td>M08</td><td>返品で出荷済み数量を戻す</td><td class="num">6</td></tr>
+        <tr><td>M09</td><td>売上のコンストラクタを公開する</td><td class="num">1</td></tr>
+        <tr><td>M10</td><td>受注から請求書を作る入口を足す</td><td class="num">1</td></tr>
+        <tr><td>M11</td><td>受注が承認済で始まる</td><td class="num">52</td></tr>
+        <tr><td>M12</td><td>1行でも出荷が終われば出荷済にする</td><td class="num">1</td></tr>
+        <tr><td>M13</td><td>返品の数量の上限を確かめない</td><td class="num">5</td></tr>
+        <tr><td>M14</td><td>確定した出荷を取り消せる</td><td class="num">1</td></tr>
+        <tr class="total"><td colspan="2">検出された誤り</td><td class="num">14 / 14</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p class="note"><b>空の実装で通るテストは、検証が弱い。</b>「例外が出ない」「合計が0円」のように、何もしなくても成り立つ条件だけを見ていた。操作の後の状態や、打ち消し合う前のそれぞれの金額まで確かめるように直した。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>コンパイル実験：12通りがすべてエラー</h2>
+    <p class="msg">受注を渡す、売上を直接作る、状態を書き換える。どの書き方も、ビルドの時点で止まる。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表6: 未出荷のまま請求しようとする書き方と、コンパイルエラー</caption>
+      <thead><tr><th>書き方</th><th class="num">通り</th><th>エラー</th></tr></thead>
+      <tbody>
+        <tr><td>受注・受注の一覧・受注明細を請求書に渡す</td><td class="num">3</td><td>CS1503・CS0029（売上に変換できない）</td></tr>
+        <tr><td>確定していない出荷指示を請求書に渡す</td><td class="num">1</td><td>CS0029</td></tr>
+        <tr><td>売上・売上明細・出荷・請求書を直接作る</td><td class="num">4</td><td>CS1729（そのコンストラクタは無い）</td></tr>
+        <tr><td>出荷済み数量だけを進める、出荷指示を通さずに売上を計上する</td><td class="num">2</td><td>CS1061（外から見えない）</td></tr>
+        <tr><td>出荷済み数量・状態を書き換える</td><td class="num">2</td><td>CS0200（読み取り専用）</td></tr>
+        <tr class="total"><td>合計</td><td class="num">12</td><td>12 エラー</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p><b>この保証は、後から公開コンストラクタや別の入口を足すと崩れる。</b>そこで保証の前提そのものをテストにした。<code>InvoiceTests</code> が、公開コンストラクタが無いこと、<code>InternalsVisibleTo</code> が付いていないこと、請求書を作る入口が売上を受け取る1つだけであることを確かめる。守れないのは、リフレクションで非公開のコンストラクタを呼ぶような、意図して回避するコード。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>分納と返品の金額：累計差分</h2>
+    <p class="msg">動いた分だけを丸めると合計がずれる。累計で丸めた金額の差を取れば、どう並べても合う。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表7: 単価 33.33円 × 3個を1個ずつ出荷し、1個ずつ返品する</caption>
+      <thead><tr><th>動き</th><th class="num">手元の数量</th><th>計算</th><th class="num">金額</th></tr></thead>
+      <tbody>
+        <tr><td>1個出荷</td><td class="num">1</td><td>33.33 → 33 から 0 を引く</td><td class="num">33円</td></tr>
+        <tr><td>1個出荷</td><td class="num">2</td><td>66.66 → 67 から 33 を引く</td><td class="num"><b>34円</b></td></tr>
+        <tr><td>1個出荷</td><td class="num">3</td><td>99.99 → 100 から 67 を引く</td><td class="num">33円</td></tr>
+        <tr><td>1個返品</td><td class="num">2</td><td>67 から 100 を引く</td><td class="num">-33円</td></tr>
+        <tr><td>1個返品</td><td class="num">1</td><td>33 から 67 を引く</td><td class="num"><b>-34円</b></td></tr>
+        <tr><td>1個返品</td><td class="num">0</td><td>0 から 33 を引く</td><td class="num">-33円</td></tr>
+        <tr class="total"><td colspan="3">売上の合計</td><td class="num">0円</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <figure>
+      <figcaption>図表8: ランダムな並び1万件で起きた動き 51,537回の内訳</figcaption>
+      <svg viewBox="0 0 700 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ランダムテストの動きの内訳">
+        <line x1="230" y1="12" x2="230" y2="138" stroke="#a8adb5" stroke-width="1"/>
+        <text x="220" y="36" text-anchor="end" font-size="12.5" fill="#555555">出荷</text>
+        <rect x="230" y="22" width="322" height="22" fill="#c9ccd1"/>
+        <text x="562" y="38" font-size="12.5" fill="#555555">24,688回</text>
+
+        <text x="220" y="80" text-anchor="end" font-size="12.5" fill="#555555">返品</text>
+        <rect x="230" y="66" width="350" height="22" fill="#c9ccd1"/>
+        <text x="590" y="82" font-size="12.5" fill="#555555">26,849回</text>
+
+        <text x="220" y="124" text-anchor="end" font-size="12.5" fill="#1a1a1a" font-weight="700">単価×数量と1円違う金額</text>
+        <rect x="230" y="110" width="105" height="22" fill="#173f66"/>
+        <text x="345" y="126" font-size="12.5" fill="#173f66" font-weight="700">8,089回（全体の15.7%）</text>
+      </svg>
+      <p class="src">出所: <code>SalesRecordTests</code> のランダムテスト（乱数の種は固定）。すべての動きの後で、売上の合計が期待値と一致。出荷済まで進んだ受注 6,368件、全部返品された受注 4,368件</p>
+    </figure>
+
+    <p>期待値は Day21 と同じく、製品コードとは別の方法（単価を銭、数量を 1/1000 の整数で持つ <code>long</code> の計算）で出した。Day21 の教訓から、<b>乱数が偏って確かめたい場面を通らないまま合格していないこと</b>を、上の件数に下限を置くアサーションで確かめている。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>実装のときに決めたこと（確認待ち）</h2>
+    <p class="msg">業務ルール集に無かった4点を、既存の方針に沿って決めた。違っていれば直す。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表9: Day22 に決めた業務の決まり</caption>
+      <thead><tr><th>#</th><th>決めたこと</th><th>理由</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>返品しても受注の状態と出荷済み数量は戻さない。返品数量は別に持つ</td><td>出荷済み数量が増えるだけなら、状態は逆戻りしない</td></tr>
+        <tr><td>2</td><td>返品した数量は同じ受注で出荷し直せない。代わりの品は新しい受注で出す</td><td>出荷済は終点。受注の残りは返品で増えない</td></tr>
+        <tr><td>3</td><td>出荷指示だけでは数量を押さえない。指示が重なって超えるときは、後から確定するほうが止まる</td><td>数量を押さえるのは在庫の引当（段階4）</td></tr>
+        <tr><td>4</td><td>確定した出荷は取り消せない。返品の売上日は返品日</td><td>確定した時点で売上になっている。打ち消すのは返品</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>作らなかったもの</h3>
+    <ul>
+      <li>承認待ちと100万円の基準（段階2）。今は受付から承認済へ直接進む</li>
+      <li>請求書の締め・繰越・状態・二重請求の防止（Day31）</li>
+      <li>負の単価の明細（値引きの明細行。入力方法が未決定なので受け付けない）</li>
+      <li>一部出荷の受注の残りを打ち切る操作（未決定事項に追記）</li>
+      <li>商品・得意先・IDとの結び付け（Day25 の永続化で）</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>今日学んだこと</h2>
+    <p class="msg">型で止める場所は境界に絞り、内側は表を網羅するテストで守る。</p>
+    <ul>
+      <li><b>型で止める場所は、境界に絞る。</b>すべての状態を型にすると、保存や画面とのつなぎが重くなる。境界1つを型にするだけで、12通りの書き方が書けなくなった</li>
+      <li><b>空の実装で通るテストは、検証が弱い。</b>落ちた件数だけでなく、落ちなかったテストを一覧にして、なぜ通ったかを1件ずつ確かめる</li>
+      <li><b>表を網羅するテストは、個別の例が見落とす誤りを捕まえる。</b>「できないこと」は意識して並べる</li>
+      <li><b>型による保証は、後から崩れないように固定する。</b>保証の前提（コンストラクタを公開しない）そのものをテストにする</li>
+    </ul>
+
+    <h3>つまずきと未解決の点</h3>
+    <ul>
+      <li><b>対照実験のスクリプトが最初の1件で止まった。</b>Windows PowerShell 5.1 では、<code>Stop</code> の設定のまま標準エラーを結合すると、テストの失敗の出力が例外になる。書き換えたファイルは必ず戻す作りにしていたので、製品コードは元のままだった</li>
+      <li><b>テストの実行時間の増分が測れていない。</b>Domain のテストが約1秒から7〜8秒になったが、測ったときPCのCPU使用率が94〜100%で、Day21 までの36件だけでも3秒かかった。負荷の無い状態で測り直す</li>
+      <li>結合テストのビルドで EF Core の版の競合の警告（MSB3277）。今日の変更とは関係が無い。Day25 で揃える</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>次のアクション</h2>
+    <p class="msg">Day23 は、金額と端数処理の「お願い」をアナライザで「強制」に変える。</p>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v">104<small>/104</small></div><div class="l">Domain のテスト（新規 68）</div></div>
+      <div class="kpi"><div class="v">12<small>/12</small></div><div class="l">コンパイルで止まった書き方</div></div>
+      <div class="kpi"><div class="v">14<small>/14</small></div><div class="l">検出された誤った実装</div></div>
+    </div>
+
+    <div class="tbl">
+    <table>
+      <caption>図表10: Day23 の作業と持ち越し</caption>
+      <thead><tr><th>作業</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>アナライザ</td><td>BannedApiAnalyzers で <code>double</code>・<code>float</code> の金額利用、<code>Money</code> 以外での <code>Math.Round</code> を禁止する。わざと違反するコードを書き、ビルドが落ちることを確認する</td></tr>
+        <tr><td>持ち越し</td><td>図表9の4点の、本人による確認</td></tr>
+        <tr><td>持ち越し</td><td>Domain のテストの実行時間を、負荷の無い状態で測り直す</td></tr>
+        <tr class="total"><td><b>完了条件</b></td><td>違反コードでビルドが落ちる。CLAUDE.md の該当ルールが「お願い」から「強制」に変わっている</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>成果物</h3>
+    <p><b>sales-core（製品コード）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day22/src/SalesCore.Domain/SalesOrder.cs">SalesOrder.cs</a> — 受注と状態遷移</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day22/src/SalesCore.Domain/SalesOrderLine.cs">SalesOrderLine.cs</a> — 受注明細、累計差分</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day22/src/SalesCore.Domain/Shipment.cs">Shipment.cs</a> — 出荷（指示 → 確定 ／ 取消）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day22/src/SalesCore.Domain/SalesRecord.cs">SalesRecord.cs</a> — 売上（外から作れない）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day22/src/SalesCore.Domain/Invoice.cs">Invoice.cs</a> — 請求書（売上からしか作れない）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day22/tests/SalesCore.Domain.Tests/SalesOrderTests.cs">SalesOrderTests.cs</a>（50件）／ <a href="https://github.com/kiyo015/sales-core/blob/day22/tests/SalesCore.Domain.Tests/SalesRecordTests.cs">SalesRecordTests.cs</a>（10件）／ <a href="https://github.com/kiyo015/sales-core/blob/day22/tests/SalesCore.Domain.Tests/InvoiceTests.cs">InvoiceTests.cs</a>（8件）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day22/docs/domain/business-rules.md">business-rules.md</a> — 状態×操作の表、出荷、返品</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day22/docs/domain/business-flow.md">business-flow.md</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day22/docs/domain/er-diagram.md">er-diagram.md</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day22/docs/domain/glossary.md">glossary.md</a> — 出荷の状態図、返品数量、「返品」</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day22/CLAUDE.md">CLAUDE.md</a> — 禁止事項に2行</li>
+    </ul>
+    <p><b>Study（学習記録）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day22/evidence/2026-10-02-mutation-results.txt">evidence/2026-10-02-mutation-results.txt</a> — 対照実験14種で落ちたテストの名前</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day22/evidence/2026-10-02-mutate.ps1">evidence/2026-10-02-mutate.ps1</a> — 対照実験のスクリプト</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day22/evidence/2026-10-02-compile-probe.txt">evidence/2026-10-02-compile-probe.txt</a> — コンパイル実験の12通りとエラー</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day22/2026-10-02/summary.md">2026-10-02/summary.md</a> — この記録のMarkdown版</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">付録</span>検証の中身</h2>
+    <p class="msg">図表5・6・8の根拠。スクリプト本体は添付せず、入れた誤りと結果をここに載せる。</p>
+
+    <p>対照実験で入れた誤り（抜粋）。「正」が製品コード、「誤」が入れ替えた行。</p>
+<pre>M01 出荷ごとに丸める
+  正: return new SalesRecordLine(quantity, UnitPrice, TaxRate, SalesAmount - before);
+  誤: return new SalesRecordLine(quantity, UnitPrice, TaxRate, Money.Round(UnitPrice * quantity));
+  → 失敗 2件: 分納の金額は累計数量で丸めた金額の差で決まり… ／ ランダムな出荷と返品の並びでも…
+
+M03 承認していない受注でも出荷できる
+  正: Require(Status is Approved or PartiallyShipped, "出荷");
+  誤: Require(Status is Received or Approved or PartiallyShipped, "出荷");
+  → 失敗 1件: 状態ごとに許される操作だけができる(受付, 出荷指示, 許されない)
+
+M08 返品で出荷済み数量を戻す
+  正: ReturnedQuantity += quantity;
+  誤: ShippedQuantity -= quantity;
+  → 失敗 6件: 返品しても受注の状態と出荷済み数量は戻らない ／ ランダム1万件 ほか
+
+M09 売上のコンストラクタを公開する
+  正: internal SalesRecord(DateOnly recordedOn, ...)
+  誤: public SalesRecord(DateOnly recordedOn, ...)
+  → 失敗 1件: 売上と出荷と請求書は_外から直接は作れない(SalesRecord)</pre>
+
+    <p>コンパイル実験の12通り:</p>
+<pre> 1 Invoice.Create(order);                               CS1503 SalesOrder から IEnumerable&lt;SalesRecord&gt; へ変換できない
+ 2 Invoice.Create([order]);                             CS0029 SalesOrder を SalesRecord に変換できない
+ 3 Invoice.Create(order.Lines);                         CS1503
+ 4 Invoice.Create([order.InstructShipment([...])]);     CS0029 Shipment を SalesRecord に変換できない
+ 5 new SalesRecord(new DateOnly(2026, 10, 2), []);      CS1729 そのコンストラクタは無い
+ 6 new SalesRecordLine(10, 100m, TaxRate.Of(10m), ...); CS1729
+ 7 new Shipment(order, []);                             CS1729
+ 8 new Invoice([], new TaxBreakdown([]));               CS1729
+ 9 order.Lines[0].Ship(10);                             CS1061 外から見えない
+10 order.Lines[0].ShippedQuantity = 10;                 CS0200 読み取り専用
+11 order.Status = SalesOrderStatus.Shipped;             CS0200 読み取り専用
+12 order.RecordShipment(new DateOnly(2026, 10, 2), []); CS1061 外から見えない
+ビルドの結果: 12 エラー</pre>
+
+    <p>累計差分の実装と、ランダムテストの期待値の出し方:</p>
+<pre>// 製品コード: 動く前と後の「手元の数量 × 単価の四捨五入」の差
+var before = SalesAmount;              // Money.Round(単価 × (出荷済み − 返品))
+ShippedQuantity += quantity;
+return new SalesRecordLine(quantity, UnitPrice, TaxRate, SalesAmount - before);
+
+// テスト: 単価は銭、数量は 1/1000 の整数で持つ。decimal も Money も使わない
+var expected = RoundHalfUp(unitPriceSen * (shipped - returned), 100_000);
+Assert.Equal(expected, salesTotal);                    // 売上を足し上げた合計
+Assert.Equal(expected, (long)line.SalesAmount.Yen);    // 明細が持つ売上の合計</pre>
+    <p class="src">スクリプトと全結果は GitHub（タグ day22 の <code>evidence/</code>）で読める</p>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day22 学習記録 — 受注の状態遷移と分納</span>
+    <span>2026-10-02 ／ 請求書は売上からしか作れない ／ タグ day22</span>
+  </footer>
+
+</div>
+</body>
+</html>

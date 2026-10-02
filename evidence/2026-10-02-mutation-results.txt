@@ -1,0 +1,95 @@
+## M01-round-each-shipment: failed 2 / total 104
+  - SalesRecordTests.ランダムな出荷と返品の並びでも_売上の合計は常に手元の数量と単価の積の四捨五入に一致する
+  - SalesRecordTests.分納の金額は累計数量で丸めた金額の差で決まり_合計が明細金額に一致する
+## M02-round-each-return: failed 2 / total 104
+  - SalesRecordTests.ランダムな出荷と返品の並びでも_売上の合計は常に手元の数量と単価の積の四捨五入に一致する
+  - SalesRecordTests.返品の売上は数量も金額も負で_累計差分で決まる
+## M03-ship-without-approval: failed 1 / total 104
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Received, operation: "出荷指示", allowed: False)
+## M04-no-overship-check: failed 4 / total 104
+  - SalesOrderTests.指示が2件あって合計が受注数量を超えるなら_後から確定するほうが止まる
+  - SalesOrderTests.受注数量を超える出荷は指示できない
+  - SalesOrderTests.複数行の出荷で1行でも超過なら_どの行も出荷されない
+  - SalesOrderTests.分納の累計が受注数量を超える出荷は指示できない
+## M05-cancel-after-shipment: failed 1 / total 104
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: PartiallyShipped, operation: "取消", allowed: False)
+## M06-confirm-twice: failed 2 / total 104
+  - SalesOrderTests.確定した出荷はもう一度確定できない
+  - SalesOrderTests.取り消した出荷指示は確定できず_受注にも影響しない
+## M07-no-precheck-of-all-lines: failed 2 / total 104
+  - SalesOrderTests.取り消した受注に出ていた出荷指示は確定できない
+  - SalesOrderTests.複数行の出荷で1行でも超過なら_どの行も出荷されない
+## M08-return-rewinds-shipped-quantity: failed 6 / total 104
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: PartiallyShipped, operation: "返品", allowed: True)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Shipped, operation: "返品", allowed: True)
+  - SalesRecordTests.ランダムな出荷と返品の並びでも_売上の合計は常に手元の数量と単価の積の四捨五入に一致する
+  - SalesRecordTests.一部出荷の受注で返品があっても_残りは出荷できる
+  - SalesRecordTests.出荷して手元にある数量を超える返品はできない
+  - SalesRecordTests.返品しても受注の状態と出荷済み数量は戻らない
+## M09-public-sales-record-ctor: failed 1 / total 104
+  - InvoiceTests.売上と出荷と請求書は_外から直接は作れない(type: typeof(SalesCore.Domain.SalesRecord))
+## M10-invoice-from-order: failed 1 / total 104
+  - InvoiceTests.請求書を作る入口は_売上を受け取るものだけ
+## M11-initial-status-approved: failed 52 / total 104
+  - InvoiceTests.税率の違う明細は_請求書で税率ごとに集計される
+  - InvoiceTests.分納した売上を請求書にまとめ_税額は税率ごとに1回だけ丸める
+  - InvoiceTests.返品の売上を同じ請求書に入れると_対象額も税額も打ち消し合う
+  - SalesOrderTests.一部を出荷確定すると一部出荷になり_出荷済み数量が増える
+  - SalesOrderTests.確定した出荷はもう一度確定できない
+  - SalesOrderTests.確定した出荷は取り消せない
+  - SalesOrderTests.残りをすべて出荷確定すると出荷済になる
+  - SalesOrderTests.指示が2件あって合計が受注数量を超えるなら_後から確定するほうが止まる
+  - SalesOrderTests.取り消した受注に出ていた出荷指示は確定できない
+  - SalesOrderTests.取り消した受注は消えずに取消の状態で残る
+  - SalesOrderTests.取り消した出荷指示は確定できず_受注にも影響しない
+  - SalesOrderTests.受注数量を超える出荷は指示できない
+  - SalesOrderTests.受付の受注を承認すると承認済になる
+  - SalesOrderTests.出荷を確定すると確定の状態になる
+  - SalesOrderTests.出荷を指示しただけでは受注の状態も出荷済み数量も変わらない
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Approved, operation: "取消", allowed: True)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Approved, operation: "出荷指示", allowed: True)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Approved, operation: "承認", allowed: False)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Approved, operation: "返品", allowed: False)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: PartiallyShipped, operation: "取消", allowed: False)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: PartiallyShipped, operation: "出荷指示", allowed: True)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: PartiallyShipped, operation: "承認", allowed: False)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: PartiallyShipped, operation: "返品", allowed: True)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Received, operation: "取消", allowed: True)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Received, operation: "出荷指示", allowed: False)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Received, operation: "承認", allowed: True)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Received, operation: "返品", allowed: False)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Shipped, operation: "取消", allowed: False)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Shipped, operation: "出荷指示", allowed: False)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Shipped, operation: "承認", allowed: False)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Shipped, operation: "返品", allowed: True)
+  - SalesOrderTests.数量が0以下や小数4桁以上の出荷は指示できない(quantity: "0")
+  - SalesOrderTests.数量が0以下や小数4桁以上の出荷は指示できない(quantity: "0.0001")
+  - SalesOrderTests.数量が0以下や小数4桁以上の出荷は指示できない(quantity: "-1")
+  - SalesOrderTests.全量を1回で出荷確定すると_一部出荷を経ずに出荷済になる
+  - SalesOrderTests.他の受注の明細は出荷できない
+  - SalesOrderTests.登録した受注は受付で始まる
+  - SalesOrderTests.同じ明細を1回の出荷に2度入れられない
+  - SalesOrderTests.複数行の出荷で1行でも超過なら_どの行も出荷されない
+  - SalesOrderTests.分納の累計が受注数量を超える出荷は指示できない
+  - SalesOrderTests.明細が複数あるとき_1行でも残りがあれば一部出荷
+  - SalesOrderTests.明細の無い出荷は指示できない
+  - SalesRecordTests.ランダムな出荷と返品の並びでも_売上の合計は常に手元の数量と単価の積の四捨五入に一致する
+  - SalesRecordTests.一部出荷の受注で返品があっても_残りは出荷できる
+  - SalesRecordTests.出荷して手元にある数量を超える返品はできない
+  - SalesRecordTests.出荷を確定すると売上が計上され_売上日は出荷確定日になる
+  - SalesRecordTests.複数行の出荷は_1件の売上に行ごとの明細を持つ
+  - SalesRecordTests.複数行の返品で1行でも超過なら_どの行も返品されない
+  - SalesRecordTests.分納の金額は累計数量で丸めた金額の差で決まり_合計が明細金額に一致する
+  - SalesRecordTests.返品した数量は同じ受注で出荷し直せない
+  - SalesRecordTests.返品しても受注の状態と出荷済み数量は戻らない
+  - SalesRecordTests.返品の売上は数量も金額も負で_累計差分で決まる
+## M12-shipped-if-any-line-done: failed 1 / total 104
+  - SalesOrderTests.明細が複数あるとき_1行でも残りがあれば一部出荷
+## M13-no-return-limit: failed 5 / total 104
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Approved, operation: "返品", allowed: False)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Cancelled, operation: "返品", allowed: False)
+  - SalesOrderTests.状態ごとに許される操作だけができる(status: Received, operation: "返品", allowed: False)
+  - SalesRecordTests.出荷して手元にある数量を超える返品はできない
+  - SalesRecordTests.複数行の返品で1行でも超過なら_どの行も返品されない
+## M14-shipment-cancel-after-confirm: failed 1 / total 104
+  - SalesOrderTests.確定した出荷は取り消せない

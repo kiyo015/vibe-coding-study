@@ -1,0 +1,55 @@
+Day22（2026-10-02）コンパイル実験：未出荷のまま請求しようとする書き方は、コンパイルで落ちるか
+
+方法：sales-core の tests/SalesCore.Domain.Tests に一時ファイル CompileProbe.cs を置き、
+      dotnet build tests/SalesCore.Domain.Tests を実行してエラーを集めた。確認後、一時ファイルは消した。
+
+前提のコード：
+    var order = new SalesOrder([new SalesOrderLine(10, 100m, TaxRate.Of(10m))]);
+    order.Approve();
+
+試した書き方と結果（12通り、すべてコンパイルエラー）：
+
+ 1 受注をそのまま渡す
+     Invoice.Create(order);
+     → CS1503 引数 1: は 'SalesOrder' から 'IEnumerable<SalesRecord>' へ変換することはできません
+ 2 受注の一覧を渡す
+     Invoice.Create([order]);
+     → CS0029 型 'SalesOrder' を 'SalesRecord' に暗黙的に変換できません
+ 3 受注明細を渡す
+     Invoice.Create(order.Lines);
+     → CS1503 引数 1: は 'IReadOnlyList<SalesOrderLine>' から 'IEnumerable<SalesRecord>' へ変換することはできません
+ 4 確定していない出荷指示を渡す
+     Invoice.Create([order.InstructShipment([new(order.Lines[0], 10)])]);
+     → CS0029 型 'Shipment' を 'SalesRecord' に暗黙的に変換できません
+ 5 売上を直接作る
+     var record = new SalesRecord(new DateOnly(2026, 10, 2), []);
+     → CS1729 'SalesRecord' には、引数 2 を指定するコンストラクターは含まれていません
+ 6 売上明細を直接作る
+     var line = new SalesRecordLine(10, 100m, TaxRate.Of(10m), Money.Of(1000));
+     → CS1729 'SalesRecordLine' には、引数 4 を指定するコンストラクターは含まれていません
+ 7 出荷を受注を通さずに作る
+     var shipment = new Shipment(order, []);
+     → CS1729 'Shipment' には、引数 2 を指定するコンストラクターは含まれていません
+ 8 請求書を直接作る
+     var invoice = new Invoice([], new TaxBreakdown([]));
+     → CS1729 'Invoice' には、引数 2 を指定するコンストラクターは含まれていません
+ 9 出荷済み数量だけを進める
+     order.Lines[0].Ship(10);
+     → CS1061 'SalesOrderLine' に 'Ship' の定義が含まれておらず…（internal なので外から見えない）
+10 出荷済み数量を書き換える
+     order.Lines[0].ShippedQuantity = 10;
+     → CS0200 プロパティ 'SalesOrderLine.ShippedQuantity' は読み取り専用であるため、割り当てることはできません
+11 状態を書き換える
+     order.Status = SalesOrderStatus.Shipped;
+     → CS0200 プロパティ 'SalesOrder.Status' は読み取り専用であるため、割り当てることはできません
+12 出荷指示を通さずに売上を計上する
+     order.RecordShipment(new DateOnly(2026, 10, 2), []);
+     → CS1061 'SalesOrder' に 'RecordShipment' の定義が含まれておらず…（internal なので外から見えない）
+
+ビルドの結果：12 エラー。一時ファイルを消した後は、Domain 104件・結合 6件がすべて成功。
+
+この保証が効かなくなる変更と、それを止めるテスト（InvoiceTests）：
+  - 売上・売上明細・出荷・請求書に公開コンストラクタを足す → 「売上と出荷と請求書は_外から直接は作れない」が落ちる
+  - Domain に InternalsVisibleTo を付ける → 同上
+  - Invoice に売上以外を受け取る入口を足す → 「請求書を作る入口は_売上を受け取るものだけ」が落ちる
+守れないもの：リフレクションで非公開のコンストラクタを呼ぶなど、意図して回避するコード。
