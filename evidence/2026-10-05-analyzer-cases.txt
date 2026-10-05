@@ -1,0 +1,10 @@
+C0-baseline-no-violation: exit 0 -> no errors
+C1-rounding-api-in-domain: exit 1 -> RS0030@Probe.cs:10, RS0030@Probe.cs:11, RS0030@Probe.cs:6, RS0030@Probe.cs:7, RS0030@Probe.cs:8, RS0030@Probe.cs:9
+C2-double-in-domain: exit 1 -> SALES001@Probe.cs:
+C3-float-cast-in-domain: exit 1 -> SALES001@Probe.cs:
+C4-pragma-outside-money: exit 1 -> SALES002@Probe.cs:
+C5-suppressmessage-outside-money: exit 1 -> SALES002@Probe.cs:
+C6-nowarn-in-csproj: exit 1 -> SALES002
+C7-rounding-api-in-api-project: exit 1 -> RS0030@Probe.cs:6
+C8-double-in-infrastructure: exit 1 -> SALES001@Probe.cs:
+C9-known-gap-var-double-and-long-cast: exit 0 -> no errors

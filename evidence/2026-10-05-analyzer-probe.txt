@@ -1,0 +1,44 @@
+Day23（2026-10-05）アナライザの検証：違反コードでビルドが落ちるか
+
+■ 実験1 違反22箇所を1ファイルに並べ、アナライザの有無・版でビルドを比べた（src/SalesCore.Domain/BannedProbe.cs、確認後に削除）
+
+    01 double price = 1.5;                                 12 Math.Floor(amount);
+    02 float rate = 0.1f;                                  13 Math.Ceiling(amount);
+    03 var converted = (double)amount;                     14 Math.Truncate(amount);
+    04 Math.Round(amount);                                 15 decimal.Floor(amount);
+    05 Math.Round(amount, 0);                              16 decimal.Ceiling(amount);
+    06 Math.Round(amount, MidpointRounding.AwayFromZero);  17 decimal.Truncate(amount);
+    07 Math.Round(amount, 0, MidpointRounding.AwayFromZero);18 Convert.ToInt32(amount);
+    08 decimal.Round(amount);                              19 Convert.ToInt64(amount);
+    09 decimal.Round(amount, 0);                           20 (long)amount;
+    10 decimal.Round(amount, MidpointRounding.AwayFromZero);21 (int)amount;
+    11 decimal.Round(amount, 0, MidpointRounding.AwayFromZero);22 Math.Round(price);  // double の丸め
+
+  アナライザなし                     → 警告0・エラー0。ビルド成功（何も止めていない）
+  BannedApiAnalyzers 5.6.0（最新）   → 警告 CS9057 が1件だけ。エラー0。ビルド成功（違反22箇所のまま）
+      CS9057: アナライザー アセンブリ '…BannedApiAnalyzers\5.6.0\…' は、コンパイラのバージョン '4.12.0.0' を
+              参照しています。これは、現在実行中のバージョン '4.11.0.0' よりも新しいバージョンです。
+      （SDK 8.0.421 のコンパイラは 4.11。アナライザが読み込まれず、黙って何も検査していない）
+  5.6.0 ＋ CS9057 をエラーに          → CS9057 のエラーでビルド失敗（黙って無効になることは無くなる）
+  BannedApiAnalyzers 3.3.4           → RS0030 のエラー17件（04〜19、22）。ビルド失敗
+      素通りした5件: 01 double の宣言、02 float の宣言、03 (double) へのキャスト、20 (long)、21 (int)
+      → 型の宣言とキャストは BannedApiAnalyzers の検査の対象外
+      既存コードでも6件: Money.cs 3件、SalesOrderLine.cs 2件・TaxRate.cs 1件（桁数の検査の decimal.Truncate）
+      → 桁数の検査は「x * 100m % 1m != 0m」に書き換え、Money.cs の2か所だけ #pragma で許可した
+
+■ 実験2 最終形の設定で、違反を1種類ずつ入れてビルドした（evidence/2026-10-05-analyzer-cases.ps1）
+
+  C0 違反なし（基準）                         → 成功
+  C1 Domain で Math.Round など6種             → RS0030 6件で失敗
+  C2 Domain で double の宣言                  → SALES001 で失敗（ソースの文字列の検査）
+  C3 Domain で (float) へのキャスト            → SALES001 で失敗
+  C4 Money.cs 以外で #pragma warning disable RS0030 → SALES002 で失敗
+  C5 Money.cs 以外で [SuppressMessage(…"RS0030")]  → SALES002 で失敗
+  C6 csproj の NoWarn に RS0030                → SALES002 で失敗
+  C7 Api プロジェクトで Math.Round             → RS0030 で失敗（src の全プロジェクトに効く）
+  C8 Infrastructure プロジェクトで double      → SALES001 で失敗
+  C9 既知の穴: var price = 1.5 と (long)amount → 成功（止まらない。レビューで拾う）
+
+■ 最終確認
+  ソリューション全体のビルド: エラー0（警告1件は既存の MSB3277。EF Core の版の競合で、今日の変更とは無関係）
+  テスト: Domain 104件・結合 6件 すべて成功（桁数の検査の書き換えも既存のテストで確認）

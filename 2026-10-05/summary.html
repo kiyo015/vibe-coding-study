@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day23 学習記録 — アナライザで強制にする</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day23 ／ 基幹システム開発</p>
+    <h1>アナライザで強制にする — 「入れた」は「効いている」ではない</h1>
+    <p class="lead">「金額に double・float を使わない」「端数処理は Money の中だけ」を、お願いからビルドで止める強制に変えた。最新版のアナライザが黙って無効になること、型の宣言とキャストは検査されないことを実測で見つけ、両方に手当てをした。</p>
+    <div class="doc-meta"><span>2026-10-05</span><span>対象: sales-core ／ src 配下の全プロジェクト</span><span>段階1 / Day23</span></div>
+  </header>
+
+  <section>
+    <h2>エグゼクティブサマリー</h2>
+    <ol class="summary">
+      <li><b>違反コードでビルドが落ちるようになった。</b>違反を1種類ずつ入れた8ケースはすべて失敗し、違反なしは成功した。CLAUDE.md の2行は「お願い」から「強制（ビルド）＋お願い」に変わった。</li>
+      <li><b>最新版のアナライザ（5.6.0）は、警告1件を出すだけで何も検査していなかった。</b>SDK のコンパイラより新しく、読み込まれない。3.3.4 に固定し、その警告（CS9057）をエラーにした。</li>
+      <li><b>BannedApiAnalyzers は型の宣言とキャストを見ない。</b>double・float はソースの文字列の検査で止め、Money.cs 以外での抑止もビルドで止めた。</li>
+      <li><b>止められない書き方が2つ残る</b>（<code>var x = 1.5</code>、<code>(long)amount</code>）。実測したうえで、レビューで拾うと明記した。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>違反22箇所を、構成ごとにビルドした</h2>
+    <p class="msg">アナライザを入れても、版が合わなければ何も止まらない。止めたいものを入れて、止まるのを見るまで分からない。</p>
+
+    <figure>
+      <figcaption>図表1: 違反22箇所のうち、ビルドで止まった数</figcaption>
+      <svg viewBox="0 0 700 196" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="構成ごとに止まった違反の数">
+        <line x1="250" y1="12" x2="250" y2="184" stroke="#a8adb5" stroke-width="1"/>
+        <text x="240" y="36" text-anchor="end" font-size="12.5" fill="#555555">アナライザなし</text>
+        <rect x="250" y="22" width="2" height="22" fill="#c9ccd1"/>
+        <text x="260" y="38" font-size="12.5" fill="#555555">0（ビルド成功）</text>
+
+        <text x="240" y="80" text-anchor="end" font-size="12.5" fill="#555555">5.6.0（最新版）</text>
+        <rect x="250" y="66" width="2" height="22" fill="#c9ccd1"/>
+        <text x="260" y="82" font-size="12.5" fill="#555555">0（警告 CS9057 が1件だけ。ビルド成功）</text>
+
+        <text x="240" y="124" text-anchor="end" font-size="12.5" fill="#555555">3.3.4</text>
+        <rect x="250" y="110" width="255" height="22" fill="#c9ccd1"/>
+        <text x="515" y="126" font-size="12.5" fill="#555555">17（RS0030）</text>
+
+        <text x="240" y="168" text-anchor="end" font-size="12.5" fill="#1a1a1a" font-weight="700">3.3.4 ＋ ソースの文字列検査</text>
+        <rect x="250" y="154" width="300" height="22" fill="#173f66"/>
+        <text x="560" y="170" font-size="12.5" fill="#173f66" font-weight="700">20（残り2つはキャスト）</text>
+      </svg>
+      <p class="src">出所: <code>dotnet build</code>（2026-10-05）。22箇所の一覧は付録。止まらない2つは <code>(long)amount</code> と <code>(int)amount</code></p>
+    </figure>
+
+    <p class="note"><b>5.6.0 の CS9057 は「アナライザがコンパイラ 4.12 を参照している。実行中は 4.11」という知らせ。</b>SDK 8.0.421 より新しいアナライザは読み込まれず、違反22箇所のままビルドが通った。警告は1件だけで、ほかの出力に紛れる。手当ては、3.3.4 に固定することと、CS9057 をエラーにすること（5.6.0 で失敗することを確認）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>道具が見ないところを、別の検査で止める</h2>
+    <p class="msg">BannedApiAnalyzers は API の呼び出しを見る道具で、型の宣言とキャストは見ない。そこをソースの文字列の検査で補った。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表2: 3つの止め方と、その範囲</caption>
+      <thead><tr><th>コード</th><th>仕組み</th><th>止めるもの</th></tr></thead>
+      <tbody>
+        <tr><td>RS0030</td><td>BannedApiAnalyzers 3.3.4（<code>src/BannedSymbols.txt</code>）</td><td><code>Math.Round</code>・<code>decimal.Round</code> の全形、<code>Floor</code>・<code>Ceiling</code>・<code>Truncate</code>、<code>Convert.ToInt32/64</code></td></tr>
+        <tr><td>SALES001</td><td>コンパイル前に、ソースの文字列を調べる</td><td><code>double</code>・<code>float</code> の宣言とキャスト</td></tr>
+        <tr><td>SALES002</td><td>同上</td><td><code>Money.cs</code> 以外での RS0030 の抑止（<code>#pragma</code>・<code>SuppressMessage</code>・<code>NoWarn</code>）</td></tr>
+        <tr class="total"><td>CS9057</td><td>エラーに格上げ</td><td>アナライザが読み込まれずに黙って無効になること</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p><b>SALES002 は計画に無かったが、「強制」と書くための前提として足した。</b>抑止が自由なら、エラーが出た人が1行足して黙らせられる。抑止してよいのは <code>Money.cs</code> の丸めと正規化の2箇所だけ。</p>
+
+    <p>既存のコードも6箇所が引っかかった。<code>Money.cs</code> の3箇所は2箇所を <code>#pragma</code> で許可し、1箇所は書き換えた。<code>TaxRate.cs</code>・<code>SalesOrderLine.cs</code> の桁数の検査（小数2桁・3桁まで）は、<code>decimal.Truncate</code> を <code>x * 100m % 1m != 0m</code> に替えた。端数処理ではないが、<code>Truncate</code> を許すと抜け道になるため。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>対照実験：違反を1種類ずつ入れてビルドした</h2>
+    <p class="msg">違反を入れた8ケースはすべて失敗し、違反なしは成功した。止まらない穴（C9）も、実測して残した。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表3: ケースごとの結果</caption>
+      <thead><tr><th>ケース</th><th>入れた違反</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>C0</td><td>なし（基準）</td><td>成功</td></tr>
+        <tr><td>C1</td><td>Domain で <code>Math.Round</code> など6種</td><td>RS0030 6件で失敗</td></tr>
+        <tr><td>C2</td><td>Domain で <code>double</code> の宣言</td><td>SALES001 で失敗</td></tr>
+        <tr><td>C3</td><td>Domain で <code>(float)</code> へのキャスト</td><td>SALES001 で失敗</td></tr>
+        <tr><td>C4</td><td><code>Money.cs</code> 以外で <code>#pragma warning disable RS0030</code></td><td>SALES002 で失敗</td></tr>
+        <tr><td>C5</td><td><code>Money.cs</code> 以外で <code>SuppressMessage</code></td><td>SALES002 で失敗</td></tr>
+        <tr><td>C6</td><td>csproj の <code>NoWarn</code> に RS0030</td><td>SALES002 で失敗</td></tr>
+        <tr><td>C7</td><td>Api プロジェクトで <code>Math.Round</code></td><td>RS0030 で失敗</td></tr>
+        <tr><td>C8</td><td>Infrastructure プロジェクトで <code>double</code></td><td>SALES001 で失敗</td></tr>
+        <tr class="total"><td>C9</td><td><code>var price = 1.5</code> と <code>(long)amount</code>（既知の穴）</td><td>成功（止まらない）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: <code>evidence/2026-10-05-analyzer-cases.ps1</code>。各ケースの後にファイルを必ず元に戻す。2回実行して同じ結果</p>
+
+    <p>C7・C8 で、<code>src</code> 配下の全プロジェクトに効くことも確かめた。<code>tests</code> 配下には効かない（テストは期待値を <code>long</code> などの別の方法で出すため）。C9 の書き方は、文字列の検査では見つけられない。CLAUDE.md に「レビューで拾う」と明記した。正確に止めるには、型を調べる自前のアナライザが要る。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>Day22 からの持ち越し</h2>
+    <p class="msg">決めごと4点はすべて推奨どおりで確定。テスト時間の増分は約2〜3秒で、件数は据え置いた。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表4: 本人に確認した Day22 の決めごと</caption>
+      <thead><tr><th>決めごと</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>返品しても受注の状態と出荷済み数量は戻さない</td><td>確定</td></tr>
+        <tr><td>返品した数量は同じ受注で出荷し直せない</td><td>確定</td></tr>
+        <tr><td>出荷指示だけでは数量を押さえない</td><td>確定</td></tr>
+        <tr><td>確定した出荷は取り消せない。返品の売上日は返品日</td><td>確定</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="tbl">
+    <table>
+      <caption>図表5: ランダムテスト1件ごとの所要時間（単独で3回）</caption>
+      <thead><tr><th>テスト</th><th class="num">1回目</th><th class="num">2回目</th><th class="num">3回目</th></tr></thead>
+      <tbody>
+        <tr><td>Day22 の出荷と返品 1万件</td><td class="num">2.1秒</td><td class="num">3.3秒</td><td class="num">3.5秒</td></tr>
+        <tr><td>Day21 の請求書 1万件</td><td class="num">0.8秒</td><td class="num">1.4秒</td><td class="num">1.5秒</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">PCの負荷は Claude アプリ自体で 30〜100% を行き来し、下がりきらなかった。全体の時間ではなく、テスト1件ごとの時間で比べた</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>今日学んだこと</h2>
+    <p class="msg">安全柵は、止まるべきものを入れて、止まるのを見るまで効いているとは言えない。</p>
+    <ul>
+      <li><b>「入れた」は「効いている」ではない。</b>最新版を入れた時点でビルドは通り、警告は1件だった。違反を入れて確かめなければ「強制にした」と記録していた。Day17 の dev-guard と同じ教訓を、ビルドの設定でも繰り返した</li>
+      <li><b>安全柵が外れたことを知らせる警告は、エラーにする。</b>CS9057 は「この道具は今動いていない」という知らせだった</li>
+      <li><b>道具が何を見ていて、何を見ていないかを測る。</b>名前から「禁止したものは全部止まる」と思い込んでいた。違反を種類ごとに並べたことで、止まらない5箇所がはっきりした</li>
+      <li><b>強制には、抜け道を塞ぐところまで含める。</b>1行で黙らせられるなら強制ではない</li>
+      <li><b>止められない穴は、穴として書く。</b>「強制」と書くなら、どこまでが強制かも書く</li>
+    </ul>
+
+    <h3>つまずき</h3>
+    <ul>
+      <li><b>対照実験の書き戻しで、csproj の先頭の BOM が外れた。</b>文字列として読み、BOM なしで書き戻したため。git で元に戻し、スクリプトをバイト列のまま退避・復元する形に直した。直した版でもう一度実行し、差分が出ないことを確かめた</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>次のアクション</h2>
+    <p class="msg">Day24 はレビュー役の model を実測で決める。仕込む誤りは、今日からビルドで止まるもの以外にする。</p>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v">8<small>/8</small></div><div class="l">違反を入れて落ちたケース</div></div>
+      <div class="kpi"><div class="v">20<small>/22</small></div><div class="l">ビルドで止まる違反の書き方</div></div>
+      <div class="kpi"><div class="v">110<small>/110</small></div><div class="l">テスト（Domain 104＋結合 6）</div></div>
+    </div>
+
+    <div class="tbl">
+    <table>
+      <caption>図表6: Day24 の作業と完了条件</caption>
+      <thead><tr><th>作業</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>スキル</td><td><code>domain-rule-change</code>: 税率・端数処理・締め日を変えるときに、コード・テスト・<code>docs/domain/</code> を一緒に直す手順</td></tr>
+        <tr><td>レビュー役</td><td><code>team-reviewer</code> の観点に「金額の型と端数処理」「状態遷移」「取消と削除」「秘密情報」を追加</td></tr>
+        <tr><td>model 比較</td><td>誤りを仕込んだ差分を haiku／sonnet／opus にレビューさせる。仕込む誤りは、明細ごとに税を丸める・<code>(long)</code> で切り捨てる等、ビルドで止まらないものにする</td></tr>
+        <tr class="total"><td><b>完了条件</b></td><td>比較表ができ、実測に基づいてレビュー役の <code>model</code> を決めている</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>成果物</h3>
+    <p><b>sales-core（製品コード）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day23/src/Directory.Build.props">src/Directory.Build.props</a> — アナライザ 3.3.4、RS0030・CS9057 をエラーに、SALES001・002 の検査</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day23/src/BannedSymbols.txt">src/BannedSymbols.txt</a> — 禁止する24項目と理由</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day23/src/SalesCore.Domain/Money.cs">Money.cs</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day23/src/SalesCore.Domain/TaxRate.cs">TaxRate.cs</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day23/src/SalesCore.Domain/SalesOrderLine.cs">SalesOrderLine.cs</a> — 許可は Money.cs の2箇所だけ、桁数の検査を書き換え</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day23/CLAUDE.md">CLAUDE.md</a> — 禁止事項2行を強制に、仕組みの節を追加</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day23/docs/domain/business-rules.md">business-rules.md</a> — 端数処理の強制、Day22 の決めごとの本人確認</li>
+    </ul>
+    <p><b>Study（学習記録）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day23/evidence/2026-10-05-analyzer-probe.txt">evidence/2026-10-05-analyzer-probe.txt</a> — 違反22箇所の実験と版の比較</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day23/evidence/2026-10-05-analyzer-cases.txt">evidence/2026-10-05-analyzer-cases.txt</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day23/evidence/2026-10-05-analyzer-cases.ps1">analyzer-cases.ps1</a> — 対照実験10ケース</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day23/2026-10-05/summary.md">2026-10-05/summary.md</a> — この記録のMarkdown版</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">付録</span>設定と検証の中身</h2>
+    <p class="msg">図表1〜3の根拠。スクリプト本体は添付せず、設定の要点と出力をここに載せる。</p>
+
+    <p>違反22箇所（図表1）:</p>
+<pre>01 double price = 1.5;                  12 Math.Floor(amount);
+02 float rate = 0.1f;                   13 Math.Ceiling(amount);
+03 (double)amount                       14 Math.Truncate(amount);
+04 Math.Round(amount);                  15 decimal.Floor(amount);
+05 Math.Round(amount, 0);               16 decimal.Ceiling(amount);
+06 Math.Round(amount, AwayFromZero);    17 decimal.Truncate(amount);
+07 Math.Round(amount, 0, AwayFromZero); 18 Convert.ToInt32(amount);
+08 decimal.Round(amount);               19 Convert.ToInt64(amount);
+09 decimal.Round(amount, 0);            20 (long)amount
+10 decimal.Round(amount, AwayFromZero); 21 (int)amount
+11 decimal.Round(amount, 0, AwayFromZero); 22 Math.Round(price)   // double の丸め
+
+3.3.4 で止まった: 04〜19・22（17件）  素通り: 01・02・03・20・21
+文字列の検査を足して止まった: 01・02・03          残る穴: 20・21（キャスト）</pre>
+
+    <p>CS9057 の全文（5.6.0 のとき）:</p>
+<pre>CSC : warning CS9057: アナライザー アセンブリ '…\bannedapianalyzers\5.6.0\…BannedApiAnalyzers.dll' は、
+コンパイラのバージョン '4.12.0.0' を参照しています。これは、現在実行中のバージョン '4.11.0.0' よりも新しいバージョンです。</pre>
+
+    <p>ビルドで止める設定（<code>src/Directory.Build.props</code> の要点）:</p>
+<pre>&lt;PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4" PrivateAssets="all" /&gt;
+&lt;AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" /&gt;
+&lt;WarningsAsErrors&gt;$(WarningsAsErrors);RS0030;CS9057&lt;/WarningsAsErrors&gt;
+
+コンパイルの前に（Target BeforeTargets="CoreCompile"）:
+  SALES001  ソースが '\b(double|float|Double)\b|\bSystem\.Single\b' に一致する
+  SALES002  Money.cs 以外のソースが 'RS0030' を含む ／ NoWarn に RS0030 か CS9057 がある</pre>
+
+    <p>対照実験10ケースの出力（図表3）:</p>
+<pre>C0-baseline-no-violation: exit 0 -&gt; no errors
+C1-rounding-api-in-domain: exit 1 -&gt; RS0030 ×6
+C2-double-in-domain: exit 1 -&gt; SALES001
+C3-float-cast-in-domain: exit 1 -&gt; SALES001
+C4-pragma-outside-money: exit 1 -&gt; SALES002
+C5-suppressmessage-outside-money: exit 1 -&gt; SALES002
+C6-nowarn-in-csproj: exit 1 -&gt; SALES002
+C7-rounding-api-in-api-project: exit 1 -&gt; RS0030
+C8-double-in-infrastructure: exit 1 -&gt; SALES001
+C9-known-gap-var-double-and-long-cast: exit 0 -&gt; no errors</pre>
+    <p class="src">スクリプトと全結果は GitHub（タグ day23 の <code>evidence/</code>）で読める</p>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day23 学習記録 — アナライザで強制にする</span>
+    <span>2026-10-05 ／ RS0030・SALES001・SALES002・CS9057 ／ タグ day23</span>
+  </footer>
+
+</div>
+</body>
+</html>
