@@ -1,0 +1,201 @@
+次の差分をレビューしてください。
+
+## 何を実現する変更か
+受注の変更機能を追加する。
+- 明細の数量変更(ChangeQuantity)
+- 明細の削除(RemoveLine)
+- 受注全体への値引き(ApplyDiscount、% 指定)
+あわせて、請求書に明細ごとの税額(LineTaxes)と請求額(TotalAmount)を追加し、開発環境の設定を更新する。
+作業ツリーにはこの差分が当たっている。
+
+## 差分
+```diff
+diff --git a/src/SalesCore.Api/appsettings.Development.json b/src/SalesCore.Api/appsettings.Development.json
+index 0c208ae..a11bb18 100644
+--- a/src/SalesCore.Api/appsettings.Development.json
++++ b/src/SalesCore.Api/appsettings.Development.json
+@@ -4,5 +4,8 @@
+       "Default": "Information",
+       "Microsoft.AspNetCore": "Warning"
+     }
++  },
++  "ConnectionStrings": {
++    "SalesCore": "Host=localhost;Port=5432;Database=salescore_dev;Username=salescore_dev;Password=<仕込みの架空の値>"
+   }
+ }
+diff --git a/src/SalesCore.Domain/Invoice.cs b/src/SalesCore.Domain/Invoice.cs
+index d224734..110ebe5 100644
+--- a/src/SalesCore.Domain/Invoice.cs
++++ b/src/SalesCore.Domain/Invoice.cs
+@@ -17,6 +17,13 @@ public sealed class Invoice
+     /// <summary>税率ごとの対象額と税額。売上ごとではなく、請求書全体で税率ごとに1回だけ丸める。</summary>
+     public TaxBreakdown Tax { get; }
+ 
++    /// <summary>明細ごとの税額。請求書の明細欄に出す。</summary>
++    public IReadOnlyList<Money> LineTaxes =>
++        SalesRecords.SelectMany(record => record.Lines).Select(line => line.TaxRate.TaxOn(line.Amount)).ToList();
++
++    /// <summary>請求額(税込)。明細欄の税額と合うように、明細ごとの税額を足して出す。</summary>
++    public Money TotalAmount => Tax.TaxableTotal + LineTaxes.Aggregate(Money.Zero, (total, tax) => total + tax);
++
+     public static Invoice Create(IEnumerable<SalesRecord> salesRecords)
+     {
+         var records = salesRecords.ToList();
+diff --git a/src/SalesCore.Domain/SalesOrder.cs b/src/SalesCore.Domain/SalesOrder.cs
+index c9a4238..8c07798 100644
+--- a/src/SalesCore.Domain/SalesOrder.cs
++++ b/src/SalesCore.Domain/SalesOrder.cs
+@@ -59,6 +59,34 @@ public sealed class SalesOrder
+         Status = SalesOrderStatus.Cancelled;
+     }
+ 
++    /// <summary>明細の数量を変える(得意先からの数量変更)。</summary>
++    public void ChangeQuantity(SalesOrderLine line, decimal quantity)
++    {
++        Require(Status is not SalesOrderStatus.Cancelled, "数量変更");
++        if (!_lines.Contains(line))
++        {
++            throw new ArgumentException("この受注の明細ではない。", nameof(line));
++        }
++        line.ChangeQuantity(quantity);
++    }
++
++    /// <summary>明細を削除する(得意先から明細の取り下げがあったとき)。</summary>
++    public void RemoveLine(SalesOrderLine line)
++    {
++        Require(Status is not SalesOrderStatus.Cancelled, "明細の削除");
++        _lines.Remove(line);
++    }
++
++    /// <summary>受注全体に値引き(%)をかける。各明細の単価を下げる。</summary>
++    public void ApplyDiscount(int percent)
++    {
++        Require(Status is not SalesOrderStatus.Cancelled, "値引き");
++        foreach (var line in _lines)
++        {
++            line.ApplyDiscount(percent);
++        }
++    }
++
+     /// <summary>出荷を指示する。この時点では出荷済み数量も状態も変わらない(変わるのは確定のとき)。</summary>
+     public Shipment InstructShipment(IEnumerable<OrderLineQuantity> lines)
+     {
+diff --git a/src/SalesCore.Domain/SalesOrderLine.cs b/src/SalesCore.Domain/SalesOrderLine.cs
+index b3a1273..5c026fe 100644
+--- a/src/SalesCore.Domain/SalesOrderLine.cs
++++ b/src/SalesCore.Domain/SalesOrderLine.cs
+@@ -24,10 +24,10 @@ public sealed class SalesOrderLine
+     }
+ 
+     /// <summary>受注数量。</summary>
+-    public decimal Quantity { get; }
++    public decimal Quantity { get; private set; }
+ 
+-    /// <summary>受注時点の単価。</summary>
+-    public decimal UnitPrice { get; }
++    /// <summary>受注時点の単価。値引きで下がる。</summary>
++    public decimal UnitPrice { get; private set; }
+ 
+     /// <summary>受注時点の税率。</summary>
+     public TaxRate TaxRate { get; }
+@@ -50,6 +50,14 @@ public sealed class SalesOrderLine
+     /// </summary>
+     public Money SalesAmount => AmountOf(ShippedQuantity - ReturnedQuantity);
+ 
++    internal void ChangeQuantity(decimal quantity) => Quantity = quantity;
++
++    internal void ApplyDiscount(int percent)
++    {
++        var factor = 1 - percent / 100.0;
++        UnitPrice = (long)(UnitPrice * (decimal)factor * 100) / 100m; // 単価は小数2桁まで
++    }
++
+     internal static void EnsureQuantity(decimal quantity, string paramName)
+     {
+         if (quantity <= 0m)
+diff --git a/tests/SalesCore.Domain.Tests/InvoiceTests.cs b/tests/SalesCore.Domain.Tests/InvoiceTests.cs
+index 4e49655..c86a474 100644
+--- a/tests/SalesCore.Domain.Tests/InvoiceTests.cs
++++ b/tests/SalesCore.Domain.Tests/InvoiceTests.cs
+@@ -73,6 +73,19 @@ public class InvoiceTests
+         Assert.Equal(Money.Zero, invoice.Tax.TotalWithTax);
+     }
+ 
++    [Fact]
++    public void 請求額は税抜合計と税額の合計()
++    {
++        var line = new SalesOrderLine(2, 1000m, Standard);
++        var order = Approved(line);
++        var record = Ship(order, line, 2);
++
++        var invoice = Invoice.Create([record]);
++
++        Assert.Equal(Money.Of(2200), invoice.TotalAmount);
++        Assert.Equal(new[] { Money.Of(200) }, invoice.LineTaxes);
++    }
++
+     // ── 型による保証 ──
+     // 売上・出荷・請求書に公開コンストラクタが無いので、外のコードは出荷確定を通さずに売上を作れない。
+     // InternalsVisibleTo があると internal のコンストラクタが外から呼べてしまうので、付いていないことも確かめる
+diff --git a/tests/SalesCore.Domain.Tests/SalesOrderTests.cs b/tests/SalesCore.Domain.Tests/SalesOrderTests.cs
+index f3db631..3f8d30e 100644
+--- a/tests/SalesCore.Domain.Tests/SalesOrderTests.cs
++++ b/tests/SalesCore.Domain.Tests/SalesOrderTests.cs
+@@ -22,6 +22,55 @@ public class SalesOrderTests
+     private static SalesRecord Ship(SalesOrder order, SalesOrderLine line, decimal quantity) =>
+         order.InstructShipment([new(line, quantity)]).Confirm(Today);
+ 
++    // ── 受注の変更 ──
++    [Fact]
++    public void 明細の数量を変えられる()
++    {
++        var line = Line(10);
++        var order = Approved(line);
++
++        order.ChangeQuantity(line, 5);
++
++        Assert.Equal(5m, line.Quantity);
++        Assert.Equal(Money.Of(500), order.Amount);
++    }
++
++    [Fact]
++    public void 明細を削除できる()
++    {
++        var first = Line(10);
++        var second = Line(5);
++        var order = Approved(first, second);
++
++        order.RemoveLine(second);
++
++        Assert.Equal(first, Assert.Single(order.Lines));
++    }
++
++    [Fact]
++    public void 値引きすると全明細の単価が下がる()
++    {
++        var first = Line(10, 1000m);
++        var second = Line(5, 200m);
++        var order = Approved(first, second);
++
++        order.ApplyDiscount(10);
++
++        Assert.Equal(900m, first.UnitPrice);
++        Assert.Equal(180m, second.UnitPrice);
++    }
++
++    [Fact]
++    public void 取り消した受注は変更できない()
++    {
++        var line = Line(10);
++        var order = new SalesOrder([line]);
++        order.Cancel();
++
++        Assert.Throws<InvalidOperationException>(() => order.ChangeQuantity(line, 5));
++        Assert.Throws<InvalidOperationException>(() => order.ApplyDiscount(10));
++    }
++
+     // ── 状態の進み方 ──
+     [Fact]
+     public void 登録した受注は受付で始まる()
+
+```

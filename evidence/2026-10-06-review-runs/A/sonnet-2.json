@@ -1,0 +1,40 @@
+{
+    "model":  "claude-sonnet-5",
+    "total_cost_usd":  0.2658584,
+    "duration_ms":  188694,
+    "num_turns":  12,
+    "permission_denials":  11,
+    "usage":  {
+                  "input_tokens":  10,
+                  "cache_creation_input_tokens":  25451,
+                  "cache_read_input_tokens":  87022,
+                  "output_tokens":  14663,
+                  "output_tokens_details":  {
+                                                "thinking_tokens":  10028
+                                            },
+                  "server_tool_use":  {
+                                          "web_search_requests":  0,
+                                          "web_fetch_requests":  0
+                                      },
+                  "service_tier":  "standard",
+                  "cache_creation":  {
+                                         "ephemeral_1h_input_tokens":  25451,
+                                         "ephemeral_5m_input_tokens":  0
+                                     },
+                  "inference_geo":  "not_available",
+                  "iterations":  [
+                                     {
+                                         "input_tokens":  2,
+                                         "output_tokens":  5713,
+                                         "cache_read_input_tokens":  21693,
+                                         "cache_creation_input_tokens":  8338,
+                                         "cache_creation":  {
+                                                                "ephemeral_5m_input_tokens":  0,
+                                                                "ephemeral_1h_input_tokens":  8338
+                                                            },
+                                         "type":  "message"
+                                     }
+                                 ],
+                  "speed":  "standard"
+              }
+}

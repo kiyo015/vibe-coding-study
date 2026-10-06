@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day24 学習記録 — レビュー役の model 比較</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:520px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day24 ／ 基幹システム開発</p>
+    <h1>レビュー役の model を実測で決める — 見逃しより怖いのは、もっともらしい誤り</h1>
+    <p class="lead">業務ルールを変える手順をスキルにし、レビュー役に業務の観点を足した。誤りを仕込んだ同じ差分を haiku／sonnet／opus に18回レビューさせ、検出・誤り・費用・時間を比べて、レビュー役を opus に決めた。2週目の最終日。</p>
+    <div class="doc-meta"><span>2026-10-06</span><span>対象: sales-core ／ .claude（エージェント・スキル）</span><span>段階1 / Day24</span></div>
+  </header>
+
+  <section>
+    <h2>エグゼクティブサマリー</h2>
+    <ol class="summary">
+      <li><b>レビュー役の model を opus に決めた。</b>11項目の誤りを含む差分で、平均の検出は opus 10.8・sonnet 9.7・haiku 7.0。opus は最も速く（60秒）、誤った記述が0件。費用は sonnet の1.1倍（1回 $0.29）。</li>
+      <li><b>haiku の問題は見逃しよりも、存在しない API や合わない計算をもっともらしく書くこと。</b>1回は、仕込んだ税の誤りを「良い点」として褒めた。</li>
+      <li><b>1回目の9回は、すべての model がファイルを読めていなかった。</b>Windows の短縮パスが原因。差分だけのレビュー（Day29 の CI と同じ条件）として使い、読める条件で回し直した。</li>
+      <li><b>レビュー役が sales-core に無かったので新しく作った。</b>ルール変更の手順は <code>domain-rule-change</code> スキルにまとめ、新しいセッションで呼ばれることを確かめた。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>比べ方：CIを通る誤りだけを仕込む</h2>
+    <p class="msg">誤りを10種仕込んでも、ビルドはエラー0、テスト109件はすべて成功した。どれもレビューで拾うしかない誤り。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表1: 仕込んだ誤り（観点の一覧に載せていない3種を混ぜた）</caption>
+      <thead><tr><th>#</th><th>誤り</th><th>観点の一覧に</th></tr></thead>
+      <tbody>
+        <tr><td>P1</td><td>請求額に、明細ごとに丸めた税額の合計を使う</td><td>載せた</td></tr>
+        <tr><td>P2</td><td>値引きの計算が double（<code>percent / 100.0</code>）</td><td>載せた</td></tr>
+        <tr><td>P3</td><td>値引き後の単価を <code>(long)</code> キャストで切り捨てる</td><td>載せた</td></tr>
+        <tr><td>P4</td><td>数量を出荷済み数量より小さくできる</td><td>載せた</td></tr>
+        <tr><td>P5</td><td>出荷後も単価・数量を変えられ、計上済みの売上と合わなくなる</td><td>載せた</td></tr>
+        <tr><td>P6</td><td>明細を物理削除する</td><td>載せた</td></tr>
+        <tr><td>P7</td><td>接続文字列のパスワードを設定ファイルに書く（架空の値）</td><td>載せた</td></tr>
+        <tr><td>P8</td><td>数量変更で 0・負・小数4桁を検査しない</td><td><b>載せていない</b></td></tr>
+        <tr><td>P9</td><td>最後の明細を消すと、明細0行の受注になる</td><td><b>載せていない</b></td></tr>
+        <tr><td>P10</td><td>値引き率の範囲（負・100超）を検査しない</td><td><b>載せていない</b></td></tr>
+        <tr class="total"><td>P11</td><td>伝票全体への値引きは、業務ルールで「扱わない」と決めている</td><td>仕込んだつもりは無かった</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p class="note"><b>P11 は最初の試行で haiku が見つけた。</b>Day20 に本人が決めた「伝票全体への値引きは扱わない」に、差分を作った Claude 自身が反していた。業務ルール集を常に読み込んでいても、作る側は見落とす。レビュー役が別に読む意味がある。</p>
+
+    <p>実行は <code>claude -p --agent team-reviewer --model &lt;m&gt;</code>。エージェントの定義はそのまま渡し、変えたのは <code>--model</code> だけ。<code>--setting-sources project</code> で、個人のプラグインや口調を変えるフックを混ぜない。各 model 3回 × 2条件で、合計18回。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>結果を読む前に：道具は使えていたか</h2>
+    <p class="msg">1回目の9回は、全回で Read・Grep が権限拒否されていた。出力の一文から気付き、JSON の記録で確かめた。</p>
+
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">出力の一文<small>「短縮パスで読めなかった」</small></div>
+      <div class="chev">記録を確かめる<small>permission_denials 1〜8件</small></div>
+      <div class="chev on">条件A として使う<small>差分だけのレビュー</small></div>
+      <div class="chev">長いパスで再実行<small>拒否 0件</small></div>
+      <div class="chev on">条件B<small>周りのコードも読める</small></div>
+    </div></div>
+    <p class="src">図表2: 交絡要因の見つけ方と扱い。<code>%TEMP%</code> は <code>C:\Users\SAKAGU~1\…</code> という短縮形で返り、権限の確認で作業ディレクトリの中と認められなかった</p>
+
+    <p>条件A（差分だけ）は Day29 の CI で差分だけを渡す形と同じなので、捨てずに使った。追加の費用は $2.17。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>結果：opus が最も多く見つけ、誤りを書かなかった</h2>
+    <p class="msg">検出は opus 10.8・sonnet 9.7・haiku 7.0（11項目中）。opus はファイルを読める条件で3回とも満点だった。</p>
+
+    <figure>
+      <figcaption>図表3: 11項目中の検出数（6回の平均）</figcaption>
+      <svg viewBox="0 0 700 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="model ごとの検出数">
+        <line x1="120" y1="12" x2="120" y2="138" stroke="#a8adb5" stroke-width="1"/>
+        <text x="110" y="36" text-anchor="end" font-size="12.5" fill="#555555">haiku</text>
+        <rect x="120" y="22" width="280" height="22" fill="#c9ccd1"/>
+        <text x="410" y="38" font-size="12.5" fill="#555555">7.0（条件A 7.3 ／ 条件B 6.7）</text>
+
+        <text x="110" y="80" text-anchor="end" font-size="12.5" fill="#555555">sonnet</text>
+        <rect x="120" y="66" width="388" height="22" fill="#c9ccd1"/>
+        <text x="518" y="82" font-size="12.5" fill="#555555">9.7（9.3 ／ 10.0）</text>
+
+        <text x="110" y="124" text-anchor="end" font-size="12.5" fill="#1a1a1a" font-weight="700">opus</text>
+        <rect x="120" y="110" width="432" height="22" fill="#173f66"/>
+        <text x="562" y="126" font-size="12.5" fill="#173f66" font-weight="700">10.8（10.7 ／ 11.0）</text>
+      </svg>
+      <p class="src">出所: <code>evidence/2026-10-06-review-grading.md</code>。棒の長さは11項目＝440px。採点は「その問題を問題として挙げたか」で、Claude 1人が行った</p>
+    </figure>
+
+    <div class="tbl">
+    <table>
+      <caption>図表4: 1回あたりの比較（6回の平均）</caption>
+      <thead><tr><th></th><th class="num">haiku</th><th class="num">sonnet</th><th class="num">opus</th></tr></thead>
+      <tbody>
+        <tr><td>検出（11項目中）</td><td class="num">7.0</td><td class="num">9.7</td><td class="num"><b>10.8</b></td></tr>
+        <tr><td>一覧に無い3種（18点満点）</td><td class="num">6</td><td class="num">13</td><td class="num"><b>17</b></td></tr>
+        <tr><td>誤った記述（1回あたり）</td><td class="num">3.8</td><td class="num">0.5</td><td class="num"><b>0</b></td></tr>
+        <tr><td>費用</td><td class="num">$0.126</td><td class="num">$0.264</td><td class="num">$0.292</td></tr>
+        <tr class="total"><td>時間</td><td class="num">122秒</td><td class="num">187秒</td><td class="num">60秒</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p><b>誤った記述</b>とは、存在しない API・合わない計算例・事実と違う説明・そのまま入れると新しい誤りになる修正案のこと。haiku は <code>SalesOrderStatus.Accepted</code> や <code>Tax.TotalTax</code> のような存在しない名前を使い、単価を <code>Money.Round</code> で丸める修正案（円単位に丸まり、銭が消える）を出した。条件Bの1回では、仕込んだ税の誤りを「請求額を正しく計算している」と良い点として褒めた。opus は「<code>Money</code> は円単位しか無いので、単価用の丸めを足す」と正しく書いた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>決めたことと、作ったもの</h2>
+    <p class="msg">レビュー役は opus。検出が最多・誤りが0・最速で、費用は sonnet の1.1倍。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表5: Day24 で sales-core に足したもの</caption>
+      <thead><tr><th>ファイル</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td><code>.claude/agents/team-reviewer.md</code></td><td>これまで Study 側にしか無く、sales-core から使えなかった。業務の観点（金額の型と端数処理・状態遷移・取消と削除・秘密情報）を足して新しく作った。<code>model: opus</code></td></tr>
+        <tr><td><code>.claude/skills/domain-rule-change/</code></td><td>業務ルールを変えるときの7手順。本人に確かめる → 文書 → テスト（古い実装で落ちるのを見る）→ 1か所だけ直す → 残りを探す → 確かめる → 記録する</td></tr>
+        <tr><td><code>CLAUDE.md</code></td><td>スキルとレビュー役の場所、model を選んだ根拠</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>スキルは、新しいセッション（haiku）に「標準の消費税率を10%から12%に変えたい」と頼むと呼ばれた。答えも手順どおりで、変更日と軽減税率の扱いを本人に確かめてから「文書 → テスト → コード」の順で進める内容だった（$0.05）。</p>
+
+    <p class="note"><b>Day29 への申し送り:</b> レビュー結果にパスワードの値をそのまま書き写した回が、どの model にもあった（haiku 5/6・sonnet 5/6・opus 3/6）。PR のコメントは公開されるので、CI では指示と出力の検査の両方で防ぐ。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>今日学んだこと</h2>
+    <p class="msg">レビュー役に求めるのは「見つける」ことと「誤ったことを言わない」ことの両方。</p>
+    <ul>
+      <li><b>安いモデルの問題は、もっともらしい誤り。</b>存在しない API や合わない計算を自信のある書き方で出す。そのまま修正に使えば、新しい誤りが入る。件数の比較だけでは見えなかった</li>
+      <li><b>結果を読む前に、道具が想定どおり動いたかを確かめる。</b>ヘッドレス実行では <code>permission_denials</code> を最初に見る。Day23 の「黙って無効なアナライザ」と同じ教訓</li>
+      <li><b>観点の一覧に無い誤りを混ぜて測る。</b>一覧に書いたものだけでは「一覧を読めるか」しか測れない。差が開いたのは一覧に無い3種だった</li>
+      <li><b>作る側は業務ルールを見落とす。</b>常に読み込んでいても、差分を作った Claude が Day20 の決定に反した。レビュー役が別に読む意味がある</li>
+      <li><b>Windows の短縮パスは、権限の判定を変える。</b>ヘッドレスで作業ディレクトリを渡すときは長いパスにする</li>
+    </ul>
+
+    <h3>つまずき</h3>
+    <ul>
+      <li><b>9回をまとめて回すと、ツールの時間制限（10分）を超える。</b>途中で止め、子プロセスが残っていないことを確かめてから、独立したプロセスで起動し直した。止めた実行の費用（最大 $0.1 程度）は記録できていない</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>2週目の振り返り（Day20〜24）</h2>
+    <p class="msg">予定の5日分はすべて完了。業務ルールが「テスト・型・ビルド・レビュー」の4段で守られる形になった。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表6: 2週目に作った守り</caption>
+      <thead><tr><th>Day</th><th>内容</th><th>守り方</th></tr></thead>
+      <tbody>
+        <tr><td>20</td><td>金額型と端数処理</td><td>テスト（境界値・対照実験）</td></tr>
+        <tr><td>21</td><td>消費税</td><td>テスト（ランダム1万件、期待値は別の方法で）</td></tr>
+        <tr><td>22</td><td>受注の状態遷移と分納</td><td>型（請求書は売上からしか作れない）＋テスト（状態×操作20通り）</td></tr>
+        <tr><td>23</td><td>アナライザ</td><td>ビルド（RS0030・SALES001・SALES002・CS9057）</td></tr>
+        <tr class="total"><td>24</td><td>ルール変更手順とレビュー役</td><td>手順（スキル）＋レビュー（opus）</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>毎日効いたのは、誤った実装を入れて落ちるのを見る対照実験。2週目に見つけた落とし穴は、検証の乱数の偏り（Day21）、空の実装で通るテスト（Day22）、型の宣言とキャストを見ないアナライザ（Day23）、短縮パスで黙って使えない道具（Day24）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>次のアクション</h2>
+    <p class="msg">Day25 から3週目。EF Core で永続化し、マイグレーションの SQL をレビューしてから適用する手順をスキルにする。</p>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v">10.8<small>/11</small></div><div class="l">opus の平均検出</div></div>
+      <div class="kpi"><div class="v">0</div><div class="l">opus の誤った記述</div></div>
+      <div class="kpi"><div class="v">$4.23</div><div class="l">今日の費用（18回の比較ほか）</div></div>
+    </div>
+
+    <div class="tbl">
+    <table>
+      <caption>図表7: Day25 の作業と申し送り</caption>
+      <thead><tr><th>作業</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>マッピング</td><td>段階1で使う表だけ：得意先（請求先・締め日）、商品、税区分・税率、倉庫（1件）、受注・出荷・売上・請求とその明細、監査ログ</td></tr>
+        <tr><td>スキル</td><td><code>migration</code>：生成 → SQL スクリプトを出力してレビュー → 開発用DBにだけ適用</td></tr>
+        <tr><td>申し送り</td><td>結合テストのビルドの警告 <code>MSB3277</code>（EF Core の版の競合）を揃える</td></tr>
+        <tr class="total"><td><b>完了条件</b></td><td>マイグレーションの SQL をレビューしてから適用する手順が、スキルとして回る</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>成果物</h3>
+    <p><b>sales-core（製品コード）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day24/.claude/agents/team-reviewer.md">.claude/agents/team-reviewer.md</a> — 業務の観点を足したレビュー役（opus）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day24/.claude/skills/domain-rule-change/SKILL.md">.claude/skills/domain-rule-change/SKILL.md</a> — 業務ルールを変えるときの7手順</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day24/CLAUDE.md">CLAUDE.md</a> — スキルとレビュー役の場所、model の根拠</li>
+    </ul>
+    <p><b>Study（学習記録）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day24/evidence/2026-10-06-review-grading.md">evidence/2026-10-06-review-grading.md</a> — 採点基準と18回×11項目の表</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day24/evidence/2026-10-06-planted.diff">evidence/2026-10-06-planted.diff</a> — 誤りを仕込んだ差分（パスワードは伏せ字）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/tree/day24/evidence/2026-10-06-review-runs">evidence/2026-10-06-review-runs/</a> — 18回分の出力・費用・権限拒否の件数</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day24/2026-10-06/summary.md">2026-10-06/summary.md</a> — この記録のMarkdown版</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">付録</span>検証の中身</h2>
+    <p class="msg">図表3・4の根拠。スクリプトは添付せず、仕込んだ誤り・採点・費用をここに載せる。</p>
+
+    <p>仕込んだ誤り（差分の抜粋）:</p>
+<pre>// SalesOrder.cs — 状態の検査が「取消でない」だけ（P5）。Remove は物理削除（P6）、最後の1行も消せる（P9）
+public void RemoveLine(SalesOrderLine line)
+{
+    Require(Status is not SalesOrderStatus.Cancelled, "明細の削除");
+    _lines.Remove(line);
+}
+
+// SalesOrderLine.cs — 数量を検査せずに代入（P4・P8）。double（P2）とキャストの切り捨て（P3）。率の範囲を見ない（P10）
+internal void ChangeQuantity(decimal quantity) =&gt; Quantity = quantity;
+internal void ApplyDiscount(int percent)
+{
+    var factor = 1 - percent / 100.0;
+    UnitPrice = (long)(UnitPrice * (decimal)factor * 100) / 100m;
+}
+
+// Invoice.cs — 明細ごとに丸めた税額を足して請求額にする（P1）
+public Money TotalAmount =&gt; Tax.TaxableTotal + LineTaxes.Aggregate(Money.Zero, (total, tax) =&gt; total + tax);
+
+ビルド: エラー 0 ／ テスト: 109件すべて成功（追加の5件は、割り切れる値・1明細だけの例）</pre>
+
+    <p>採点（✓=1、△=0.5、−=0。各 model は条件A 3回 ／ 条件B 3回）:</p>
+<pre>       haiku               sonnet                opus
+P1   ✓ ✓ ✓ / − ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓
+P2   ✓ ✓ ✓ / ✓ ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓
+P3   ✓ − ✓ / ✓ ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓
+P4   ✓ − − / ✓ − −    ✓ ✓ ✓ / ✓ ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓
+P5   ✓ ✓ ✓ / ✓ ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓
+P6   ✓ ✓ ✓ / − − −    ✓ − ✓ / − ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓
+P7   ✓ ✓ ✓ / ✓ ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓
+P8   ✓ ✓ − / ✓ ✓ −    ✓ ✓ ✓ / − ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓
+P9   − − − / ✓ − −    − − − / ✓ − ✓    ✓ − ✓ / ✓ ✓ ✓
+P10  − ✓ − / − − −    ✓ ✓ ✓ / ✓ ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓
+P11  − ✓ − / − ✓ ✓    △ ✓ △ / ✓ ✓ ✓    ✓ ✓ ✓ / ✓ ✓ ✓
+計   8 8 6 / 7 7 6    9.5 9 9.5 / 9 10 11   11 10 11 / 11 11 11</pre>
+
+    <p>1回ごとの費用と時間:</p>
+<pre>条件A  haiku  $0.112 115s / $0.103  96s / $0.074  70s
+       sonnet $0.275 200s / $0.266 189s / $0.234 182s
+       opus   $0.324  73s / $0.256  56s / $0.272  63s
+条件B  haiku  $0.190 196s / $0.160 161s / $0.115  95s
+       sonnet $0.236 150s / $0.233 172s / $0.338 228s
+       opus   $0.296  53s / $0.287  54s / $0.314  62s
+今日の合計: 約 $4.23（試行 $0.10、条件A $1.92、条件B $2.17、スキルの確認 $0.05）
+model の実体: haiku = claude-haiku-4-5-20251001 ／ sonnet = claude-sonnet-5 ／ opus = claude-opus-5-5</pre>
+    <p class="src">全出力は GitHub（タグ day24 の <code>evidence/2026-10-06-review-runs/</code>）で読める。仕込んだパスワードは架空の値だが、伏せ字にした</p>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day24 学習記録 — レビュー役の model 比較</span>
+    <span>2026-10-06 ／ team-reviewer = opus ／ タグ day24</span>
+  </footer>
+
+</div>
+</body>
+</html>

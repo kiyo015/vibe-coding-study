@@ -1,0 +1,128 @@
+[
+  {
+    "name": "haiku-1",
+    "model": "haiku",
+    "run": 1,
+    "ok": true,
+    "costUsd": 0.1119153,
+    "durationSec": 114.99,
+    "wallSec": 119.042,
+    "turns": 7,
+    "models": [
+      "claude-haiku-4-5-20251001"
+    ],
+    "error": null
+  },
+  {
+    "name": "sonnet-1",
+    "model": "sonnet",
+    "run": 1,
+    "ok": true,
+    "costUsd": 0.2751362,
+    "durationSec": 200.364,
+    "wallSec": 208.171,
+    "turns": 9,
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "error": null
+  },
+  {
+    "name": "opus-1",
+    "model": "opus",
+    "run": 1,
+    "ok": true,
+    "costUsd": 0.324158,
+    "durationSec": 72.704,
+    "wallSec": 77.447,
+    "turns": 8,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "error": null
+  },
+  {
+    "name": "haiku-2",
+    "model": "haiku",
+    "run": 2,
+    "ok": true,
+    "costUsd": 0.1030527,
+    "durationSec": 96.185,
+    "wallSec": 100.889,
+    "turns": 2,
+    "models": [
+      "claude-haiku-4-5-20251001"
+    ],
+    "error": null
+  },
+  {
+    "name": "sonnet-2",
+    "model": "sonnet",
+    "run": 2,
+    "ok": true,
+    "costUsd": 0.2658584,
+    "durationSec": 188.694,
+    "wallSec": 192.844,
+    "turns": 12,
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "error": null
+  },
+  {
+    "name": "opus-2",
+    "model": "opus",
+    "run": 2,
+    "ok": true,
+    "costUsd": 0.25570839999999995,
+    "durationSec": 56.397,
+    "wallSec": 61.627,
+    "turns": 7,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "error": null
+  },
+  {
+    "name": "haiku-3",
+    "model": "haiku",
+    "run": 3,
+    "ok": true,
+    "costUsd": 0.07420360000000001,
+    "durationSec": 70.036,
+    "wallSec": 74.285,
+    "turns": 2,
+    "models": [
+      "claude-haiku-4-5-20251001"
+    ],
+    "error": null
+  },
+  {
+    "name": "sonnet-3",
+    "model": "sonnet",
+    "run": 3,
+    "ok": true,
+    "costUsd": 0.2335376,
+    "durationSec": 182.368,
+    "wallSec": 186.687,
+    "turns": 9,
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "error": null
+  },
+  {
+    "name": "opus-3",
+    "model": "opus",
+    "run": 3,
+    "ok": true,
+    "costUsd": 0.27233199999999996,
+    "durationSec": 62.738,
+    "wallSec": 66.818,
+    "turns": 8,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "error": null
+  }
+]
