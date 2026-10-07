@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day25 学習記録 — マイグレーション手順</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+figure svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.fig-scroll{overflow-x:auto}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,figure,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day25 ／ 基幹システム開発</p>
+    <h1>マイグレーション手順 — C# の差分では見えない事故を、SQL で読む</h1>
+    <p class="lead">段階1の業務の表12個を EF Core で対応付け、生成された SQL をレビューしてから適用する手順を migration スキルにまとめた。最初のマイグレーションで1周回し、適用前に欠陥を2つ見つけて直した。3週目（永続化とCI）の初日。</p>
+    <div class="doc-meta"><span>2026-10-07</span><span>対象: sales-core ／ Infrastructure・Domain・結合テスト</span><span>段階1 / Day25</span></div>
+  </header>
+
+  <section>
+    <h2>エグゼクティブサマリー</h2>
+    <ol class="summary">
+      <li><b>12表を作る最初のマイグレーションを、SQL をレビューしてから適用した。</b>手順を <code>migration</code> スキルにまとめ、新しいセッションで呼ばれることも確かめた。</li>
+      <li><b>EF Core の既定のままだと、外部キー13本がすべて削除を連鎖させる。</b>得意先1件を消すと売上まで消える構造で、C# の差分を見ても分からない。全外部キーを RESTRICT にした。</li>
+      <li><b>レビューで欠陥を2つ見つけ、適用前に直した。</b>番号が NULL を許す（自分で観点の表を当てて発見）、税率の期間が重なる（opus のレビューで発見）。</li>
+      <li><b>DB が止めることを、SQLSTATE まで区別して確かめた。</b>結合テスト8件。申し送りの MSB3277 は 30件 → 0件。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>migration スキル：SQL を読んでから適用する</h2>
+    <p class="msg">生成 → SQL を出してレビュー → テスト用DB → 開発用DBにだけ適用。1つでも引っかかったら適用しない。</p>
+
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">ER図を先に直す</div>
+      <div class="chev">生成<small>migrations add</small></div>
+      <div class="chev on">SQL をレビュー<small>docs/migrations/ に残す</small></div>
+      <div class="chev">テスト用DB<small>結合テスト</small></div>
+      <div class="chev">開発用DBだけ<small>list で確かめてから</small></div>
+    </div></div>
+    <p class="src">図表1: <code>sales-core/.claude/skills/migration/SKILL.md</code> の流れ。適用済みは書き換えず新しく足す。未適用なら作り直してよい</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表2: SQL で確かめる観点</caption>
+      <thead><tr><th>観点</th><th>見つけ方</th></tr></thead>
+      <tbody>
+        <tr><td>データを消す操作</td><td><code>DROP</code>・<code>TRUNCATE</code>。名前の変更が「消して作る」に見えることがある</td></tr>
+        <tr><td>型の変更</td><td><code>ALTER COLUMN … TYPE</code></td></tr>
+        <tr><td><b>削除の連鎖</b></td><td><code>ON DELETE CASCADE</code>。取引データは物理削除しない決まりなので RESTRICT</td></tr>
+        <tr><td>金額・数量の型</td><td><code>numeric(15,0)</code>・<code>(15,2)</code>・<code>(15,3)</code>・<code>(5,2)</code>。<code>double precision</code> が無いこと</td></tr>
+        <tr><td><b>NULL 可否</b></td><td><code>NOT NULL</code>。業務上必須の列が NULL を許していないか</td></tr>
+        <tr><td>一意制約</td><td>番号・コードに <code>UNIQUE</code></td></tr>
+        <tr><td>名前・余計なもの</td><td>snake_case。<code>INSERT</code>・秘密情報が無いこと</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>対照実験：EF Core の既定は、削除を連鎖させる</h2>
+    <p class="msg">「外部キーをすべて RESTRICT」の2行を外すと、必須の外部キー13本がすべて CASCADE になった。</p>
+
+    <figure>
+      <figcaption>図表3: モデルから出る SQL の外部キー（本数）</figcaption>
+      <svg viewBox="0 0 700 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="設定の有無と CASCADE の本数">
+        <line x1="230" y1="12" x2="230" y2="108" stroke="#a8adb5" stroke-width="1"/>
+        <text x="220" y="40" text-anchor="end" font-size="12.5" fill="#555555">設定なし（EF Core の既定）</text>
+        <rect x="230" y="26" width="260" height="22" fill="#c9ccd1"/>
+        <text x="500" y="42" font-size="12.5" fill="#555555">CASCADE 13本 ／ RESTRICT 0本</text>
+
+        <text x="220" y="88" text-anchor="end" font-size="12.5" fill="#1a1a1a" font-weight="700">設定あり</text>
+        <rect x="230" y="74" width="3" height="22" fill="#173f66"/>
+        <text x="242" y="90" font-size="12.5" fill="#173f66" font-weight="700">CASCADE 0本 ／ RESTRICT 15本</text>
+      </svg>
+      <p class="src">出所: <code>dotnet ef dbcontext script</code>（マイグレーションを作らずにモデルから SQL を出す）。棒は CASCADE の本数（1本＝20px）</p>
+    </figure>
+
+    <p class="note"><b>得意先を1件消すと、その得意先の受注・明細・出荷・売上が連鎖して黙って消える構造だった。</b>EF Core としては自然な既定でも、このシステムの「物理削除しない」と逆を向く。C# の差分には <code>ON DELETE CASCADE</code> は現れないので、SQL を読む手順が要る。結合テストでは、明細のある受注を SQL で直接消そうとして、DB が SQLSTATE 23001（RESTRICT）で止めることを確かめた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>レビューで見つけた欠陥2つ</h2>
+    <p class="msg">観点の表は「形」を、opus は「業務の意味」を見つけた。どちらも相手が見つけたものは見つけていない。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表4: 適用前に直したもの</caption>
+      <thead><tr><th>見つけた人</th><th>欠陥</th><th>何が起きるか</th><th>直し方</th></tr></thead>
+      <tbody>
+        <tr><td>自分（観点の表）</td><td>受注・出荷・売上の番号に <code>NOT NULL</code> が無い</td><td>一意インデックスは NULL を何件でも通すので、番号の無い受注をいくつでも作れる</td><td><code>IsRequired()</code>。回帰を止めるテスト（23502）</td></tr>
+        <tr><td>team-reviewer（opus、$0.61）</td><td>税率の期間が重なる・逆転する</td><td>同じ日に税率が2つあると、受注明細にどちらを写すか決まらず、税額が狂う</td><td>ドメインの検査、CHECK 制約（23514）、<code>btree_gist</code> の排他制約（23P01）</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>opus の指摘はほかに4つ。同じ出荷に同じ受注明細が2行入る（一意制約を付けた）、ER図の記載漏れ2件（直した）、締め日・数量の CHECK 制約が無い（<b>見送り</b>。ドメインとテストで守っていて、DB にも書くと規則が2か所になる）。直した SQL を観点で数え直すと、CASCADE 0・RESTRICT 15・double 0・桁の無い numeric 0・DROP 0・INSERT は履歴の1件だけになった。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>テスト：保存して読み直し、DB が止めることも確かめる</h2>
+    <p class="msg">受注 → 出荷 → 返品を保存して読み直しても、状態と金額（33・34・-34円）が変わらず、続きの出荷もできる。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表5: DB が止めること（SQLSTATE まで区別して確かめた）</caption>
+      <thead><tr><th>やろうとしたこと</th><th>SQLSTATE</th><th>止めているもの</th></tr></thead>
+      <tbody>
+        <tr><td>明細のある受注を SQL で直接消す</td><td>23001</td><td>外部キーの RESTRICT</td></tr>
+        <tr><td>同じ税区分で期間が重なる税率を足す</td><td>23P01</td><td>排他制約 <code>ex_tax_rates_no_overlap</code></td></tr>
+        <tr><td>終了日が開始日より前の税率を SQL で入れる</td><td>23514</td><td>CHECK 制約</td></tr>
+        <tr><td>番号の無い受注を保存する</td><td>23502</td><td>NOT NULL</td></tr>
+        <tr><td>得意先コードを重複させる</td><td>23505</td><td>一意インデックス</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p><b>途中で落ちた2件は、テストの期待値の誤りだった。</b>返品の後に残りを出荷すると、手元は1個 → 2個なので金額は34円（テストは33円と書いていた）。RESTRICT が止めると SQLSTATE は 23001（テストは NO ACTION のときの 23503 と書いていた）。どちらも手で計算し直してから、テストの側を直した。期待値を 23001 にしたことで、「RESTRICT が付いていること」まで区別できるテストになった。</p>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v">125</div><div class="l">Domain のテスト（新規 21）</div></div>
+      <div class="kpi"><div class="v">14</div><div class="l">結合テスト（新規 8）</div></div>
+      <div class="kpi"><div class="v">0<small>件</small></div><div class="l">ビルドの警告（MSB3277 は 30件から）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>範囲と、スキルの確認</h2>
+    <p class="msg">請求書は Day31、全表に共通する列は Day27 に回した。スキルは DB だけの依頼で呼ばれた。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表6: 作ったものと、後に回したもの</caption>
+      <thead><tr><th>作った表（12）</th><th>後に回したもの</th></tr></thead>
+      <tbody>
+        <tr><td>得意先・商品・税区分・税率・倉庫、受注・出荷・売上とそれぞれの明細、監査ログ</td><td>請求書と税率ごとの集計（Day31。Invoice のドメインが締め・繰越・状態を作るまで仮の形）／作成者・更新日時・版数（Day27）／赤伝・見積の参照（使う段階）</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>番号・日付・得意先・商品・倉庫のように、ドメインの判断に使わない列はシャドウプロパティ（エンティティのクラスに持たず、EF Core の側だけで持つ列）にした。ドメインが使うようになったらプロパティに移せばよく、列は変わらない。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表7: 新しいセッション（haiku）でスキルが呼ばれるか</caption>
+      <thead><tr><th>依頼</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>audit_logs にインデックスを足して、開発用DBに反映して</td><td><b><code>Skill(migration)</code> が呼ばれた</b>。手順どおりに答えた</td></tr>
+        <tr><td>受注に「納期」の列を足したい。DBにも反映して</td><td>呼ばれなかった。ただし「業務の意味を決めるのが先なので domain-rule-change → 実装 → migration の順」と答えた</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>今日学んだこと</h2>
+    <p class="msg">道具の既定と業務の決まりがぶつかる場所は、生成物（SQL）を読まないと見えない。</p>
+    <ul>
+      <li><b>EF Core の既定は、業務の決まりと逆を向くことがある。</b>必須の外部キーを CASCADE にするのは自然な既定でも、物理削除しないこのシステムでは事故になる</li>
+      <li><b>一意制約は NULL を素通りさせる。</b>C# の <code>string</code> を見ても NULL を許すかは分からず、SQL の <code>NOT NULL</code> の有無で初めて見えた</li>
+      <li><b>レビューは「観点の表」と「別の目」の両方で効いた。</b>前者は形（NULL 可否）、後者は業務の意味（同じ日に税率が2つ）を見つけた</li>
+      <li><b>SQLSTATE はテストの精度を上げる。</b>23001 と 23503 を区別すると、RESTRICT が付いていることまで確かめられる</li>
+      <li><b>テストの期待値も、独立に計算して確かめる。</b>テストの側を直すときは、根拠を明示する</li>
+    </ul>
+
+    <h3>つまずき</h3>
+    <ul>
+      <li><b>変数経由の <code>Remove-Item</code> をハーネスが止めた。</b>実行前に文字列で判定するので、変数の中身が分からず最悪を想定した。ファイル名を確かめてから <code>-LiteralPath</code> で明示して消した</li>
+      <li>PowerShell 5.1 に <code>??</code> 演算子が無い。<code>if</code> で書き直した</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>次のアクション</h2>
+    <p class="msg">Day26 は、受注 → 出荷 → 請求を DB 込みで通す結合テスト。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表8: Day26 の作業と申し送り</caption>
+      <thead><tr><th>作業</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>結合テスト</td><td>受注 → 出荷 → 売上までを DB に保存して読み直し、請求書は読み直した売上から作る（請求書の表は Day31）</td></tr>
+        <tr><td>申し送り</td><td>番号・得意先などのシャドウプロパティを毎回設定する手間を減らすため、テスト用の組み立て方を用意する</td></tr>
+        <tr class="total"><td><b>完了条件</b></td><td>結合テストが CI でも手元でも同じ結果になる</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>成果物</h3>
+    <p><b>sales-core（製品コード）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day25/.claude/skills/migration/SKILL.md">.claude/skills/migration/SKILL.md</a> — マイグレーションの7手順</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day25/src/SalesCore.Infrastructure/Persistence/Configurations.cs">Configurations.cs</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day25/src/SalesCore.Infrastructure/Persistence/SalesCoreDbContext.cs">SalesCoreDbContext.cs</a> — 表ごとの対応付け、全外部キー RESTRICT</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day25/docs/migrations/2026-10-07-AddStageOneTables.sql">docs/migrations/2026-10-07-AddStageOneTables.sql</a> — レビューして適用した SQL</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day25/tests/SalesCore.Integration.Tests/PersistenceMappingTests.cs">PersistenceMappingTests.cs</a> — 結合テスト8件</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day25/docs/domain/er-diagram.md">er-diagram.md</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day25/CLAUDE.md">CLAUDE.md</a></li>
+    </ul>
+    <p><b>Study（学習記録）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day25/evidence/2026-10-07-migration-review.md">evidence/2026-10-07-migration-review.md</a> — 対照実験、3回のレビュー、期待値を直した2件</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day25/evidence/2026-10-07-sql-review-by-team-reviewer.md">evidence/2026-10-07-sql-review-by-team-reviewer.md</a> — opus のレビュー全文</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day25/2026-10-07/summary.md">2026-10-07/summary.md</a> — この記録のMarkdown版</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">付録</span>SQL の要点</h2>
+    <p class="msg">図表3〜5の根拠。全文は sales-core の docs/migrations/ にある。</p>
+<pre>-- 金額・数量の型（業務ルール集「1. 金額と数量」）
+quantity numeric(15,3), unit_price numeric(15,2), tax_rate numeric(5,2), amount numeric(15,0)
+
+-- 番号は必須（1回目のレビューで NOT NULL が無いのを見つけた）
+number character varying(20) NOT NULL
+
+-- 外部キーはすべて RESTRICT（設定が無いと13本が CASCADE になる）
+CONSTRAINT "FK_sales_orders_customers_customer_id" FOREIGN KEY (customer_id)
+  REFERENCES customers (id) ON DELETE RESTRICT
+
+-- 税率の期間（2回目のレビューの指摘）
+CONSTRAINT ck_tax_rates_valid_period CHECK (valid_to IS NULL OR valid_to &gt;= valid_from)
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+ALTER TABLE tax_rates ADD CONSTRAINT ex_tax_rates_no_overlap
+  EXCLUDE USING gist (tax_category_id WITH =, daterange(valid_from, valid_to, '[]') WITH &amp;&amp;);
+
+-- 1回の出荷に同じ受注明細は1行
+CREATE UNIQUE INDEX "IX_shipment_lines_shipment_id_sales_order_line_id"
+  ON shipment_lines (shipment_id, sales_order_line_id);
+
+最終の数え直し: CASCADE 0 / RESTRICT 15 / double・real 0 / 桁の無い numeric 0 / DROP 0 / INSERT 1（履歴だけ） / NOT NULL の number 3
+費用: SQL レビュー $0.61、スキルの確認 $0.044・$0.040。合計 $0.69</pre>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day25 学習記録 — マイグレーション手順</span>
+    <span>2026-10-07 ／ AddStageOneTables ／ タグ day25</span>
+  </footer>
+
+</div>
+</body>
+</html>
