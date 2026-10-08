@@ -1,0 +1,12 @@
+## F0-baseline: failed 0 / total 16
+## F1-shipped-quantity-not-updated: failed 2 / total 16
+  - PersistenceMappingTests.受注から出荷と返品までを保存し_読み直しても状態と金額が同じで_続きの出荷もできる
+  - SalesFlowTests.受注から分納と返品を経て_締め期間の売上で請求書を作ると税率ごとに1回だけ丸めた額になる
+## F2-returned-quantity-not-updated: failed 2 / total 16
+  - PersistenceMappingTests.受注から出荷と返品までを保存し_読み直しても状態と金額が同じで_続きの出荷もできる
+  - SalesFlowTests.受注から分納と返品を経て_締め期間の売上で請求書を作ると税率ごとに1回だけ丸めた額になる
+## F3-order-status-not-updated: failed 2 / total 16
+  - PersistenceMappingTests.受注から出荷と返品までを保存し_読み直しても状態と金額が同じで_続きの出荷もできる
+  - SalesFlowTests.受注から分納と返品を経て_締め期間の売上で請求書を作ると税率ごとに1回だけ丸めた額になる
+## F4-hand-written-migration-sql-typo: failed 1 / total 16
+  - MigrationTests.全マイグレーションをまっさらなスキーマに最初から適用できる

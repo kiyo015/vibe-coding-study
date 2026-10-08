@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day26 学習記録 — 結合テスト</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day26 ／ 基幹システム開発</p>
+    <h1>結合テスト — 手元で通っても、CI で通るとは限らない</h1>
+    <p class="lead">受注 → 分納 → 返品 → 請求を DB 越しに1本で流すテストを作り、CI と手元で結果が変わる原因を手元で1つずつ潰した。手で書いたマイグレーションの誤りは、既存のテストでは1件も捕まらなかった。</p>
+    <div class="doc-meta"><span>2026-10-08</span><span>対象: sales-core ／ 結合テスト</span><span>段階1 / Day26</span></div>
+  </header>
+
+  <section>
+    <h2>エグゼクティブサマリー</h2>
+    <ol class="summary">
+      <li><b>受注から請求までを、操作ごとに DB で保存して読み直しながら1本で流した。</b>10月末締めの請求書は、手で計算した 419円（10%の税32円・8%の税5円）と一致した。</li>
+      <li><b>手で書いたマイグレーションの SQL を壊しても、既存の結合テスト15件はすべて通った。</b>手元のDBは適用済みで、壊れたマイグレーションを当て直さないため。まっさらなスキーマに最初から当てる新しいテストだけが捕まえた。</li>
+      <li><b>ビルド成果物の無い作業ツリーで2回流し、2回とも141件成功・結果は同一。</b>保存まわりの誤り3種も、それぞれ2件のテストが捕まえた。</li>
+      <li><b>完了条件のうち「CI でも同じ結果」の確認は Day28 に持ち越す。</b>CI を作るのは Day28 で、この PC には Docker も無いため。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>受注から請求までを1本で流す</h2>
+    <p class="msg">操作ごとに保存して読み直す。出荷の指示と確定も別の操作にし、確定は DB から読み直した出荷で行う。</p>
+
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">受注・承認<small>10/1</small></div>
+      <div class="chev">出荷1<small>10/5 ボルト1・お茶2</small></div>
+      <div class="chev">出荷2<small>10/12 ボルト1</small></div>
+      <div class="chev">出荷3<small>10/19 ボルト1・お茶1</small></div>
+      <div class="chev">返品<small>10/20 お茶1</small></div>
+      <div class="chev on">10月末締め<small>本社あての請求書</small></div>
+    </div></div>
+    <p class="src">図表1: 筋書き。支店（請求先は本社）がボルト（105円・10%）3箱とお茶（33.33円・8%）3本を受注。矢印ごとに保存して読み直す</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表2: 請求書の期待値（手で計算した値）</caption>
+      <thead><tr><th>税率</th><th>対象額</th><th>税額</th></tr></thead>
+      <tbody>
+        <tr><td>10%</td><td>105 × 3 ＝ 315円</td><td>31.5 → <b>32円</b>（売上ごとに丸めると 11 × 3 ＝ 33円）</td></tr>
+        <tr><td>8%</td><td>67 + 33 − 33 ＝ 67円（累計差分）</td><td>5.36 → <b>5円</b></td></tr>
+        <tr class="total"><td>合計</td><td>382円</td><td>37円 → 請求額 419円</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>請求の対象にならない売上（11月の売上、別の請求先の売上）も入れておき、請求書に入らないことを確かめた。受注は出荷済になり、明細ごとの売上の合計が請求書の税抜合計と一致する。番号や得意先などの列は、組み立て役 <code>TestScenario</code> がまとめて設定する（Day25 からの申し送り）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>CI と手元で結果が変わる原因を潰す</h2>
+    <p class="msg">違いが生まれる場所を挙げ、それぞれを手元で再現する手段を用意した。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表3: CI と手元の違いと、今日の対処</caption>
+      <thead><tr><th>違い</th><th>今日やったこと</th></tr></thead>
+      <tbody>
+        <tr><td>CI のDBはまっさらで、マイグレーションを最初から当てる。手元は適用済み</td><td><b><code>MigrationTests</code> を足した。</b>まっさらなスキーマに全マイグレーションを当て、履歴と13表がそろうことを確かめる。最後にトランザクションごと取り消す</td></tr>
+        <tr><td>手元のDBには別の行が残りうる</td><td>表全体を数えていたテストを、自分が作った行に絞った。日付はすべて固定の値</td></tr>
+        <tr><td>CI はビルド成果物の無い状態から始まる</td><td>今日の変更を含む作業ツリーを、ビルド成果物なしで作って2回流した</td></tr>
+        <tr><td>CI は接続文字列を環境変数で渡す</td><td>読み込み側は対応済み。実際に通るかは Day28</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v">141<small>/141</small></div><div class="l">クリーンな作業ツリーの1回目</div></div>
+      <div class="kpi"><div class="v">141<small>/141</small></div><div class="l">2回目</div></div>
+      <div class="kpi"><div class="v">0<small>行</small></div><div class="l">結合テストの結果の違い</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>対照実験：どのテストが捕まえたか</h2>
+    <p class="msg">マイグレーションの誤りを捕まえたのは、新しいテスト1件だけ。無ければ0件だった。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表4: 入れた誤りと、落ちたテスト（結合テスト16件）</caption>
+      <thead><tr><th>入れた誤り</th><th class="c">流れのテスト</th><th class="c">保存して読み直すテスト</th><th class="c">MigrationTests</th><th class="c">ほかの13件</th></tr></thead>
+      <tbody>
+        <tr><td>なし（基準）</td><td class="c miss">通る</td><td class="c miss">通る</td><td class="c miss">通る</td><td class="c miss">通る</td></tr>
+        <tr><td>出荷済み数量の更新が保存されない</td><td class="c hit">落ちる</td><td class="c hit">落ちる</td><td class="c miss">通る</td><td class="c miss">通る</td></tr>
+        <tr><td>返品数量の更新が保存されない</td><td class="c hit">落ちる</td><td class="c hit">落ちる</td><td class="c miss">通る</td><td class="c miss">通る</td></tr>
+        <tr><td>受注の状態の更新が保存されない</td><td class="c hit">落ちる</td><td class="c hit">落ちる</td><td class="c miss">通る</td><td class="c miss">通る</td></tr>
+        <tr class="total"><td>手で書いたマイグレーションの SQL を壊す</td><td class="c">通る</td><td class="c">通る</td><td class="c">落ちる</td><td class="c">通る</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: <code>evidence/2026-10-08-integration-mutate.ps1</code>。誤りを1種類ずつ入れて結合テストを流し、ファイルをバイト単位で元に戻した</p>
+
+    <p class="note"><b>手元のテスト用DBは「今まで当ててきたマイグレーションの結果」で、まっさらから当てた結果ではない。</b>壊れたマイグレーションは手元ではもう当てられないので、既存のテストは誰も気付かない。CI のまっさらなDBでだけ落ちる種類の誤りで、<code>MigrationTests</code> が無ければ Day28 の CI で初めて気付くところだった。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>今日学んだこと</h2>
+    <p class="msg">テストが通る環境と、本番に近い環境の違いを、テストの側で埋める。</p>
+    <ul>
+      <li><b>手元で通るテストは、CI で通る保証にならない。</b>DBの状態・ビルド成果物・接続の渡し方という、違いが生まれる場所を挙げて1つずつ潰した</li>
+      <li><b>対照実験は「どのテストが捕まえたか」まで見る。</b>全体として捕まえたかだけでなく、捕まえたテストを見ると、そのテストの存在意義がはっきりする</li>
+      <li><b>操作ごとに読み直すと、「メモリ上では正しい」を見逃さない。</b>同じオブジェクトを使い続けると、保存が漏れてもメモリ上の値で正しく動いてしまう</li>
+      <li><b>表全体を数えると、DBの状態に結果が左右される。</b>数えるときは、そのテストが作った行に絞る</li>
+    </ul>
+    <p>Day25 の migration スキルの手順4は「テスト用DBで確かめる」だったが、テスト用DBは今回の分しか当てないので、最初から当てたときの誤りは見えていなかった。手順4に <code>MigrationTests</code> を書き足した。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>次のアクション</h2>
+    <p class="msg">Day27 は楽観ロック・監査ログ・削除の禁止。2本目のマイグレーションで、今日のテストがさっそく効く。</p>
+
+    <div class="tbl">
+    <table>
+      <caption>図表5: Day27 の作業と持ち越し</caption>
+      <thead><tr><th>作業</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>楽観ロック・監査ログ</td><td>同時更新の衝突検知、誰がいつ何を変えたかの記録</td></tr>
+        <tr><td>削除の禁止</td><td>アーキテクチャテストで受注・請求の物理削除を禁止する（DB の RESTRICT は「子のある親」しか止めない）</td></tr>
+        <tr><td>申し送り</td><td>全表に共通する列（作成者・更新日時・版数）を、2本目のマイグレーションとして migration スキルで足す。<code>MigrationTests</code> も通ることを確かめる</td></tr>
+        <tr><td>持ち越し（Day28 へ）</td><td>「結合テストが CI でも手元と同じ結果になる」の確認（CI を作る日）</td></tr>
+        <tr class="total"><td><b>完了条件</b></td><td>物理削除するコードを書くとアーキテクチャテストが落ちる。衝突がテストで再現できる</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>成果物</h3>
+    <p><b>sales-core（製品コード）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day26/tests/SalesCore.Integration.Tests/SalesFlowTests.cs">SalesFlowTests.cs</a> — 受注から請求までの流れ</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day26/tests/SalesCore.Integration.Tests/MigrationTests.cs">MigrationTests.cs</a> — まっさらなスキーマに全マイグレーションを当てる</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day26/tests/SalesCore.Integration.Tests/TestScenario.cs">TestScenario.cs</a> — テスト用の組み立て役</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day26/CLAUDE.md">CLAUDE.md</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day26/.claude/skills/migration/SKILL.md">migration スキル</a> — 結合テストのきまり、手順4の追記</li>
+    </ul>
+    <p><b>Study（学習記録）</b></p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day26/evidence/2026-10-08-integration-mutations.txt">evidence/2026-10-08-integration-mutations.txt</a> — 対照実験の結果</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day26/2026-10-08/summary.md">2026-10-08/summary.md</a> — この記録のMarkdown版</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">付録</span>検証の中身</h2>
+    <p class="msg">図表4の根拠。スクリプトは添付せず、入れた誤りと出力をここに載せる。</p>
+
+    <p>まっさらなスキーマに当てるテスト（要点）:</p>
+<pre>var script = Db.GetService&lt;IMigrator&gt;().GenerateScript(options: MigrationsSqlGenerationOptions.NoTransactions);
+await Db.Database.ExecuteSqlRawAsync("CREATE SCHEMA migration_probe; SET LOCAL search_path TO migration_probe, public;");
+await Db.Database.ExecuteSqlRawAsync(script);
+// 適用の履歴 = 全マイグレーション、表 = 13個(履歴の表を含む)。テストの終わりにトランザクションごと取り消す</pre>
+
+    <p>入れた誤り:</p>
+<pre>F1 出荷済み数量の更新が保存されない
+   b.Property(l =&gt; l.ShippedQuantity).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+F2 返品数量の更新が保存されない(同じ形で ReturnedQuantity)
+F3 受注の状態の更新が保存されない(同じ形で SalesOrder.Status)
+F4 手で書いたマイグレーションの SQL を壊す
+   daterange(valid_from, valid_to, '[]')  →  daterange(valid_from, valid_until, '[]')</pre>
+
+    <p>出力:</p>
+<pre>F0-baseline: failed 0 / total 16
+F1-shipped-quantity-not-updated: failed 2 / total 16
+  - PersistenceMappingTests.受注から出荷と返品までを保存し_読み直しても状態と金額が同じで_続きの出荷もできる
+  - SalesFlowTests.受注から分納と返品を経て_締め期間の売上で請求書を作ると税率ごとに1回だけ丸めた額になる
+F2-returned-quantity-not-updated: failed 2 / total 16（同じ2件）
+F3-order-status-not-updated: failed 2 / total 16（同じ2件）
+F4-hand-written-migration-sql-typo: failed 1 / total 16
+  - MigrationTests.全マイグレーションをまっさらなスキーマに最初から適用できる</pre>
+    <p class="src">今日の費用は0（<code>claude -p</code> を使っていない）</p>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day26 学習記録 — 結合テスト</span>
+    <span>2026-10-08 ／ SalesFlowTests・MigrationTests ／ タグ day26</span>
+  </footer>
+
+</div>
+</body>
+</html>
