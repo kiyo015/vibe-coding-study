@@ -1,0 +1,22 @@
+## D1-DbContext.Remove: failed 1 / total 9
+  - NoPhysicalDeleteTests.EFCoreで行を消す呼び出しが無い(assemblyName: "SalesCore.Infrastructure")
+## D2-DbSet.RemoveRange: failed 1 / total 9
+  - NoPhysicalDeleteTests.EFCoreで行を消す呼び出しが無い(assemblyName: "SalesCore.Infrastructure")
+## D3-ExecuteDeleteAsync: failed 1 / total 9
+  - NoPhysicalDeleteTests.EFCoreで行を消す呼び出しが無い(assemblyName: "SalesCore.Infrastructure")
+## D4-raw-DELETE-sql: failed 1 / total 9
+  - NoPhysicalDeleteTests.行を消すSQLが無い(assemblyName: "SalesCore.Infrastructure")
+## D5-Remove-in-Api-project: failed 1 / total 9
+  - NoPhysicalDeleteTests.EFCoreで行を消す呼び出しが無い(assemblyName: "SalesCore.Api")
+## D6-known-gap-List.Remove-in-domain: failed 0 / total 9
+## C1-no-RejectDeletes: failed 1 / total 22
+  - AuditAndConcurrencyTests.末端の行でも_削除の印を付けて保存しようとすると止まり_消えない
+## C2-no-TouchAggregateRoots: failed 1 / total 22
+  - AuditAndConcurrencyTests.同じ受注の別々の明細を2人が同時に出荷すると_後から保存した方が衝突で止まる
+## C3-RowVersion-not-concurrency-token: failed 2 / total 22
+  - AuditAndConcurrencyTests.同じ受注の別々の明細を2人が同時に出荷すると_後から保存した方が衝突で止まる
+  - AuditAndConcurrencyTests.同じ受注を2人が同時に変えると_後から保存した方が衝突で止まる
+## C4-RowVersion-not-incremented: failed 3 / total 22
+  - AuditAndConcurrencyTests.作った人と日時_最後に変えた人と日時が残る
+  - AuditAndConcurrencyTests.同じ受注の別々の明細を2人が同時に出荷すると_後から保存した方が衝突で止まる
+  - AuditAndConcurrencyTests.同じ受注を2人が同時に変えると_後から保存した方が衝突で止まる

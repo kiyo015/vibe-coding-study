@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day27 学習記録 — 楽観ロック・監査ログ・削除の禁止</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day27 ／ 基幹システム開発</p>
+    <h1>楽観ロック・監査ログ・削除の禁止 — 衝突は「行」ではなく「判断に使った全体」で起きる</h1>
+    <p class="lead">全表に作成者・更新日時・版数の列を足し、保存の入口で自動的に埋めるようにした。同時更新は版数で検知し、変えた値は監査ログに残す。物理削除は、アーキテクチャテスト・保存のとき・DB の3段で止める。</p>
+    <div class="doc-meta"><span>2026-10-09</span><span>対象: sales-core ／ 永続化</span><span>段階1 / Day27</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件は2つとも達成した。</b>物理削除するコードを書くとアーキテクチャテストが落ちる（書き方5通り）。同時更新の衝突をテストで再現できる（2つの場面）。</li>
+      <li><b>明細の版数だけでは衝突に気付けない場面があった。</b>同じ受注の別々の明細を2人が同時に出荷すると、全部出荷したのに状態が一部出荷のまま残る。受注（集約の根）の版数も上げて止めた。</li>
+      <li><b>DB の RESTRICT は子の無い行を守らない。</b>先にテストを書くと売上明細が実際に消せた。保存のときの禁止を足した。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">156<small>件</small></div><div class="l">全テスト成功（Domain 125・アーキ 9・結合 22）</div></div>
+      <div class="kpi"><div class="v">9<small>/10</small></div><div class="l">対照実験で検出（残る1つは既知の穴）</div></div>
+      <div class="kpi"><div class="v">55<small>列</small></div><div class="l">2本目のマイグレーションで追加</div></div>
+      <div class="kpi"><div class="v">0<small>円</small></div><div class="l">今日の費用</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>設計：最初に決めた3点</h2>
+    <p class="msg">値を入れるのも、削除を止めるのも、保存の入口1か所に集めた。書き忘れが起きないため。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表1: 設計の判断</caption>
+      <thead><tr><th>項目</th><th>やり方</th><th>理由</th></tr></thead>
+      <tbody>
+        <tr><td>衝突の検知</td><td>全表に版数 <code>row_version</code>。更新のたびに1上げ、保存のときに読んだ時点の値と比べる</td><td>PostgreSQL の <code>xmin</code> は同じトランザクションの中では変わらない。取り消す結合テストで衝突を再現できない</td></tr>
+        <tr><td>監査ログ・作成者と更新日時</td><td>保存の入口（<code>SaveChangesAsync</code>）で埋める</td><td>業務のデータと監査ログを1つのトランザクションで保存する</td></tr>
+        <tr><td>物理削除の禁止</td><td>アーキテクチャテスト・保存のとき・DB の3段</td><td>図表4</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <figure>
+      <figcaption>図表2: 保存の入口（<code>SalesCoreDbContext.SaveChangesAsync</code>）で行う順番</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">変更を検出</div>
+        <div class="chev on">削除を拒否<small>RejectDeletes</small></div>
+        <div class="chev on">受注の版数も上げる<small>TouchAggregateRoots</small></div>
+        <div class="chev">作成者・日時・版数を入れる</div>
+        <div class="chev">業務データ → 監査ログ<small>1トランザクション</small></div>
+      </div></div>
+    </figure>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>2本目のマイグレーション</h2>
+    <p class="msg">migration スキルの2周目。55列を足し、壊す操作は0。既に行のある表にも当てられる。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表3: <code>AddCommonColumns</code> の SQL レビュー</caption>
+      <thead><tr><th>観点</th><th class="num">数</th></tr></thead>
+      <tbody>
+        <tr><td>列の追加（監査ログ以外の11表 × 5列）</td><td class="num">55</td></tr>
+        <tr><td>CASCADE・DROP・型の変更</td><td class="num">0</td></tr>
+        <tr><td>INSERT（マイグレーションの履歴だけ）</td><td class="num">1</td></tr>
+        <tr><td>監査ログの表への変更</td><td class="num">0</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>NOT NULL の列には既定値（日時は <code>now()</code>、版数は <code>0</code>）を付けた。テスト用DB（まっさらなスキーマに当てる <code>MigrationTests</code> を含む）と開発用DBの両方に適用した。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>物理削除を3段で止める</h2>
+    <p class="msg">どの段も、ほかの段が止めないものを止める。子の無い行は、保存のときの段でしか止まらない。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表4: 削除を止める3段</caption>
+      <thead><tr><th>段</th><th>止めるもの</th><th>仕組み</th></tr></thead>
+      <tbody>
+        <tr><td>アーキテクチャテスト</td><td>削除のコードを書くこと</td><td>src の4プロジェクトの DLL を標準の <code>System.Reflection.Metadata</code> で読む。EF Core の <code>Remove</code>・<code>RemoveRange</code>・<code>ExecuteDelete(Async)</code> と、<code>DELETE FROM</code>・<code>TRUNCATE</code> の SQL が無いこと</td></tr>
+        <tr class="total"><td>保存のとき</td><td>削除の印の付いた行（子の無い行を含む）</td><td><code>Deleted</code> の行があれば例外。テストを先に書いた時点では、売上明細が実際に消せた</td></tr>
+        <tr><td>DB</td><td>子のある親の削除</td><td>外部キーの RESTRICT（Day25）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">DLL を読む検査は、読み方を誤ると「何も見つからない＝成功」になる。Day23 でアナライザの最新版が黙って無効だったのと同じ形なので、テスト自身の DLL にある <code>"DELETE FROM probe_table"</code> が読めることを確かめるテストを1件入れた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>衝突の再現</h2>
+    <p class="msg">別々の明細を同時に出荷すると、行としては1つもぶつからないのに、受注の状態が食い違う。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表5: 2人目の利用者（同じトランザクションを共有する2つ目の DbContext）で再現した場面</caption>
+      <thead><tr><th>場面</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>同じ受注を2人が開く。1人が承認して保存した後、もう1人が古い画面のまま取り消す</td><td>後から保存した方が <code>DbUpdateConcurrencyException</code>。承認済のまま残る</td></tr>
+        <tr class="total"><td>3行の受注（1行目は出荷済）で、残りの2行を2人が別々の出荷で同時に確定する</td><td>後から保存した方が衝突で止まる（受注の版数も上げた後）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>2つ目の場面では、2人とも「ほかの行が残っている」と見て受注を一部出荷のままにする。明細の版数だけを見ていると両方が通り、<b>全部出荷したのに状態が一部出荷のまま</b>残る。受注の状態は全明細を見て決まるので、受注明細が変わったら受注（集約の根）の版数も上げるようにした。計画に無かった追加。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>監査ログ</h2>
+    <p class="msg">業務の値のうち変わったものだけを、変更前と変更後で残す。共通の列は含めない。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表6: テストで確かめた監査ログ</caption>
+      <thead><tr><th>操作</th><th>残った値</th></tr></thead>
+      <tbody>
+        <tr><td>作成</td><td>作った人・日時、版数 1</td></tr>
+        <tr><td>承認</td><td><code>"status": "Received"</code> → <code>"Approved"</code>、操作した人と日時。<code>updated_at</code> は入らない</td></tr>
+        <tr><td>出荷の確定</td><td>受注明細の出荷済み数量 0 → 2、売上明細の金額 67円（33.33 × 2 ＝ 66.66 → 67）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">途中で状態が <code>"Received"</code> ではなく数値で書かれた。<code>HasConversion&lt;string&gt;()</code> は DB での型を決めるだけで、<code>GetValueConverter()</code> では変換器が取れない。変換器は <code>GetTypeMapping().Converter</code> の側にある。値まで比べるテストだったので気付けた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>対照実験：10ケース</h2>
+    <p class="msg">削除のコード5種はすべて落ち、保存の守り4種もそれぞれ担当のテストが落ちた。止まらないのは EF Core 以外のリストの削除だけ。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表7: 入れた誤りと結果</caption>
+      <thead><tr><th>ケース</th><th>入れた誤り</th><th class="c">結果</th><th class="num">落ちた件数</th></tr></thead>
+      <tbody>
+        <tr><td>D1</td><td><code>DbContext.Remove</code></td><td class="c hit">落ちる</td><td class="num">1 / 9</td></tr>
+        <tr><td>D2</td><td><code>DbSet.RemoveRange</code></td><td class="c hit">落ちる</td><td class="num">1 / 9</td></tr>
+        <tr><td>D3</td><td><code>ExecuteDeleteAsync</code></td><td class="c hit">落ちる</td><td class="num">1 / 9</td></tr>
+        <tr><td>D4</td><td>生の <code>delete from</code> の SQL</td><td class="c hit">落ちる</td><td class="num">1 / 9</td></tr>
+        <tr><td>D5</td><td>Api プロジェクトでの <code>Remove</code></td><td class="c hit">落ちる</td><td class="num">1 / 9</td></tr>
+        <tr><td>D6</td><td>ドメインの <code>List.Remove</code>（EF Core 以外）</td><td class="c miss">通る</td><td class="num">0 / 9</td></tr>
+        <tr><td>C1</td><td>保存のときの削除の禁止を外す</td><td class="c hit">落ちる</td><td class="num">1 / 22</td></tr>
+        <tr><td>C2</td><td>受注の版数を上げる処理を外す</td><td class="c hit">落ちる</td><td class="num">1 / 22</td></tr>
+        <tr><td>C3</td><td>版数を比べない</td><td class="c hit">落ちる</td><td class="num">2 / 22</td></tr>
+        <tr><td>C4</td><td>版数を上げない</td><td class="c hit">落ちる</td><td class="num">3 / 22</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: <code>evidence/2026-10-09-mutate.ps1</code>。誤りを1つずつ入れてテストを流し、ファイルをバイト単位で元に戻した。D はアーキテクチャテスト9件、C は結合テスト22件</p>
+    <p>D6 は既知の穴。ドメインのリストから外すこと自体は正当な場面があるので対象外にし、CLAUDE.md に「レビューで拾う」と書いた。C2 で落ちたのは別々の明細の同時出荷テスト1件だけ。このテストが無ければ、集約の根の版数を上げる処理は誰にも守られていない。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>今日学んだこと</h2>
+    <p class="msg">「DB で止まる」「行で衝突を見る」「検査が通る」は、どれも範囲を確かめるまで安心できない。</p>
+    <ul>
+      <li><b>衝突の単位は、判断に使ったもの全体。</b>受注の状態は全明細の出荷済み数量で決まる。別々の行を更新しても、2人とも古い全体像で決めてしまう</li>
+      <li><b>RESTRICT が止めるのは子のある親だけ。</b>Day25 で物理削除は止まると考えていたが、子の無い行は何も止めない。先にテストを書いて実際に消せることを見たので気付けた</li>
+      <li><b>検査が黙って何も見ない失敗に備える。</b>検査そのものが働くことを確かめるテストを1件置く</li>
+      <li><b>変換器は型の対応付けの側にある。</b><code>HasConversion&lt;string&gt;()</code> の値は <code>GetTypeMapping().Converter</code> で変換する</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>つまずき</h2>
+    <p class="msg">3件とも、テストを先に書いて実際の値を見たことで原因まで追えた。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>症状</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>受注（子のある親）を削除するテストが、保存の前に EF Core の例外で落ちた</td><td>EF Core 自身が RESTRICT を見て止める</td><td>子の無い売上明細を消すテストにした</td></tr>
+        <tr><td>2人目の利用者で受注を作ると番号が重複した</td><td><code>TestScenario</code> の連番が利用者ごとに1から振られる</td><td>番号の頭に付ける文字（<code>numberPrefix</code>）を渡せるようにした</td></tr>
+        <tr><td>監査ログの状態が数値になった</td><td>変換器の取り方</td><td><code>GetTypeMapping().Converter</code></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">09</span>成果物</h2>
+    <p class="msg">リンクはすべて <code>day27</code> タグに固定している。</p>
+    <h3>sales-core（製品コード）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day27/src/SalesCore.Infrastructure/Persistence/SalesCoreDbContext.cs">SalesCoreDbContext.cs</a> — 保存のときの削除の禁止・版数・監査ログ</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day27/src/SalesCore.Infrastructure/Persistence/Configurations.cs">Configurations.cs</a> — 共通の列</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day27/src/SalesCore.Infrastructure/Persistence/Migrations/20261009002125_AddCommonColumns.cs">20261009002125_AddCommonColumns.cs</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day27/docs/migrations/2026-10-09-AddCommonColumns.sql">2026-10-09-AddCommonColumns.sql</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day27/tests/SalesCore.Architecture.Tests/NoPhysicalDeleteTests.cs">NoPhysicalDeleteTests.cs</a> — 物理削除のアーキテクチャテスト</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day27/tests/SalesCore.Integration.Tests/AuditAndConcurrencyTests.cs">AuditAndConcurrencyTests.cs</a> — 監査ログと衝突のテスト</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day27/tests/SalesCore.Integration.Tests/DatabaseTest.cs">DatabaseTest.cs</a> — 2人目の利用者</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day27/CLAUDE.md">CLAUDE.md</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day27/docs/domain/er-diagram.md">er-diagram.md</a></li>
+    </ul>
+    <h3>Study（学習記録）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day27/evidence/2026-10-09-mutations.txt">evidence/2026-10-09-mutations.txt</a> — 対照実験の結果</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day27/evidence/2026-10-09-mutate.ps1">evidence/2026-10-09-mutate.ps1</a> — 対照実験のスクリプト</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day27/study_plan_next_month.md">study_plan_next_month.md</a> — Day27 の実測値</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day27/2026-10-09/summary.md">2026-10-09/summary.md</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day27/2026-10-09/summary.html">summary.html</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">10</span>次回：Day28 — CI（ビルドとテスト）</h2>
+    <p class="msg">GitHub Actions で build と test を回し、Day26 からの持ち越し「CI でも手元と同じ結果」を確かめる。</p>
+    <ul>
+      <li>CI の DB は PostgreSQL 18（<code>btree_gist</code> を含む公式イメージ）。接続文字列は環境変数 <code>ConnectionStrings__SalesCoreTest</code></li>
+      <li>手元と同じ結合テスト22件（<code>MigrationTests</code> を含む）とアーキテクチャテスト9件が通ることを、結果の一覧で突き合わせる</li>
+      <li>Day27 からの持ち越しは無し</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">付録</span>検証の中身</h2>
+    <p class="msg">スクリプト本体は添付しない。要点と結果をテキストで載せる。</p>
+    <h3>保存の入口（要点）</h3>
+<pre>ChangeTracker.DetectChanges();
+RejectDeletes();          // Deleted の行があれば例外。取消は状態か赤黒で表す
+TouchAggregateRoots();    // 受注明細が変わったら、受注の row_version も上げる
+// 監査ログの対象(業務の値・変わった列だけ)と変更前の値を控える → 作成者・日時・版数(元の値 + 1)を入れる
+// 業務のデータを保存 → 新しい行の id が決まってから監査ログを保存 → 1つのトランザクションで確定</pre>
+    <h3>入れた誤り</h3>
+<pre>D1 Infrastructure に db.Remove(order)
+D2 Infrastructure に db.SalesRecords.RemoveRange(records)
+D3 Infrastructure に db.Shipments.Where(...).ExecuteDeleteAsync()
+D4 Infrastructure に db.Database.ExecuteSqlRaw("delete from sales_records where id = 1")
+D5 Api に db.Customers.Remove(customer)
+D6 Domain に List&lt;SalesOrderLine&gt;.Remove(line)            (既知の穴)
+C1 SaveChangesAsync から RejectDeletes(); を外す
+C2 SaveChangesAsync から TouchAggregateRoots(); を外す
+C3 b.Property&lt;int&gt;(RowVersion).IsConcurrencyToken() → b.Property&lt;int&gt;(RowVersion)
+C4 version.CurrentValue = 元の値 + 1 → 元の値</pre>
+    <h3>結果</h3>
+<pre>D1-DbContext.Remove: failed 1 / total 9
+  - NoPhysicalDeleteTests.EFCoreで行を消す呼び出しが無い(assemblyName: "SalesCore.Infrastructure")
+D2-DbSet.RemoveRange: failed 1 / total 9（同上）
+D3-ExecuteDeleteAsync: failed 1 / total 9（同上）
+D4-raw-DELETE-sql: failed 1 / total 9
+  - NoPhysicalDeleteTests.行を消すSQLが無い(assemblyName: "SalesCore.Infrastructure")
+D5-Remove-in-Api-project: failed 1 / total 9
+  - NoPhysicalDeleteTests.EFCoreで行を消す呼び出しが無い(assemblyName: "SalesCore.Api")
+D6-known-gap-List.Remove-in-domain: failed 0 / total 9
+C1-no-RejectDeletes: failed 1 / total 22
+  - AuditAndConcurrencyTests.末端の行でも_削除の印を付けて保存しようとすると止まり_消えない
+C2-no-TouchAggregateRoots: failed 1 / total 22
+  - AuditAndConcurrencyTests.同じ受注の別々の明細を2人が同時に出荷すると_後から保存した方が衝突で止まる
+C3-RowVersion-not-concurrency-token: failed 2 / total 22
+  - AuditAndConcurrencyTests.同じ受注の別々の明細を2人が同時に出荷すると_後から保存した方が衝突で止まる
+  - AuditAndConcurrencyTests.同じ受注を2人が同時に変えると_後から保存した方が衝突で止まる
+C4-RowVersion-not-incremented: failed 3 / total 22
+  - AuditAndConcurrencyTests.作った人と日時_最後に変えた人と日時が残る
+  - AuditAndConcurrencyTests.同じ受注の別々の明細を2人が同時に出荷すると_後から保存した方が衝突で止まる
+  - AuditAndConcurrencyTests.同じ受注を2人が同時に変えると_後から保存した方が衝突で止まる</pre>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day27 学習記録 ／ sales-core</span><span>2026-10-09 ／ 費用 0円</span>
+  </footer>
+
+</div>
+</body>
+</html>
