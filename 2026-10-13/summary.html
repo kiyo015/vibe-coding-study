@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day28 学習記録 — CI（ビルドとテスト）</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day28 ／ 基幹システム開発</p>
+    <h1>CI（ビルドとテスト）— 失敗すればマージできないのは、CI でなく main のルール</h1>
+    <p class="lead">PR ごとにビルドとテストを流す CI を作り、main にルールを付けた。手元と CI の結果を、テスト1件ごとの名前と成否で突き合わせ、156件すべて同じだった。</p>
+    <div class="doc-meta"><span>2026-10-13</span><span>対象: sales-core ／ CI</span><span>段階1 / Day28</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>わざと落ちるテストを足すと、CI はその1件だけ失敗し、PR は <code>BLOCKED</code>（マージできない）になった。</li>
+      <li><b>Day26 の持ち越しも達成した。</b>手元と CI で、156件すべてが同じ名前・同じ成否（違い0件）。</li>
+      <li><b>sales-core の進め方が変わった。</b>main へは PR でしか入れられない。締め作業もブランチ → PR → CI → スカッシュマージ → タグ、に書き換えた。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">0<small>件</small></div><div class="l">手元と CI の違い（156件中）</div></div>
+      <div class="kpi"><div class="v">71<small>秒</small></div><div class="l">CI 1回（1回目）</div></div>
+      <div class="kpi"><div class="v">3<small>回</small></div><div class="l">CI の実行（成功・失敗・成功）</div></div>
+      <div class="kpi"><div class="v">0<small>円</small></div><div class="l">今日の費用</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>CI の定義</h2>
+    <p class="msg">PR と main への push で、Release ビルド（警告もエラー）と全テストを、使い捨ての PostgreSQL 18 に当てて流す。</p>
+    <figure>
+      <figcaption>図表1: CI のジョブ <code>build-and-test</code> の流れ</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">DB コンテナ起動<small>postgres:18</small></div>
+        <div class="chev on">SDK をそろえる<small>global.json 8.0.421</small></div>
+        <div class="chev">restore</div>
+        <div class="chev">build<small>Release・-warnaserror</small></div>
+        <div class="chev on">test<small>trx を残す</small></div>
+      </div></div>
+    </figure>
+    <div class="tbl">
+    <table>
+      <caption>図表2: 決めたこと</caption>
+      <thead><tr><th>項目</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>DB</td><td>サービスコンテナ（<code>salescore_test</code>）。ジョブの間だけの使い捨て。公式イメージに <code>btree_gist</code> が入っている。マイグレーションは結合テストが最初に当てる</td></tr>
+        <tr><td>接続文字列</td><td>環境変数 <code>ConnectionStrings__SalesCoreTest</code>。パスワードはこのコンテナ専用で、秘密情報ではない</td></tr>
+        <tr><td>SDK（計画に無かった追加）</td><td><code>global.json</code> で 8.0.421。実行環境には新しい SDK も入っていて、無いとそちらが使われる。アナライザはコンパイラの版で黙って無効になる（Day23）</td></tr>
+        <tr><td>結果の残し方</td><td>テストごとの成否（trx）を成果物 <code>test-results</code> に残し、手元と突き合わせる</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <figure>
+      <figcaption>図表3: CI 1回目の時間の内訳（秒）</figcaption>
+      <svg viewBox="0 0 640 150" role="img" aria-label="DBコンテナ起動21秒、restore10秒、build11秒、test6秒、その他23秒">
+        <g font-size="12" fill="#1a1a1a">
+          <text x="0" y="20">DB コンテナの起動</text><rect x="150" y="8" width="210" height="16" fill="#173f66"/><text x="368" y="21" font-weight="700" fill="#173f66">21</text>
+          <text x="0" y="48">restore</text><rect x="150" y="36" width="100" height="16" fill="#c9ccd1"/><text x="258" y="49">10</text>
+          <text x="0" y="76">build</text><rect x="150" y="64" width="110" height="16" fill="#c9ccd1"/><text x="268" y="77">11</text>
+          <text x="0" y="104">test（156件）</text><rect x="150" y="92" width="60" height="16" fill="#c9ccd1"/><text x="218" y="105">6</text>
+          <text x="0" y="132">その他（SDK の導入など）</text><rect x="150" y="120" width="230" height="16" fill="#e7e9ec"/><text x="388" y="133">23</text>
+        </g>
+      </svg>
+    </figure>
+    <p class="src">出所: GitHub Actions run 38327558195 の各手順の開始・終了時刻。合計71秒</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>手元と CI の突き合わせ</h2>
+    <p class="msg">件数でなく、テスト1件ごとの「名前 → 成否」で比べた。156件すべて同じで、違いは0件。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表4: テストの件数と、手元との違い</caption>
+      <thead><tr><th>実行</th><th class="num">アーキテクチャ</th><th class="num">Domain</th><th class="num">結合</th><th class="num">違い</th></tr></thead>
+      <tbody>
+        <tr><td>手元（Release・<code>-warnaserror</code>）</td><td class="num">9</td><td class="num">125</td><td class="num">22</td><td class="num">—</td></tr>
+        <tr><td>CI 1回目（a054975、71秒）</td><td class="num">9</td><td class="num">125</td><td class="num">22</td><td class="num">0</td></tr>
+        <tr class="total"><td>CI 最後（66a41fb、53秒）</td><td class="num">9</td><td class="num">125</td><td class="num">22</td><td class="num">0</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: <code>evidence/2026-10-13-compare-trx.js</code>。結合22件には、まっさらなスキーマに全マイグレーションを当てる <code>MigrationTests</code> を含む</p>
+    <p class="note">比べる仕組み自体も確かめた。CI の結果の1件を「失敗」に書き換えた写しと比べると、その1件（<code>得意先コードは重複できない</code>）を差として出し、終了コード1になった。件数だけを比べると、別のテストが入れ替わって成功していても気付けない。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>main のルール</h2>
+    <p class="msg">CI を作っただけでは、失敗してもマージできる。止めるのは main のルール。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表5: ルールセット「main: PR and CI required」</caption>
+      <thead><tr><th>ルール</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>PR 必須</td><td>main へは PR でしか入れられない。承認は0件でよい（一人で開発しているため。1件以上にすると自分の PR をマージできない）</td></tr>
+        <tr class="total"><td>CI 必須</td><td><code>build-and-test</code> が成功していないとマージできない。main の最新の取り込みも必須</td></tr>
+        <tr><td>禁止</td><td>強制 push、main の削除</td></tr>
+        <tr><td>例外</td><td>なし（管理者も同じ）</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>対照実験</h2>
+    <p class="msg">わざと落ちるテストを足すと、CI はその1件だけが失敗し、PR はマージできなくなった。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表6: 状態ごとの CI と PR</caption>
+      <thead><tr><th>状態</th><th class="c">CI</th><th class="c">PR</th></tr></thead>
+      <tbody>
+        <tr><td>ルールを付ける前（1回目の CI の実行中）</td><td class="c miss">実行中</td><td class="c">CLEAN（マージできた）</td></tr>
+        <tr><td>ルールを付けた後、CI の実行中</td><td class="c miss">実行中</td><td class="c hit">BLOCKED</td></tr>
+        <tr class="total"><td>わざと落ちるテスト（<code>SELECT 1</code> が 2 であること）を足して push</td><td class="c">失敗（その1件だけ。9・125・22 は全件成功）</td><td class="c">BLOCKED</td></tr>
+        <tr><td>そのテストを消して push</td><td class="c">成功</td><td class="c">CLEAN</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <h3>自動モードの分類器に止められた操作</h3>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>しようとしたこと</th><th>止めた理由</th><th>代わりにしたこと</th></tr></thead>
+      <tbody>
+        <tr><td>製品コードの安全策（保存のときの削除の禁止）を外して push する</td><td>安全策のテストの除去</td><td>わざと落ちるテストを足す形にした</td></tr>
+        <tr><td>失敗した PR を実際にマージする（<code>--admin</code> を含む）、main へ直接 push する</td><td>CI の迂回</td><td>ルールの中身と <code>BLOCKED</code> を API で読んで確かめた</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>どちらも回避はしていない。公開リポジトリの main に、安全策を外したコードや CI の迂回が入りうる操作なので、止められて当然の内容だった。対照実験は「安全策を外す」でなく「わざと落ちるものを足す」形にすると、同じことを確かめられる。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>文書と進め方の変更</h2>
+    <p class="msg">sales-core の main には直接 push しない。締め作業もこの流れに合わせた。</p>
+    <figure>
+      <figcaption>図表7: Day28 以降の sales-core の締め</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">作業ブランチに commit・push</div>
+        <div class="chev on">CI の成功を確かめる<small>失敗ならマージしない</small></div>
+        <div class="chev">スカッシュマージ</div>
+        <div class="chev">main を取り込む</div>
+        <div class="chev">main のコミットに day{N}</div>
+      </div></div>
+    </figure>
+    <ul>
+      <li><b>sales-core の CLAUDE.md</b>: 「CI」の節、禁止事項の行「ビルドかテストが落ちた変更を main に入れる＝強制（GitHub のルール）」、開発の進め方の先頭に「main に直接 push しない」</li>
+      <li><b>daily-closeout スキル</b>: 上の流れに書き換えた。Study は従来どおり直接 push</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>今日学んだこと</h2>
+    <p class="msg">「同じ結果」「同じ環境」「止まる仕組み」は、どれも明示しないと成り立たない。</p>
+    <ul>
+      <li><b>「同じ結果」は1件ごとに比べる。</b>件数が同じでも、中身が入れ替わっていれば同じではない。比べる仕組みが差を見落とさないことも確かめる</li>
+      <li><b>SDK の版は、そろえないと CI で勝手に変わる。</b>実行環境に新しい SDK が入っている。<code>global.json</code> で固定し、ログで版を確かめた</li>
+      <li><b>CI を作っただけでは、失敗してもマージできる。</b>マージを止めるのは main のルール</li>
+      <li><b>分類器は、CI や安全策を弱める操作を止める。</b>対照実験は「わざと落ちるものを足す」形にする</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>つまずき</h2>
+    <p class="msg">どれも小さいもので、原因はすぐ特定できた。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>症状</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>main のルールを API で調べると「Branch not found」</td><td>既定のブランチは <code>master</code> でなく <code>main</code></td><td><code>main</code> で調べ直した</td></tr>
+        <tr><td>作業フォルダを <code>rm -rf</code> で作り直そうとして止まった</td><td>dev-guard のフック（正しい動作）</td><td>新しいフォルダ名を使った</td></tr>
+        <tr><td>アプリの PR の状態が、新しい CI の実行を反映していない</td><td>アプリのキャッシュ</td><td><code>gh pr view</code> で1回だけ直接確かめた</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>成果物</h2>
+    <p class="msg">リンクはすべて <code>day28</code> タグに固定している。</p>
+    <h3>sales-core（製品コード）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day28/.github/workflows/ci.yml">.github/workflows/ci.yml</a> — CI の定義</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day28/global.json">global.json</a> — SDK の版</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day28/CLAUDE.md">CLAUDE.md</a> — CI の節、禁止事項、開発の進め方</li>
+      <li><a href="https://github.com/kiyo015/sales-core/pull/1">PR #1</a> — CI の失敗と成功の記録</li>
+    </ul>
+    <h3>Study（学習記録）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day28/evidence/2026-10-13-ci-results.txt">evidence/2026-10-13-ci-results.txt</a> — 突き合わせ、ルールの中身、対照実験</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day28/evidence/2026-10-13-compare-trx.js">evidence/2026-10-13-compare-trx.js</a> — 比べるスクリプト</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day28/.claude/skills/daily-closeout/SKILL.md">daily-closeout/SKILL.md</a> — sales-core の締めを PR 経由に</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day28/study_plan_next_month.md">study_plan_next_month.md</a> — Day28 の実測値</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day28/2026-10-13/summary.md">2026-10-13/summary.md</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day28/2026-10-13/summary.html">summary.html</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">09</span>次回：Day29 — CI（AIレビュー）</h2>
+    <p class="msg">PR に <code>claude -p</code> のレビュー結果を残し、1回の費用を記録する。APIキーの登録は本人が行う。</p>
+    <ul>
+      <li>Day12・13・14 の教訓をそのまま使う（プロンプトは標準入力、<code>--tools ""</code> と <code>--strict-mcp-config</code>、失敗の基準も渡す）</li>
+      <li>申し送り: AI レビューを必須のチェックにするかを決める。レビュー結果にパスワードなどが写り込まないようにする</li>
+      <li>Day28 からの持ち越しは無し</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">付録</span>検証の中身</h2>
+    <p class="msg">スクリプト本体は添付しない。要点と結果をテキストで載せる。</p>
+    <h3>比べ方（compare-trx.js の要点）</h3>
+<pre>trx の &lt;UnitTestResult testName="..." outcome="..."&gt; を全部読み、名前 → 成否 の表を手元と CI で作る
+名前の和集合の中で、成否が違う(片方に無いも含む)ものを「違い」として出す。違いがあれば終了コード 1</pre>
+    <h3>結果</h3>
+<pre>== 手元と CI(1回目 a054975)
+手元: 156件(成功 156)  CI: 156件(成功 156)
+  SalesCore.Architecture: 手元 9  CI 9
+  SalesCore.Domain: 手元 125  CI 125
+  SalesCore.Integration: 手元 22  CI 22
+違い: 0件
+
+== 比較スクリプトの自己確認(CI の1件を Failed に書き換え)
+違い: 1件
+  SalesCore.Integration.Tests.PersistenceMappingTests.得意先コードは重複できない: 手元=Passed CI=Failed
+exit=1
+
+== わざと落ちるテストを足した CI(57b5287)
+build-and-test = FAILURE
+Architecture 9/9、Domain 125/125、Integration 22/23
+失敗: SalesCore.Integration.Tests.CiProbeTests.わざと落ちる
+PR: BLOCKED
+
+== テストを消した後(66a41fb)
+build-and-test = SUCCESS、PR: CLEAN、手元との違い 0件
+
+== main のルール(gh api repos/kiyo015/sales-core/rules/branches/main)
+deletion / non_fast_forward / pull_request(承認 0) / required_status_checks [build-and-test](strict)
+bypass_actors なし</pre>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day28 学習記録 ／ sales-core</span><span>2026-10-13 ／ 費用 0円</span>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -77,22 +77,27 @@ mdとHTMLをこのStep1で両方作ってからStep3でコミットすること�
 
 **製品コード（`sales-core`）を先に、記録（`Study`）を後に**コミットする。記録のリンクが指す先を先に確定させるため。
 
-その日に`sales-core`を触っていれば、そちらで:
+その日に`sales-core`を触っていれば、そちらで次を行う。**Day28以降、`sales-core`の main には直接 push できない**（ルールセット「main: PR and CI required」。PR でしか入れられず、CI の`build-and-test`が成功しないとマージできない。管理者も例外なし）。その日の作業は`day{N}-<内容>`のブランチで行い、PR を出しておく。
+
+1. 作業ブランチに残りの変更をコミットして push する（PR がまだ無ければ`gh pr create --base main`で作る）
+2. CI の結果を確かめる。`mcp__ccd_pr__get_status`を使い、`gh`での繰り返しの問い合わせはしない。**CI が失敗していたら、マージせずに原因を直す。** 直せなければ締めを止めて報告する（記録のリンクが指す先が確定しないため）
+3. スカッシュマージして、main の最新を取り込み、マージでできたコミットにタグを打つ
 
 ```
-git -C C:/Users/sakaguchi/sales-core add -A
-git -C C:/Users/sakaguchi/sales-core commit -m "<その日の内容が分かる日本語メッセージ>
-
-<その時点でシステムから指示されているCo-Authored-By行>"
+gh pr merge <PR番号> --repo kiyo015/sales-core --squash --delete-branch
+git -C C:/Users/sakaguchi/sales-core switch main
+git -C C:/Users/sakaguchi/sales-core pull --ff-only
 git -C C:/Users/sakaguchi/sales-core tag day{N}
-git -C C:/Users/sakaguchi/sales-core push
 git -C C:/Users/sakaguchi/sales-core push origin day{N}
 ```
 
-続いて`Study`で同じことをする（`git add -A` → commit → `git tag day{N}` → `git push` → `git push origin day{N}`）。
+- スカッシュマージのコミットメッセージは PR のタイトルと本文になる。PR の本文に、その日の内容が分かる日本語の説明と、システムから指示されている PR 用の署名を書く
+- タグは main に入ったコミットに打つ（作業ブランチのコミットはマージ後にブランチごと消える）
+
+続いて`Study`で同じことをする（`git add -A` → commit → `git tag day{N}` → `git push` → `git push origin day{N}`）。`Study`にはルールを付けていないので、main（`master`）へ直接 push してよい。
 
 - **タグ名は両リポジトリで同じ`day{N}`**。Step1で書いたリンクと一致させる。打たないとsummary.mdのリンクが404になる
-- その日のうちに`sales-core`側でコミット済みのものがあれば、締めではその後の差分だけをコミットし、タグは最新のコミットに打つ
+- その日のうちに`sales-core`の PR を既にマージしていれば、締めでは残りの差分だけを新しいブランチと PR で入れ、タグは main の最新のコミットに打つ
 - `Co-Authored-By`の行は、その時点でシステムから指示されている文言をそのまま使う。モデル名をこのスキルに固定で書かないこと（以前`Claude Sonnet 5`と固定で書いていたが、使用モデルが変わって古くなった）
 - push先は既存のリモート（`origin`）にそのまま行う。新しいリポジトリを作ったりリモートを変更したりはしない
 
