@@ -1,0 +1,30 @@
+## A1-ignore-requested-unit-price: failed 1 / total 12
+  - SalesOrderApiTests.単価を指定すると_標準単価の代わりにその単価で受注する
+## A2-billing-customer-not-copied: failed 1 / total 12
+  - SalesOrderApiTests.受注を登録して承認し_2回に分けて出荷を確定すると_一部出荷を経て出荷済になり_売上が累計差分で計上される
+## A3-tax-rate-ignores-order-date: failed 1 / total 12
+  - SalesOrderApiTests.税率は受注日時点の_商品の税区分の税率
+## A4-state-error-as-400: failed 2 / total 12
+  - SalesOrderApiTests.取り消した受注は承認できず_指示だけの出荷は取り消せる
+  - SalesOrderApiTests.状態に合わない操作は409で_状態は変わらない
+## A5-approve-not-saved: failed 6 / total 12
+  - SalesOrderApiTests.取り消した受注は承認できず_指示だけの出荷は取り消せる
+  - SalesOrderApiTests.受注を登録して承認し_2回に分けて出荷を確定すると_一部出荷を経て出荷済になり_売上が累計差分で計上される
+  - SalesOrderApiTests.受注日より前の出荷日では確定できない
+  - SalesOrderApiTests.出荷の指示では倉庫だけを見て_受注の後に無効にした得意先と商品は出荷できる
+  - SalesOrderApiTests.状態に合わない操作は409で_状態は変わらない
+  - SalesOrderApiTests.同時に変えられていたら409で_後の変更は保存されない
+## A6-warehouse-not-checked: failed 1 / total 12
+  - SalesOrderApiTests.入力の誤りは400_無いものは404で_理由を返す
+## A7-inactive-customer-accepted: failed 1 / total 12
+  - SalesOrderApiTests.無効な得意先と商品では受注できない
+## A8-inactive-product-accepted: failed 1 / total 12
+  - SalesOrderApiTests.無効な得意先と商品では受注できない
+## A9-inactive-warehouse-accepted: failed 1 / total 12
+  - SalesOrderApiTests.出荷の指示では倉庫だけを見て_受注の後に無効にした得意先と商品は出荷できる
+## A10-any-InvalidOperationException-as-409-with-message: failed 1 / total 12
+  - SalesOrderApiTests.業務の誤りでない例外は500で_中身を返さない
+## A11-concurrency-not-409: failed 1 / total 12
+  - SalesOrderApiTests.同時に変えられていたら409で_後の変更は保存されない
+## A12-shipped-before-ordered-accepted: failed 1 / total 12
+  - SalesOrderApiTests.受注日より前の出荷日では確定できない

@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "mini-game", "run", "dev"],
       "port": 3100
+    },
+    {
+      "name": "sales-core-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "../sales-core/src/SalesCore.Api", "--launch-profile", "http"],
+      "port": 5070
     }
   ]
 }
