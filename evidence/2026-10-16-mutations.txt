@@ -1,0 +1,21 @@
+## B1-tax-rounded-per-sales-record: failed 1 / total 5
+  - InvoiceApiTests.受注から分納での出荷を経て_月末に締めると_請求先に税率ごとに1回だけ丸めた請求書ができる
+## B2-domain-double-billing-check-removed: failed 1 / total 13
+  - InvoiceTests.請求書に入れた売上には請求書が付き_同じ売上は二重に請求できない
+## B3-already-invoiced-records-collected: failed 2 / total 5
+  - InvoiceApiTests.受注から分納での出荷を経て_月末に締めると_請求先に税率ごとに1回だけ丸めた請求書ができる
+  - InvoiceApiTests.前回の締め日より前には締められない
+## B4-records-after-closing-date-collected: failed 1 / total 5
+  - InvoiceApiTests.受注から分納での出荷を経て_月末に締めると_請求先に税率ごとに1回だけ丸めた請求書ができる
+## B5-other-billing-customers-collected: failed 1 / total 5
+  - InvoiceApiTests.別の請求先の売上は入らない
+## B6-closing-date-not-checked: failed 1 / total 5
+  - InvoiceApiTests.締めの入力の誤りは400で_請求する売上が無ければ409
+## B7-previous-closing-not-checked: failed 2 / total 5
+  - InvoiceApiTests.受注から分納での出荷を経て_月末に締めると_請求先に税率ごとに1回だけ丸めた請求書ができる
+  - InvoiceApiTests.前回の締め日より前には締められない
+## B8-period-starts-on-previous-closing-date: failed 2 / total 5
+  - InvoiceApiTests.期間より前の未請求の売上も_次の締めで請求する
+  - InvoiceApiTests.受注から分納での出荷を経て_月末に締めると_請求先に税率ごとに1回だけ丸めた請求書ができる
+## B9-branch-can-be-closed: failed 1 / total 5
+  - InvoiceApiTests.締めの入力の誤りは400で_請求する売上が無ければ409

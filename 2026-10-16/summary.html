@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day31 学習記録 — 締め請求書の発行API</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day31 ／ 基幹システム開発</p>
+    <h1>締め請求書の発行API — 受注から請求書までを API だけで1本に通した</h1>
+    <p class="lead">請求先・締め日の単位で売上をまとめて請求書を作る API を作り、受注 → 分納での出荷 → 締め請求書の発行を端から端までテストした。二重請求は Domain・DB・売上の版数の3段で止める。AI レビューが4回走り、取り返しのつかない入力と金額の境界を見つけた。</p>
+    <div class="doc-meta"><span>2026-10-16</span><span>対象: sales-core ／ 請求</span><span>段階1 / Day31</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>端から端までのテストが CI で通り、税額は税率ごとに1回だけ丸める（売上ごとだと1円ずれる）。</li>
+      <li><b>二重請求を3段で止める。</b>Domain の検査、DB の一意インデックス、売上の版数。同時に締めた場面は割り込んで再現した。</li>
+      <li><b>決定どうしの組み合わせに穴があった。</b>「取消しない」と「未来の日付も締められる」、「売上が無ければ作らない（件数）」と「返品で0円以下」。AI レビューが見つけた。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">455<small>円</small></div><div class="l">10月の請求額（税40円）</div></div>
+      <div class="kpi"><div class="v">9<small>/9</small></div><div class="l">対照実験で検出</div></div>
+      <div class="kpi"><div class="v">200<small>件</small></div><div class="l">全テスト成功（9・147・44）</div></div>
+      <div class="kpi"><div class="v">$2.03</div><div class="l">AI レビュー4回（API 換算）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>決めたこと</h2>
+    <p class="msg">段階1は入金が無いので繰越は0。締め日までの未請求の売上を全部入れ、0円以下なら締めずに次へ回す。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表1: 締めの決まり（本人の判断と、業務ルール集に書いたこと）</caption>
+      <thead><tr><th>項目</th><th>決定</th></tr></thead>
+      <tbody>
+        <tr><td>繰越（本人）</td><td>段階1は0。請求額 ＝ 今回売上 ＋ 消費税</td></tr>
+        <tr><td>集める売上（本人）</td><td>締め日までの未請求の売上を全部（入れ忘れも拾う）</td></tr>
+        <tr><td>売上なし（本人）</td><td>請求書を作らない</td></tr>
+        <tr class="total"><td>0円以下（本人、AI レビューから）</td><td>締めずに 409。売上は次の締めに回し、次の請求から差し引く</td></tr>
+        <tr><td>締め日</td><td>請求先の締め日（月末なら2月は28日・29日）。同じ請求先・締め日に1枚。前回以前は不可。<b>締め日が来るまでは不可</b>（日本時間）</td></tr>
+        <tr><td>状態・期限</td><td>「確定」だけで取消しない。支払期限は空（段階3）</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>端から端までのテスト</h2>
+    <p class="msg">API だけで受注から請求書まで通し、税額は2週目の Domain のテストと同じ規則（税率ごとに1回）で計算されている。</p>
+    <figure>
+      <figcaption>図表2: テストの流れ</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">受注<small>支店・2商品</small></div>
+        <div class="chev">承認</div>
+        <div class="chev">分納3回<small>10/5・10/12・10/19</small></div>
+        <div class="chev on">10月末に締める<small>本社あて</small></div>
+        <div class="chev">11月末に締める<small>11月分だけ</small></div>
+      </div></div>
+    </figure>
+    <div class="tbl">
+    <table>
+      <caption>図表3: 10月末の請求書</caption>
+      <thead><tr><th>税率</th><th class="num">対象額（円）</th><th class="num">税額（円）</th></tr></thead>
+      <tbody>
+        <tr><td>10%</td><td class="num">315</td><td class="num">32（31.5 を四捨五入）</td></tr>
+        <tr><td>8%</td><td class="num">100</td><td class="num">8</td></tr>
+        <tr class="total"><td>合計（請求額 455円）</td><td class="num">415</td><td class="num">40</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">売上ごとに丸めると 11 ＋ 5 ＋ 11 ＋ 11 ＋ 3 ＝ 41円になり、1円ずれる。10月は二度締められず、11月の請求書には11月の売上（105円・税11円）だけが入る。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>二重請求を3段で止める</h2>
+    <p class="msg">どの段も、ほかの段が止めない場面を止める。同時に締めた場面は、保存の直前に割り込んで再現した。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表4: 段ごとの役割</caption>
+      <thead><tr><th>段</th><th>止める場面</th><th>確かめたこと</th></tr></thead>
+      <tbody>
+        <tr><td>Domain</td><td>請求書の付いた売上を入れる</td><td>対照実験 B2</td></tr>
+        <tr class="total"><td>DB（一意インデックス）</td><td>同じ請求先・締め日の2枚目</td><td><code>SaveChangesInterceptor</code> で割り込み → 409（直す前は 500）</td></tr>
+        <tr><td>売上の版数</td><td>2人が同時に別の締め日で同じ売上を締める</td><td>版数を比べないと2枚目が保存される</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">4回目の AI レビュー: Domain の検査は、売上の「請求書」を読み込んでいるかに頼っている。読み込まずに渡すと付け替わる。今の API は DB 側で絞るので届かないが、Day32 の最初の申し送りにした。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>対照実験</h2>
+    <p class="msg">誤りを9種類入れ、すべて捕まえた。別の請求先の売上を混ぜる誤りは、テストを足すまで素通りした。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表5: 入れた誤りと落ちたテストの数</caption>
+      <thead><tr><th>入れた誤り</th><th class="num">落ちた件数</th></tr></thead>
+      <tbody>
+        <tr><td>B1 税を売上ごとに丸める</td><td class="num">1</td></tr>
+        <tr><td>B2 Domain の二重請求の検査を外す</td><td class="num">1</td></tr>
+        <tr><td>B3 締め済みの売上も集める</td><td class="num">2</td></tr>
+        <tr><td>B4 締め日より後の売上も集める</td><td class="num">1</td></tr>
+        <tr class="total"><td>B5 別の請求先の売上も集める（最初は 0 件）</td><td class="num">1</td></tr>
+        <tr><td>B6 締め日かどうかを見ない</td><td class="num">1</td></tr>
+        <tr><td>B7 前回の締め日を見ない</td><td class="num">2</td></tr>
+        <tr><td>B8 期間の開始を前回の締め日にする</td><td class="num">2</td></tr>
+        <tr><td>B9 支店で締められる</td><td class="num">1</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: <code>evidence/2026-10-16-mutate.ps1</code>。ほかに「今日」を UTC で判定する誤り → 日本時間 10/31 0時の締めが 400 で落ちることを確認</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>AI レビュー（PR #4、4回）</h2>
+    <p class="msg">取り返しのつかない入力と、金額の境界を指摘された。正しいものを直し、残りは申し送りにした。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表6: レビューの記録（費用は API 換算、実際はプランの利用枠）</caption>
+      <thead><tr><th>回</th><th>判定</th><th class="num">費用（$）</th><th class="num">秒</th><th>主な指摘と対応</th></tr></thead>
+      <tbody>
+        <tr class="total"><td>1</td><td>修正後マージ可</td><td class="num">0.4430</td><td class="num">57</td><td>未来の締め日で締められる → 400。集計の並びが DB 任せ → 高い順に</td></tr>
+        <tr class="total"><td>2</td><td>修正後マージ可</td><td class="num">0.4809</td><td class="num">65</td><td>0円・マイナスの請求書 → 本人の決定で次に回す。同時に締めると 500 → 409</td></tr>
+        <tr><td>3</td><td>マージ可</td><td class="num">0.5411</td><td class="num">78</td><td>Minor のみ。0円以下で回した売上の清算を「決めていないこと」へ</td></tr>
+        <tr><td>4</td><td>マージ可</td><td class="num">0.5605</td><td class="num">86</td><td>Important: 二重請求の検査が読み込みに頼る → Day32 へ</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>今日学んだこと</h2>
+    <p class="msg">決定は1つずつ正しくても、組み合わせると穴ができる。決定の文言でなく、理由の方を実装する。</p>
+    <ul>
+      <li><b>「取り消せない」なら、入力の範囲を狭くする。</b>取消を作らない決定と、未来の締め日を許す実装が組み合わさると、締めが全部できなくなる</li>
+      <li><b>件数の検査は金額の検査の代わりにならない。</b>「売上が無ければ作らない」の理由は「0円の請求書になるから」だった。返品で0円以下になる場面が漏れていた</li>
+      <li><b>同時に起きることは割り込んで再現する。</b>HTTP を順に呼ぶだけでは起きない。保存の直前に割り込んで 500 を確かめてから直した</li>
+      <li><b>日付は「どこの今日か」まで決める。</b>CI は UTC。日本時間の 10/31 0時は UTC では 10/30</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>つまずき</h2>
+    <p class="msg">どれも小さく、原因はすぐ特定できた。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>症状</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>照会結果の比較が失敗</td><td>record の中の List は参照で比べる</td><td><code>Assert.Equivalent</code></td></tr>
+        <tr><td><code>Money</code> に <code>&lt;=</code> が無い</td><td>比較の演算子を作っていない</td><td>円の値で比べた</td></tr>
+        <tr><td>既存のテスト2件が新しい決まりと食い違い</td><td>0円の請求書を前提にしていた</td><td>意図を保って書き換えた</td></tr>
+        <tr><td>クラス宣言の置き換えが外れた</td><td>ファイルが CRLF、置換が LF</td><td>手で直した</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>成果物</h2>
+    <p class="msg">リンクはすべて <code>day31</code> タグに固定している。</p>
+    <h3>sales-core（製品コード）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day31/src/SalesCore.Domain/Invoice.cs">Invoice.cs</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day31/src/SalesCore.Domain/Customer.cs">Customer.cs</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day31/src/SalesCore.Domain/SalesRecord.cs">SalesRecord.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day31/src/SalesCore.Application/InvoiceUseCases.cs">InvoiceUseCases.cs</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day31/src/SalesCore.Application/InvoiceContracts.cs">InvoiceContracts.cs</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day31/src/SalesCore.Api/Program.cs">Program.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day31/src/SalesCore.Infrastructure/Persistence/Migrations/20261016001848_AddInvoices.cs">AddInvoices.cs</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day31/docs/migrations/2026-10-16-AddInvoices.sql">SQL</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day31/tests/SalesCore.Integration.Tests/InvoiceApiTests.cs">InvoiceApiTests.cs</a>（端から端まで） ／ <a href="https://github.com/kiyo015/sales-core/blob/day31/tests/SalesCore.Integration.Tests/ApiTest.cs">ApiTest.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day31/tests/SalesCore.Domain.Tests/InvoiceTests.cs">InvoiceTests.cs</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day31/tests/SalesCore.Domain.Tests/CustomerTests.cs">CustomerTests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day31/docs/domain/business-rules.md">business-rules.md</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day31/docs/domain/er-diagram.md">er-diagram.md</a> ／ <a href="https://github.com/kiyo015/sales-core/blob/day31/CLAUDE.md">CLAUDE.md</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/pull/4">PR #4</a> — AI レビューのコメント4件</li>
+    </ul>
+    <h3>Study（学習記録）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day31/evidence/2026-10-16-mutations.txt">evidence/2026-10-16-mutations.txt</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day31/evidence/2026-10-16-mutate.ps1">mutate.ps1</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day31/evidence/2026-10-16-ai-review.txt">evidence/2026-10-16-ai-review.txt</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day31/study_plan_next_month.md">study_plan_next_month.md</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day31/2026-10-16/summary.md">summary.md</a> ／ <a href="https://github.com/kiyo015/vibe-coding-study/blob/day31/2026-10-16/summary.html">summary.html</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">09</span>次回：Day32 — hooks の他イベントと健康診断の C# 対応</h2>
+    <p class="msg">Stop と PreCompact の発火を実測し、健康診断に dotnet test・未適用のマイグレーション・脆弱なパッケージを足す。</p>
+    <ul>
+      <li><b>申し送り（優先）:</b> 二重請求の Domain の検査を、売上の請求書を読み込んでいるかに頼らない形にする</li>
+      <li>申し送り（任意）: 請求先を Domain で守る、一意違反の文言を制約ごとに、返品の API と返品だけの締めのテスト、Day30 からの3件</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">付録</span>検証の中身</h2>
+    <p class="msg">スクリプト本体は添付しない。結果をテキストで載せる。</p>
+<pre>B1-tax-rounded-per-sales-record: failed 1 / total 5
+B2-domain-double-billing-check-removed: failed 1 / total 13
+B3-already-invoiced-records-collected: failed 2 / total 5
+B4-records-after-closing-date-collected: failed 1 / total 5
+B5-other-billing-customers-collected: failed 1 / total 5   (最初は failed 0。テストを足した)
+B6-closing-date-not-checked: failed 1 / total 5
+B7-previous-closing-not-checked: failed 2 / total 5
+B8-period-starts-on-previous-closing-date: failed 2 / total 5
+B9-branch-can-be-closed: failed 1 / total 5
+版数を比べない → 同時に締めた2枚目が保存される(DbUpdateConcurrencyException が出ない)
+「今日」を UTC で判定 → 「締め日 2026-10-31 がまだ来ていない(今日は 2026-10-30)」で 400
+同じ締め日の割り込み(直す前) → 500</pre>
+<pre>CREATE SEQUENCE invoice_number_seq START WITH 1 INCREMENT BY 1 NO MINVALUE MAXVALUE 999999 NO CYCLE;
+ALTER TABLE sales_records ADD invoice_id bigint;
+CREATE UNIQUE INDEX "IX_invoices_billing_customer_id_closing_date" ON invoices (billing_customer_id, closing_date);</pre>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day31 学習記録 ／ sales-core</span><span>2026-10-16 ／ 追加の請求 0円（AI レビュー4回 API 換算 $2.0255）</span>
+  </footer>
+
+</div>
+</body>
+</html>
