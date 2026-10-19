@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day32 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day32 ／ 基幹システム開発</p>
+    <h1>会話の節目に働くフックと、C# を見る健康診断 — 受け取るデータを実測してから作った</h1>
+    <p class="lead">返事を終えた時（Stop）と会話を要約する前（PreCompact）に動くフックを、受け取る JSON を記録してから作り、dev-guard 1.3.0 として配布した。健康診断に C# の項目を3つ足すと、テストのプロジェクトにあった High の脆弱性2件を初回で見つけた。前日から持ち越した二重請求の検査の穴も直した。</p>
+    <div class="doc-meta"><span>2026-10-19</span><span>対象: sales-core ／ Study（dev-guard・健康診断）</span><span>段階1 / Day32</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>2つのイベントが受け取る JSON を記録し、<code>/compact</code> で PreCompact が決定を1件書き出した。健康診断は C# の項目込みで 13/13 OK、無人で完走した。</li>
+      <li><b>足した検査が、すぐに問題を見つけた。</b>xunit 2.5.3 の下に High の脆弱性が2件あった。xunit を 2.9.3 に上げて0件にした。</li>
+      <li><b>二重請求の検査は、請求書を読み込まなくても効く。</b>外部キー <code>InvoiceId</code> も見る。読み込まずに渡すと素通りしていたことを、テストで RED にしてから直した。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">13<small>/13</small></div><div class="l">健康診断（245秒）</div></div>
+      <div class="kpi"><div class="v">2<small>→0</small></div><div class="l">High の脆弱なパッケージ</div></div>
+      <div class="kpi"><div class="v">201<small>件</small></div><div class="l">全テスト成功（9・147・45）</div></div>
+      <div class="kpi"><div class="v">$0.62</div><div class="l">AI レビュー3回（API 換算）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>二重請求の検査の穴（前日からの持ち越し）</h2>
+    <p class="msg">締め済みかどうかを「請求書を読み込んでいるか」だけで見ていたので、読み込まずに渡すと、締め済みの売上が新しい請求書に付け替わった。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表1: 直す前と直した後</caption>
+      <thead><tr><th></th><th>直す前</th><th>直した後</th></tr></thead>
+      <tbody>
+        <tr><td>締め済みの判定</td><td><code>Invoice is not null</code></td><td><code>IsBilled</code> ＝ 請求書 または 請求書の番号</td></tr>
+        <tr><td>請求書の番号</td><td>EF Core の影の列（Domain から見えない）</td><td><code>SalesRecord.InvoiceId</code>（外から付け替えられない）</td></tr>
+        <tr><td>締めの対象の抽出</td><td>請求書との結合</td><td><code>InvoiceId == null</code>（Domain と同じ根拠）</td></tr>
+        <tr class="total"><td>読み込まずに渡す</td><td>素通り（テストが RED）</td><td>409</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">列名は同じなのでマイグレーションは不要（has-pending-model-changes で確認）。AI レビューの指摘で、テストは例外の文言「締め済み」も確かめる。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>受け取るデータの実測</h2>
+    <p class="msg">推測で書かず、受け取ったものを書き残すだけのフックで1回ずつ受けた。PreCompact には permission_mode と effort が来ず、trigger と custom_instructions が来る。</p>
+    <figure>
+      <figcaption>図表2: 作り方の順序</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">記録用のフック<small>受け取りを書き残す</small></div>
+        <div class="chev on">発火させて実測<small>返事の終わり・/compact</small></div>
+        <div class="chev">テスト7件<small>RED を確認</small></div>
+        <div class="chev">本番のフック<small>Stop・PreCompact</small></div>
+        <div class="chev">dev-guard 1.3.0<small>タグで配布</small></div>
+      </div></div>
+    </figure>
+    <div class="tbl">
+    <table>
+      <caption>図表3: 受け取った JSON の項目（2026-10-19 実測）</caption>
+      <thead><tr><th></th><th>Stop</th><th>PreCompact</th></tr></thead>
+      <tbody>
+        <tr><td>共通</td><td colspan="2">session_id・transcript_path・cwd・scratchpad_dir・prompt_id・hook_event_name</td></tr>
+        <tr><td>固有</td><td>stop_hook_active・last_assistant_message・background_tasks・session_crons・permission_mode・effort</td><td>trigger（manual）・custom_instructions（null）</td></tr>
+        <tr><td>会話の記録</td><td colspan="2">JSONL で 54MB。実行したフックは <code>hook_success</code> としてコマンドごと残る（出力の無い回は残らない）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: evidence/2026-10-19-hook-input.jsonl</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>2つのフック</h2>
+    <p class="msg">Stop は止めずに知らせるだけ。PreCompact は要約で消える前に、その日の決定をファイルに残す。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表4: することと実測</caption>
+      <thead><tr><th>イベント</th><th>すること</th><th>実測</th></tr></thead>
+      <tbody>
+        <tr><td>Stop</td><td>.cs を編集した後に dotnet test を流していなければ知らせる。未コミットの変更の件数を知らせる</td><td>「Study に未コミットの変更が 4 件」。記録の末尾 8MB だけ読み約1.3秒</td></tr>
+        <tr><td>PreCompact</td><td>その日に本人に確認して決めたこと（質問と回答）を docs/decisions/&lt;日付&gt;.md に書き出す</td><td>/compact で発火し、「フックの置き場」の1件を書いた</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">決定の記録には、質問の自由回答に貼った文字列もそのまま出る（AI レビューの Important）。ファイルは自動でコミットされないので、コミット前に人が読む決まりを sales-core の CLAUDE.md に書いた。機械で伏せるのは持ち越し。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>健康診断の C# 対応</h2>
+    <p class="msg">テスト・未適用のマイグレーション・脆弱なパッケージの3項目を足した。推移的な依存まで見たので、xunit の下の脆弱性が初回で出た。</p>
+    <figure>
+      <figcaption>図表5: 健康診断の結果（OK の件数）</figcaption>
+      <svg viewBox="0 0 640 110" role="img" aria-label="1回目12件、xunit を上げた後13件">
+        <text x="0" y="32" font-size="12" fill="#555">1回目</text>
+        <rect x="130" y="18" width="277" height="20" fill="#c9ccd1"/>
+        <text x="415" y="33" font-size="12" fill="#1a1a1a">12 / 13・165秒（NG: 脆弱なパッケージ）</text>
+        <text x="0" y="82" font-size="12" fill="#555">xunit を上げた後</text>
+        <rect x="130" y="68" width="300" height="20" fill="#173f66"/>
+        <text x="438" y="83" font-size="12" font-weight="700" fill="#173f66">13 / 13・245秒</text>
+      </svg>
+    </figure>
+    <div class="tbl">
+    <table>
+      <caption>図表6: 見つかった脆弱なパッケージ（テストの3プロジェクト）</caption>
+      <thead><tr><th>パッケージ</th><th>版</th><th>重要度</th><th>入ってきた経路</th></tr></thead>
+      <tbody>
+        <tr><td>System.Net.Http</td><td>4.3.0</td><td>High</td><td>xunit 2.5.3 → NETStandard.Library 1.6.1</td></tr>
+        <tr><td>System.Text.RegularExpressions</td><td>4.3.0</td><td>High</td><td>同上</td></tr>
+        <tr class="total"><td colspan="4">xunit 2.9.3・xunit.runner.visualstudio 2.8.2 に上げて0件</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">異常時の AI の要約は「OAuth session expired」で失敗した（ローカルの claude のログイン切れ）。報告書そのものは書き出された。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>AI レビューと訂正</h2>
+    <p class="msg">AI レビューは、PR の本文に無いプラグインの更新が混ざっていることと、決定の書き出しが秘密を残しうることを指摘した。こちらの誤りも1つ、実際にコマンドを投げて正した。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表7: AI レビュー（kiyo015/sales-core#5）</caption>
+      <thead><tr><th>対象</th><th>判定</th><th class="num">費用（API 換算）</th><th class="num">時間</th></tr></thead>
+      <tbody>
+        <tr><td>二重請求・xunit</td><td>マージ可</td><td class="num">$0.1788</td><td class="num">29秒</td></tr>
+        <tr><td>dev-guard 1.3.0 を追加</td><td>修正後マージ可（Important 1・Minor 2）</td><td class="num">$0.2310</td><td class="num">46秒</td></tr>
+        <tr><td>指摘を直した後</td><td>マージ可（Minor 4）</td><td class="num">$0.2069</td><td class="num">34秒</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <h3>訂正: Study で動いている dev-guard の版</h3>
+    <ul>
+      <li><code>installed_plugins.json</code> とキャッシュに 1.1.0 しか無いので、「古い版が動いている」と説明した。</li>
+      <li>新しい版だけが止めるコマンド（<code>dotnet ef migrations remove --help</code>）を、まず両方の版で判定した。それから実際に投げたら、新しい版のガードに止められた。</li>
+      <li>ローカルフォルダのマーケットプレイスは、作業中のソースを直接読む。1.1.0 はインストール時の記録が残っているだけだった。<code>echo</code> は両方とも通したので、判別に使えなかった。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>次のアクション</h2>
+    <p class="msg">次は Day33（ガードの定期実行と Windows の整理）。プラグインに移した後のフックの発火は、新しいセッションで確かめる。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表8: 持ち越し</caption>
+      <thead><tr><th>項目</th><th>誰が</th><th>いつ</th></tr></thead>
+      <tbody>
+        <tr><td>プラグインから呼ぶ Stop・PreCompact の発火（hook_success の command で見分ける）</td><td>Claude</td><td>Day33 の最初</td></tr>
+        <tr><td>guard-e2e の週1回の定期実行、未確認の3件に結論</td><td>Claude</td><td>Day33</td></tr>
+        <tr><td>ローカルの claude に再ログイン（健康診断の異常時の要約のため）</td><td>本人</td><td>次回まで</td></tr>
+        <tr><td>任意: 二重請求のテストで請求書を読み込んでいないことも確かめる（3回目の Minor）／決定の書き出しで秘密を機械で伏せる／請求先を Domain で守る／一意違反の文言／返品だけの締めの API テスト／Day30 の3件</td><td>Claude</td><td>以降</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>成果物</h2>
+    <p class="msg">リンクは day32 のタグに固定してある。</p>
+    <h3>sales-core</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day32/src/SalesCore.Domain/SalesRecord.cs">SalesRecord.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day32/src/SalesCore.Domain/Invoice.cs">Invoice.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day32/src/SalesCore.Infrastructure/Persistence/Configurations.cs">Configurations.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day32/src/SalesCore.Application/InvoiceUseCases.cs">InvoiceUseCases.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day32/tests/SalesCore.Integration.Tests/AuditAndConcurrencyTests.cs">AuditAndConcurrencyTests.cs</a> — 請求書を読み込まずに渡すテスト</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day32/docs/decisions/2026-10-19.md">docs/decisions/2026-10-19.md</a> — PreCompact が書き出した決定</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day32/CLAUDE.md">CLAUDE.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day32/.claude/settings.json">.claude/settings.json</a>（dev-guard-v1.3.0）</li>
+    </ul>
+    <h3>Study</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day32/plugins/dev-guard/hooks/session-hooks.js">session-hooks.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day32/plugins/dev-guard/hooks/session-hooks.test.js">session-hooks.test.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day32/plugins/dev-guard/.claude-plugin/plugin.json">plugin.json</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day32/checks/health-check.js">health-check.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day32/checks/health-check.test.js">health-check.test.js</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day32/evidence/2026-10-19-hook-input.jsonl">evidence/2026-10-19-hook-input.jsonl</a> — 受け取った JSON の実測</li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day32 学習記録 ／ hooks の他イベントと健康診断の C# 対応</span><span>正本は summary.md</span>
+  </footer>
+
+</div>
+</body>
+</html>
