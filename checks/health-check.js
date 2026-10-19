@@ -22,18 +22,64 @@ const CHECKS = [
   ['健康診断自体のテスト', 'node --test checks/health-check.test.js', '.'],
   // ガードの実効性テストの判定ロジックだけを見る(本物のclaudeを呼ぶ guard-e2e.js 本体は費用がかかるので含めない)
   ['ガード実効性テストの判定ロジック', 'node --test checks/guard-e2e.test.js', '.'],
+  ['セッションのフックのテスト(Stop・PreCompact)', 'node --test plugins/dev-guard/hooks/session-hooks.test.js', '.'],
 ];
 const TEST_CRITERION = '終了コードが0であること(テストが全件成功)';
 
-function run(command, cwd) {
+function run(command, cwd, timeout = TIMEOUT_MS) {
   try {
-    const stdout = execSync(command, { cwd, encoding: 'utf8', stdio: 'pipe', timeout: TIMEOUT_MS });
+    const stdout = execSync(command, { cwd, encoding: 'utf8', stdio: 'pipe', timeout });
     return { ok: true, output: stdout };
   } catch (err) {
     const timedOut = err.code === 'ETIMEDOUT';
     const output = `${err.stdout || ''}${err.stderr || ''}` || err.message || '';
-    return { ok: false, output, note: timedOut ? `${TIMEOUT_MS / 1000}秒で打ち切り` : undefined };
+    return { ok: false, output, note: timedOut ? `${timeout / 1000}秒で打ち切り` : undefined };
   }
+}
+
+// ── C#(sales-core)。Study と同じ階層に置いてある前提 ──
+const SALES_CORE = path.resolve(ROOT, '..', 'sales-core');
+const EF_PROJECTS = '--project src/SalesCore.Infrastructure --startup-project src/SalesCore.Api';
+
+/** dotnet ef migrations list の出力から、未適用(Pending)のマイグレーション。 */
+function pendingMigrations(output) {
+  return output.split('\n').filter(line => /\(Pending\)\s*$/.test(line)).map(line => line.replace(/\s*\(Pending\)\s*$/, '').trim());
+}
+
+/** dotnet list package --vulnerable の出力から、脆弱なパッケージのあるプロジェクト(日本語と英語の出力)。 */
+function vulnerableProjects(output) {
+  return [...output.matchAll(/プロジェクト '([^']+)' には次の脆弱なパッケージがあります|Project [`']([^`']+)[`'] has the following vulnerable packages/g)]
+    .map(m => m[1] ?? m[2]);
+}
+
+function checkSalesCore() {
+  if (!fs.existsSync(SALES_CORE)) {
+    return [{ name: 'sales-core', criterion: 'sales-core が Study と同じ階層にあること', ok: false, output: `${SALES_CORE} が無い` }];
+  }
+  // 結合テストはテスト用DBに接続する(接続文字列は user-secrets)。全部で1分半ほどかかるので長めに待つ
+  const test = run('dotnet test --nologo', SALES_CORE, 600000);
+  const migrations = run(`dotnet ef migrations list ${EF_PROJECTS}`, SALES_CORE, 300000);
+  const pending = migrations.ok ? pendingMigrations(migrations.output) : null;
+  // 推移的なパッケージ(xunit の下など)も見る。テストのプロジェクトも、開発機と CI で動くので対象にする
+  const packages = run('dotnet list package --vulnerable --include-transitive', SALES_CORE, 300000);
+  const vulnerable = packages.ok ? vulnerableProjects(packages.output) : null;
+  return [
+    { name: 'sales-core のテスト(dotnet test)', criterion: TEST_CRITERION, ...test },
+    {
+      name: 'sales-core の未適用のマイグレーション(開発用DB)',
+      criterion: '開発用DBに未適用のマイグレーションが無いこと(migration スキルの手順5で当てる)',
+      ok: pending !== null && pending.length === 0,
+      output: pending === null ? migrations.output : pending.length ? `未適用: ${pending.join(', ')}` : '未適用なし',
+      note: migrations.note,
+    },
+    {
+      name: 'sales-core の脆弱なパッケージ',
+      criterion: '脆弱性が報告されたパッケージ(推移的な依存を含む)を使っているプロジェクトが無いこと',
+      ok: vulnerable !== null && vulnerable.length === 0,
+      output: vulnerable === null ? packages.output : vulnerable.length ? `${vulnerable.join(', ')}\n${packages.output}` : '脆弱なパッケージなし',
+      note: packages.note,
+    },
+  ];
 }
 
 // package.json に依存があるプロジェクトだけ更新を確認する(無ければ確認する意味がない)
@@ -77,7 +123,7 @@ function main() {
     criterion: TEST_CRITERION,
     ...run(command, path.join(ROOT, dir)),
   }));
-  results.push(...checkDependencies(), checkGit());
+  results.push(...checkDependencies(), checkGit(), ...checkSalesCore());
 
   const failed = results.filter(r => !r.ok);
   const stamp = new Date().toISOString().slice(0, 10);
@@ -144,4 +190,4 @@ function askClaude(prompt, { command = 'claude', tools = '""', strictMcp = true,
 // 直接実行された時だけ診断する。テストから require した時は関数だけを使う
 if (require.main === module) process.exit(main());
 
-module.exports = { askClaude, buildPrompt };
+module.exports = { askClaude, buildPrompt, pendingMigrations, vulnerableProjects };

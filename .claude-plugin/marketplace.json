@@ -7,7 +7,7 @@
     {
       "name": "dev-guard",
       "source": "./plugins/dev-guard",
-      "description": "危険コマンドの事前ブロックと、編集後の自動テスト実行"
+      "description": "危険コマンドの事前ブロック、編集後の自動テスト実行、会話の節目の知らせ(Stop)と決定の記録(PreCompact)"
     }
   ]
 }

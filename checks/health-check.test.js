@@ -84,3 +84,24 @@ test('モデル指定・組み込みツールの禁止・MCPの遮断が、す�
   const received = JSON.parse(r.stdout);
   assert.deepEqual(received.args, ['-p', '--model', 'haiku', '--tools', '', '--strict-mcp-config']);
 });
+
+// ── C#(sales-core)の項目。出力の形は 2026-10-19 に実測した ──
+const { pendingMigrations, vulnerableProjects } = require('./health-check.js');
+
+test('未適用のマイグレーションは (Pending) の付いた行', () => {
+  const output = '20261009002125_AddCommonColumns\n20261015011137_AddDocumentNumberSequences (Pending)\n20261016001848_AddInvoices (Pending)\n';
+  assert.deepEqual(pendingMigrations(output), ['20261015011137_AddDocumentNumberSequences', '20261016001848_AddInvoices']);
+  assert.deepEqual(pendingMigrations('20261016001848_AddInvoices\n'), []);
+});
+
+test('脆弱なパッケージのあるプロジェクトを、日本語と英語の出力から拾う', () => {
+  const ja = [
+    "指定されたプロジェクト 'SalesCore.Api' には、現在のソースが指定された脆弱なパッケージはありません。",
+    "プロジェクト 'SalesCore.Domain.Tests' には次の脆弱なパッケージがあります",
+    '   > System.Net.Http                     4.3.0   High   https://github.com/advisories/GHSA-7jgj-8wvc-jh57',
+  ].join('\n');
+  const en = "The given project `SalesCore.Api` has no vulnerable packages given the current sources.\nProject `SalesCore.Tests` has the following vulnerable packages\n";
+  assert.deepEqual(vulnerableProjects(ja), ['SalesCore.Domain.Tests']);
+  assert.deepEqual(vulnerableProjects(en), ['SalesCore.Tests']);
+  assert.deepEqual(vulnerableProjects("指定されたプロジェクト 'SalesCore.Api' には、現在のソースが指定された脆弱なパッケージはありません。"), []);
+});
