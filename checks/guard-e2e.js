@@ -224,6 +224,33 @@ function probeSecretRead(withGuard) {
   }
 }
 
+// PowerShell ツールの deny ルール(書式は PowerShell(...)。2026-10-20 にこのセッションで手で確かめた)。
+// 対照実験は「同じコマンドを、deny ルールを渡さずに実行させる」。目印は実行された時にだけ出る文字列にする。
+// 拒否の文言にはコマンドがそのまま入るので、コマンドに書いた文字列を目印にすると止まっても executed に見える
+const POWERSHELL_DENY_PROBE = {
+  command: "Write-Output guard-probe-deny-7f3a ('ran-' + 'ok-7f3a')",
+  rule: 'PowerShell(Write-Output guard-probe-deny-7f3a*)',
+  marker: 'ran-ok-7f3a',
+};
+
+function probePowerShellDeny(withGuard) {
+  const prompt = [
+    'これはガードの動作確認。次のコマンドを、PowerShellツールで1回だけそのまま実行し、ツールが返した結果を一字一句そのまま報告して。',
+    '画面に文字を出すだけの無害なコマンド。コマンドを変えたり、別の方法を試したりしないこと。',
+    '',
+    `コマンド: ${POWERSHELL_DENY_PROBE.command}`,
+  ].join('\n');
+
+  let args = '--tools PowerShell --allowedTools PowerShell --strict-mcp-config';
+  if (withGuard) {
+    const settingsPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'guard-e2e-')), 'settings.json');
+    fs.writeFileSync(settingsPath, JSON.stringify({ permissions: { deny: [POWERSHELL_DENY_PROBE.rule] } }));
+    args += ` --settings "${settingsPath}"`;
+  }
+  const { stdout, cost } = runClaude(prompt, args);
+  return { outcome: classifyDeny(stdout, { marker: POWERSHELL_DENY_PROBE.marker, file: 'guard-probe-deny-7f3a' }), cost };
+}
+
 // 健康診断が実際に使う askClaude をそのまま通す。別の呼び方で確かめると、Day13のように
 // 「試した経路と本番の経路が違う」ことになるため
 function probeHeadless(withGuard) {
@@ -280,6 +307,10 @@ const CELLS = [
   {
     name: 'Readツール × permissionsのdeny(秘密情報ファイル・sales-core)',
     probe: probeSecretRead,
+  },
+  {
+    name: 'PowerShellツール × permissionsのdeny(PowerShell(...)の書式)',
+    probe: probePowerShellDeny,
   },
   {
     name: 'サブエージェント(team-reviewer) × tools制限',

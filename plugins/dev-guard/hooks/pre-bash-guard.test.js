@@ -18,7 +18,14 @@ function isBlocked(command) {
   // フックが例外で落ちると標準出力が空になり「通過」に見える。落ちていないことも確かめる。
   assert.equal(r.status, 0, `フックが異常終了した: ${r.stderr}`);
   assert.equal(r.stderr, '', `フックが標準エラーに出力した: ${r.stderr}`);
-  return r.stdout.trim() !== '' && JSON.parse(r.stdout).decision === 'block';
+  if (r.stdout.trim() === '') return false;
+  // PreToolUse の上の階層の decision・reason は非推奨(公式ドキュメント、2026-10-20 確認)。hookSpecificOutput で返す
+  const out = JSON.parse(r.stdout);
+  assert.equal(out.decision, undefined, '非推奨の decision を返している');
+  const h = out.hookSpecificOutput;
+  assert.equal(h?.hookEventName, 'PreToolUse');
+  assert.match(h.permissionDecisionReason, /^\[pre-bash-guard\] /, '理由の先頭の目印(guard-e2e が判定に使う)');
+  return h.permissionDecision === 'deny';
 }
 
 const MUST_BLOCK = [

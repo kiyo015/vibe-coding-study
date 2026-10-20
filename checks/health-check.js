@@ -82,6 +82,29 @@ function checkSalesCore() {
   ];
 }
 
+// ── ガードの実効性テスト(週1回、guard-e2e.cmd)。本物の claude を呼ぶので毎日は回さず、毎日はその記録だけを見る ──
+const GUARD_E2E_MAX_AGE_DAYS = 8; // 週1回 + 1日の余裕
+
+/** guard-e2e.log の最後の行から、直近の実行が新しく、全セル合格しているか。 */
+function guardE2eStatus(lastLine, now = new Date()) {
+  const [iso, result] = lastLine.trim().split(' ');
+  const at = new Date(iso);
+  if (!lastLine.trim() || Number.isNaN(at.getTime())) return { ok: false, output: '実行の記録が無い' };
+  const days = (now - at) / 86400000;
+  const ok = result === '全セル合格' && days <= GUARD_E2E_MAX_AGE_DAYS;
+  return { ok, output: `最後の実行: ${lastLine.trim()}(${days.toFixed(1)}日前)` };
+}
+
+function checkGuardE2e() {
+  const log = path.join(__dirname, 'guard-e2e.log');
+  const lines = fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : [];
+  return {
+    name: 'ガードの実効性テスト(週1回)の結果',
+    criterion: `${GUARD_E2E_MAX_AGE_DAYS}日以内に実行され、全セル合格していること`,
+    ...guardE2eStatus(lines.at(-1) ?? ''),
+  };
+}
+
 // package.json に依存があるプロジェクトだけ更新を確認する(無ければ確認する意味がない)
 function checkDependencies() {
   const results = [];
@@ -123,7 +146,7 @@ function main() {
     criterion: TEST_CRITERION,
     ...run(command, path.join(ROOT, dir)),
   }));
-  results.push(...checkDependencies(), checkGit(), ...checkSalesCore());
+  results.push(...checkDependencies(), checkGit(), checkGuardE2e(), ...checkSalesCore());
 
   const failed = results.filter(r => !r.ok);
   const stamp = new Date().toISOString().slice(0, 10);
@@ -190,4 +213,4 @@ function askClaude(prompt, { command = 'claude', tools = '""', strictMcp = true,
 // 直接実行された時だけ診断する。テストから require した時は関数だけを使う
 if (require.main === module) process.exit(main());
 
-module.exports = { askClaude, buildPrompt, pendingMigrations, vulnerableProjects };
+module.exports = { askClaude, buildPrompt, pendingMigrations, vulnerableProjects, guardE2eStatus };

@@ -105,3 +105,15 @@ test('脆弱なパッケージのあるプロジェクトを、日本語と英�
   assert.deepEqual(vulnerableProjects(en), ['SalesCore.Tests']);
   assert.deepEqual(vulnerableProjects("指定されたプロジェクト 'SalesCore.Api' には、現在のソースが指定された脆弱なパッケージはありません。"), []);
 });
+
+// --- ガードの実効性テスト(週1回)の結果を、毎日の健康診断で見る ---
+// 週1回の定期実行が失敗しても、誰もログを見なければ気づけない。最後の行の日時と結果で判定する
+test('guard-e2e: 8日以内に全セル合格していれば OK、古い・不合格・記録なしは NG', () => {
+  const { guardE2eStatus } = require('./health-check.js');
+  const now = new Date('2026-10-28T00:00:00Z');
+  const line = (iso, result) => `${iso} ${result} pass,pass cost=$0.5000`;
+  assert.equal(guardE2eStatus(line('2026-10-20T00:30:00Z', '全セル合格'), now).ok, true);
+  assert.equal(guardE2eStatus(line('2026-10-27T00:30:00Z', '不合格あり'), now).ok, false);
+  assert.equal(guardE2eStatus(line('2026-10-19T23:59:00Z', '全セル合格'), now).ok, false); // 8日を過ぎた
+  assert.equal(guardE2eStatus('', now).ok, false);
+});

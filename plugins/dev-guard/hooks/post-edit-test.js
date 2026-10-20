@@ -175,6 +175,9 @@ function main() {
       if (!target) return;
 
       try {
+        // ponytail: 打ち切りで止まるのは子のシェルだけ。Windows では孫(npm・dotnet test の本体)が動き続ける
+        // (2026-10-20 実測、evidence/2026-10-20-grandchild.js)。打ち切り後はシェルが消えていて taskkill /T も届かない。
+        // 残った孫がテスト用DBを握るなどの害が出たら、非同期の spawn と自前の時間切れで、シェルが生きているうちに taskkill /T /F する
         execSync(target.command, {
           cwd: target.cwd,
           encoding: 'utf8',

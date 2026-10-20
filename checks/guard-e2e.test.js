@@ -127,3 +127,23 @@ test('Readを呼ばずに終わったら「試行されなかった」(判定不
   const lines = '{"type":"assistant","message":{"content":[{"type":"text","text":"秘密情報は読みません"}]}}\n{"type":"result","permission_denials":[]}\n';
   assert.equal(classifyDeny(lines, { marker: SECRET_MARKER, file: '.env' }), 'not-attempted');
 });
+
+// --- PowerShell ツール × deny ルール ---
+// 拒否の文言にはコマンドがそのまま入る(2026-10-20 実測: "Permission to use PowerShell with command ... has been denied.")。
+// 目印をコマンドに書いた文字列にすると、止まっても「実行された」に見えるので、実行した時にだけ出る文字列を目印にする
+const psCommand = "Write-Output guard-probe-deny-7f3a ('ran-' + 'ok-7f3a')";
+const psLines = (resultText, denials) => [
+  JSON.stringify({ type: 'assistant', message: { content: [{ type: 'tool_use', name: 'PowerShell', input: { command: psCommand } }] } }),
+  JSON.stringify({ type: 'user', message: { content: [{ type: 'tool_result', content: resultText }] } }),
+  JSON.stringify({ type: 'result', permission_denials: denials }),
+].join('\n');
+const psTarget = { marker: 'ran-ok-7f3a', file: 'guard-probe-deny-7f3a' };
+
+test('PowerShellのdenyで止まれば、拒否の文言にコマンドが入っていても「ガードで止まった」', () => {
+  const lines = psLines(`Permission to use PowerShell with command ${psCommand} has been denied.`, [{ tool_name: 'PowerShell', tool_input: { command: psCommand } }]);
+  assert.equal(classifyDeny(lines, psTarget), 'blocked-by-guard');
+});
+
+test('PowerShellのコマンドが実行されて目印が出れば「実行された」', () => {
+  assert.equal(classifyDeny(psLines('guard-probe-deny-7f3a\nran-ok-7f3a', []), psTarget), 'executed');
+});

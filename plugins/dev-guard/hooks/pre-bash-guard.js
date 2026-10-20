@@ -119,9 +119,14 @@ process.stdin.on('end', () => {
 
     const danger = findDanger(command);
     if (danger) {
+      // 上の階層の decision: 'block' は PreToolUse では非推奨(公式ドキュメント、2026-10-20 確認)。
+      // 理由の先頭の [pre-bash-guard] は、guard-e2e がガードに止められたかの判定に使う
       console.log(JSON.stringify({
-        decision: 'block',
-        reason: `[pre-bash-guard] 危険なコマンド(${danger})を検知、実行前にブロックした: "${command}"。本当に必要ならユーザーに確認を取ること。`,
+        hookSpecificOutput: {
+          hookEventName: 'PreToolUse',
+          permissionDecision: 'deny',
+          permissionDecisionReason: `[pre-bash-guard] 危険なコマンド(${danger})を検知、実行前にブロックした: "${command}"。本当に必要ならユーザーに確認を取ること。`,
+        },
       }));
     }
   } catch (e) {

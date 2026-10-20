@@ -19,10 +19,12 @@
 | Bashツール（`sales-core`） | `dev-guard`フック（GitHubからタグ固定で配布） | 止める | **自動** | 2026-09-28 対照実験で合格（`dotnet ef database drop --force`） |
 | Readツール（`sales-core`） | denyルール `Read(./**/.env)`など | 秘密情報を読ませない | **自動** | 2026-09-25 対照実験で合格（同じ内容でも名前が`.env`でなければ読めた） |
 | Bashツール | denyルール `Bash(git push -f *)`など | 先頭一致のみ止める | 手動 | Day11（`git -C .`やフラグ後置は抜ける） |
-| PowerShellツール | denyルール `Bash(...)` | **効かない** | 手動 | Day11（Bash用ルールはBashツールにしか効かない）。PowerShell用の書式は未確認 |
+| PowerShellツール | denyルール `Bash(...)` | **効かない** | 手動 | Day11（Bash用ルールはBashツールにしか効かない） |
+| PowerShellツール | denyルール `PowerShell(...)` | 先頭一致で止める（別名・複合コマンドも） | 手動（自動のセルは追加済み、初回の実行待ち） | 2026-10-20 このセッションで対照実験。そのまま・別名`echo`・`;`の複合は拒否、文字列だけ変えた対照は実行。**`-InputObject`のように引数に名前を付けると抜ける**（`evidence/2026-10-20-powershell-deny.md`） |
 | サブエージェント（`team-reviewer`） | `tools: Read, Grep, Glob` | 書き込めない | **自動** | 2026-09-17 対照実験で合格（対照の`general-purpose`は同じ依頼でファイルを作った） |
 | ヘッドレス（健康診断の`askClaude`） | `--tools ""` ＋ `--strict-mcp-config` | ツールが0個 | **自動** | 2026-09-17 対照実験で合格。**`--tools ""`だけではMCPツールが10個残っていた**（下記） |
 | 定期タスク | 許可ルール `Bash(node checks/health-check.js*)` | 確認なしで実行 | 手動 | Day12（承認待ちで停止→許可後は完走） |
+| 定期タスク（週1回、`guard-e2e.cmd`） | このE2E自体 | 無人で全セル合格 | 自動（毎日の健康診断が`guard-e2e.log`の最後の行を見る。8日を過ぎるか不合格ならNG） | 2026-10-20 登録（月曜9:00） |
 | 全経路 | Claude Code本体の「怪しいパス」検知 | 8.3形式の短縮パスへの書き込みを止める | 手動 | 2026-09-17 対照実験の途中で偶然発見 |
 
 ## 分かったこと
@@ -45,9 +47,15 @@
 
 - **対照実験の「安全の根拠」は、環境が変わると崩れる。** Day17・18は「`dotnet-ef`が入っていないので、ガードを外して実行してもエラーで終わる」ことを安全の根拠にしていた。Day19でsales-coreに`dotnet-ef`と`DbContext`を入れた時点で、その対照実験は**本当に開発用DBを消せる**状態になった。ツールを入れる前に、コマンドを`dotnet ef database drop --dry-run --project <存在しない名前>`に変え、環境に頼らず2重に止まる形にした。E2Eの前後で開発用DBのマイグレーションが適用済みのまま残ることも確かめた（2026-09-29）
 
+## Windowsの落とし穴（未確認だった3件の結論、2026-10-20）
+
+- **PowerShell用のdenyルールは`PowerShell(...)`。** 書き方はBashと同じ形で、別名（`Write-Output`のルールは`echo`も止める）と`;`・`|`の複合コマンドも見る（公式ドキュメントどおり）。ただし先頭一致なので、引数の並べ方を変えると抜ける。`Bash(git push -f *)`などと同じ3本をStudyとsales-coreに足した
+- **PreToolUseの上の階層の`decision: 'block'`は非推奨だった。** 公式ドキュメントは`hookSpecificOutput.permissionDecision: 'deny'`と`permissionDecisionReason`を使うよう書いている（`block`は`deny`に読み替えられるので、今まで動いていた）。`pre-bash-guard`を移し、BashとPowerShellの両方で止まることを実際のツールで確かめた。PostToolUse（`post-edit-test`）の`decision: 'block'`は今も正式な書き方なので変えない
+- **タイムアウトで打ち切っても、孫プロセスは動き続ける。** `execSync`に上限1秒を付けてcmd経由でnodeを起動すると、1.0秒で返るが、孫は4秒後にファイルを書いた。打ち切った後はシェルが消えていて`taskkill /T`も「プロセスが見つからない」で届かない（`evidence/2026-10-20-grandchild.js`）。`post-edit-test`のテストが時間切れになると、`npm test`や`dotnet test`の本体が残る。害が出たら、非同期の`spawn`と自前の時間切れで、シェルが生きているうちに`taskkill /T /F`する
+
 ## 次に自動化するセル
 
 未検証のセルは無くなった。手動のまま残るものを順に自動化する。
 
 1. 定期タスク × 許可ルール（確認なしで完走するか）
-2. PowerShellツール × denyルール（PowerShell用の書式が分かってから）
+2. PowerShellツール × denyルール（セルは追加済み。初回の実行で合格すれば自動に上げる）

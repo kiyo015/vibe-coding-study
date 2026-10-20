@@ -1,6 +1,6 @@
 {
   "name": "dev-guard",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "開発中の安全装置。Bash・PowerShellで取り返しのつかないコマンド(force push・reset --hard・rm -rf・dotnet ef database drop・dotnet ef migrations remove・SQLのDROP/TRUNCATE)を実行前にブロックし、コードファイルの編集後にはそのファイルが属するプロジェクトのテストを自動実行する(JavaScript/TypeScriptはnpm test、C#は対応する.Testsプロジェクトのdotnet test)。会話の節目にも働く: 返事を終えた時(Stop)に、テストを流していないC#の編集と未コミットの変更を知らせ、会話を要約する前(PreCompact)に、その日に本人に確認して決めたことを docs/decisions/<日付>.md に書き出す。",
   "author": {
     "name": "kiyo015"
