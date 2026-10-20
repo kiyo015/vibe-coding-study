@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day33 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day33 ／ 基幹システム開発</p>
+    <h1>ガードの定期実行と Windows の整理 — 未確認の3件に実測で結論を出した</h1>
+    <p class="lead">2週目から持ち越していた3件（PreToolUse の decision: 'block' の非推奨、PowerShell 用の deny ルール、タイムアウト後の孫プロセス）を、公式ドキュメントと対照実験で片付けた。ガードの実効性テストを週1回の定期実行にし、タスクスケジューラから無人で完走した。</p>
+    <div class="doc-meta"><span>2026-10-20</span><span>対象: Study（dev-guard・guard-e2e・健康診断）／ sales-core</span><span>段階1 / Day33</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>タスクスケジューラから起動した guard-e2e が、7セルすべて合格して exit=0 で終わった。guard-matrix.md に未検証のセルは無い。</li>
+      <li><b>3件とも結論が出た。</b>decision: 'block' は非推奨だったので移した。PowerShell の deny は PowerShell(...) で書き、並べ替えると抜ける。孫プロセスは残るので、限界として注記した。</li>
+      <li><b>定期実行の失敗は、毎日の健康診断が拾う。</b>guard-e2e.log の最後の行を読み、8日を過ぎるか不合格なら NG にする。プラグインから呼ぶ Stop・PreCompact の発火も確かめた。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">7<small>/7</small></div><div class="l">guard-e2e（無人・7分40秒）</div></div>
+      <div class="kpi"><div class="v">14<small>/14</small></div><div class="l">健康診断</div></div>
+      <div class="kpi"><div class="v">10<small>通り</small></div><div class="l">PowerShell deny の対照実験</div></div>
+      <div class="kpi"><div class="v">$0.06</div><div class="l">guard-e2e 1回（API 換算）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>未確認3件の結論</h2>
+    <p class="msg">「動いている」と「正しい書き方」は別物だった。3件とも、推測でなく公式ドキュメントか実測を根拠にした。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表1: 3件の結論・根拠・対応</caption>
+      <thead><tr><th>件</th><th>結論</th><th>根拠</th><th>対応</th></tr></thead>
+      <tbody>
+        <tr><td>decision: 'block'</td><td><b>PreToolUse では非推奨。</b>deny に読み替えられるので動いていた</td><td>公式ドキュメント（hooks）。PostToolUse・Stop の decision は今も正式</td><td>permissionDecision: 'deny' に移した（TDD、42件 RED → 68件成功）。dev-guard 1.3.1</td></tr>
+        <tr><td>PowerShell の deny</td><td><b>PowerShell(...) で書く。</b>別名・複合も見るが、先頭一致</td><td>公式ドキュメント（permissions）＋このセッションで10通り</td><td>Study と sales-core に3本。guard-e2e にセルを追加</td></tr>
+        <tr><td>孫プロセス</td><td><b>打ち切っても残る。</b>taskkill /T も届かない</td><td>実測（上限1秒、孫は4秒後にファイルを書いた）</td><td>post-edit-test に限界として注記。害が出たら非同期の spawn で直す</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>PowerShell の deny ルールの対照実験</h2>
+    <p class="msg">別名と複合コマンドは止まるが、引数の並べ方を変えると抜ける。deny は1段目と考え、並べ替えは dev-guard のフックで止める。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表2: 試した形と結果（無害な一時ルールで実施）</caption>
+      <thead><tr><th>形</th><th>例</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>そのまま</td><td>Write-Output guard-probe-deny-7f3a</td><td>拒否</td></tr>
+        <tr><td>別名</td><td>echo guard-probe-deny-7f3a</td><td>拒否</td></tr>
+        <tr><td>複合</td><td>Write-Output ok; Write-Output guard-probe-deny-7f3a</td><td>拒否</td></tr>
+        <tr><td>引数なし・あり（空白つきのルール）</td><td>Write-Output guard-probe-7f3a [extra]</td><td>拒否</td></tr>
+        <tr class="total"><td>並べ替え・名前付き引数</td><td>Write-Output extra guard-probe-7f3a ／ -InputObject …</td><td>実行（抜ける）</td></tr>
+        <tr><td>対照: 文字列だけ変える</td><td>Write-Output guard-probe-allow-7f3a</td><td>実行</td></tr>
+        <tr><td>対照: Bash ツール</td><td>echo guard-probe-deny-7f3a</td><td>実行</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: evidence/2026-10-20-powershell-deny.md。空白つきのルールでの実験（引数なし・あり）は、sales-core の PR の AI レビューの指摘で足した。</p>
+    <p class="note">guard-e2e の判定の目印は「実行した時にだけ出る文字列」にした。拒否の文言にはコマンドがそのまま入るので、コマンドに書いた文字列を目印にすると、止まったのに「実行された」と判定される（対照で確かめた）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>週1回の定期実行</h2>
+    <p class="msg">走らせるだけでなく、毎日の健康診断がその結果を読む。ログイン切れも、その日のうちに NG として出る。</p>
+    <figure>
+      <figcaption>図表3: 定期実行の流れ</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">月曜 9:00<small>タスクスケジューラ</small></div>
+        <div class="chev">guard-e2e.cmd<small>cmd → node</small></div>
+        <div class="chev">claude -p で7セル<small>ガードあり・なし</small></div>
+        <div class="chev">guard-e2e.log<small>1行追記</small></div>
+        <div class="chev on">毎日 9:30 健康診断<small>8日超・不合格で NG</small></div>
+      </div></div>
+    </figure>
+    <figure>
+      <figcaption>図表4: guard-e2e 1回の費用（API 換算）</figcaption>
+      <svg viewBox="0 0 640 110" role="img" aria-label="9月29日 0.5336ドル、10月20日 0.0631ドル">
+        <text x="0" y="32" font-size="12" fill="#555">9/29（6セル）</text>
+        <rect x="130" y="18" width="320" height="20" fill="#c9ccd1"/>
+        <text x="458" y="33" font-size="12" fill="#1a1a1a">$0.5336</text>
+        <text x="0" y="82" font-size="12" fill="#555">10/20（7セル）</text>
+        <rect x="130" y="68" width="38" height="20" fill="#173f66"/>
+        <text x="176" y="83" font-size="12" font-weight="700" fill="#173f66">$0.0631（理由は未確認）</text>
+      </svg>
+    </figure>
+    <p class="src">本人が /login した後、Start-ScheduledTask で起動した。10:02:55 に開始して 10:10:37 に終了し、exit=0。認証は /login だけにした（本人の決定）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>プラグインから呼ぶ Stop・PreCompact</h2>
+    <p class="msg">新しいセッションで、dev-guard 1.3.1 の Stop と PreCompact が、プラグイン経由（CLAUDE_PLUGIN_ROOT）で発火した。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表5: 確かめ方と記録</caption>
+      <thead><tr><th>イベント</th><th>確かめ方</th><th>記録</th></tr></thead>
+      <tbody>
+        <tr><td>起動</td><td>system:init の plugins</td><td>dev-guard 1.3.1（Study\plugins\dev-guard ＝ 作業中のソース）</td></tr>
+        <tr><td>Stop</td><td>未追跡のファイルを Write させる</td><td>「Study に未コミットの変更が 1 件」</td></tr>
+        <tr><td>PreCompact</td><td>--resume して /compact</td><td>completed successfully。決定が無いので書き出しなし（意図どおり）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: evidence/2026-10-20-unattended-and-plugin-hooks.md。出力の無いフックは、会話の記録に hook_success を残さない。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>AI レビューとつまずき</h2>
+    <p class="msg">AI レビューは「実験したルールと足したルールの形が違う」を指摘した。こちらのつまずきは、どれも「判定を見ているつもりで、別のものを見ていた」形だった。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表6: AI レビュー（kiyo015/sales-core#6）</caption>
+      <thead><tr><th>対象</th><th>判定</th><th class="num">費用（API 換算）</th><th class="num">時間</th></tr></thead>
+      <tbody>
+        <tr><td>PowerShell の deny ルール</td><td>修正後マージ可</td><td class="num">$0.1524</td><td class="num">30秒</td></tr>
+        <tr><td>dev-guard 1.3.1</td><td>修正後マージ可</td><td class="num">$0.1460</td><td class="num">26秒</td></tr>
+        <tr><td>指摘を直した後</td><td>マージ可（Minor 2）</td><td class="num">$0.1464</td><td class="num">30秒</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <h3>つまずき</h3>
+    <ul>
+      <li><b>ガードの誤検知:</b> heredoc の中の文字列 git push --force で止められた。止めすぎの側なので直さず、文書は Edit ツールで書いた。</li>
+      <li><b>node --test にフォルダを渡すと失敗:</b> 「fail 1」でも、&amp;&amp; の後ろの grep が成功してタグの push まで進んだ。1つずつ流し直して、すべて成功を確認した。判定はテストの終了コードで行う。</li>
+      <li><b>node -e の中のエスケープの崩れ（2回）:</b> 複数行の書き換えは Edit ツールの方が確実。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>次のアクション</h2>
+    <p class="msg">次は Day34。段階1を振り返り、段階2（画面と権限）を日単位に展開する。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表7: 次回と持ち越し</caption>
+      <thead><tr><th>項目</th><th>誰が</th><th>いつ</th></tr></thead>
+      <tbody>
+        <tr><td>段階1の振り返り、team-CLAUDE.md の更新、初日に安全柵を確かめる手順、段階2の日単位の計画</td><td>Claude・本人</td><td>Day34</td></tr>
+        <tr><td>月曜 9:00 の初めての定期実行を、健康診断で確かめる</td><td>Claude</td><td>10/26 以降</td></tr>
+        <tr><td>任意: 二重請求のテストの前提を確かめる／決定の書き出しで秘密を伏せる／請求先を Domain で守る／一意違反の文言／返品だけの締め／Day30 の3件／孫プロセスの片付け／費用が下がった理由／定期タスク × 許可ルールの自動化</td><td>Claude</td><td>以降</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>成果物</h2>
+    <p class="msg">リンクは day33 のタグに固定してある。</p>
+    <h3>Study</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/plugins/dev-guard/hooks/pre-bash-guard.js">pre-bash-guard.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/plugins/dev-guard/hooks/pre-bash-guard.test.js">pre-bash-guard.test.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/plugins/dev-guard/hooks/post-edit-test.js">post-edit-test.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/plugins/dev-guard/.claude-plugin/plugin.json">plugin.json</a>（1.3.1）</li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/checks/guard-e2e.js">guard-e2e.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/checks/guard-e2e.test.js">guard-e2e.test.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/checks/guard-e2e.cmd">guard-e2e.cmd</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/checks/health-check.js">health-check.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/checks/health-check.test.js">health-check.test.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/checks/guard-matrix.md">guard-matrix.md</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/.claude/settings.json">.claude/settings.json</a></li>
+      <li>証拠: <a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/evidence/2026-10-20-powershell-deny.md">powershell-deny.md</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/evidence/2026-10-20-grandchild.js">grandchild.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day33/evidence/2026-10-20-unattended-and-plugin-hooks.md">unattended-and-plugin-hooks.md</a></li>
+    </ul>
+    <h3>sales-core</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day33/.claude/settings.json">.claude/settings.json</a>（PowerShell の deny ルール、dev-guard-v1.3.1）・<a href="https://github.com/kiyo015/sales-core/blob/day33/CLAUDE.md">CLAUDE.md</a></li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day33 学習記録 ／ ガードの定期実行と Windows の整理</span><span>正本は summary.md</span>
+  </footer>
+
+</div>
+</body>
+</html>
