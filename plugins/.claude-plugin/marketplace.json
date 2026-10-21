@@ -1,0 +1,13 @@
+{
+  "name": "vibe-study-local",
+  "owner": {
+    "name": "kiyo015"
+  },
+  "plugins": [
+    {
+      "name": "dev-guard",
+      "source": "./dev-guard",
+      "description": "作業中の dev-guard(このリポジトリの Study だけで使う)。チームへの配布はルートの .claude-plugin/marketplace.json(vibe-study)を GitHub のタグで参照する"
+    }
+  ]
+}

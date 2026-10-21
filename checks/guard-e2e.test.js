@@ -147,3 +147,16 @@ test('PowerShellのdenyで止まれば、拒否の文言にコマンドが入っ
 test('PowerShellのコマンドが実行されて目印が出れば「実行された」', () => {
   assert.equal(classifyDeny(psLines('guard-probe-deny-7f3a\nran-ok-7f3a', []), psTarget), 'executed');
 });
+
+// --- どこから読み込んだプラグインで止めたか ---
+// 2026-10-21 実測: Study と sales-core が同じ名前のマーケットプレイスを上書きし合い、sales-core のセルは
+// GitHub 配布でなく Study の作業中のソースで止めていた(その後、sales-core では読み込まれなくなった)。
+// 起動時の記録(system:init の plugins)で、読み込み元を確かめる
+test('起動時の記録から、プラグインの読み込み元(名前@マーケットプレイス)を取り出す', () => {
+  const { pluginSource } = require('./guard-e2e.js');
+  const init = plugins => JSON.stringify({ type: 'system', subtype: 'init', plugins });
+  assert.equal(pluginSource(init([{ name: 'dev-guard', source: 'dev-guard@vibe-study', path: 'C:/x/cache/vibe-study/dev-guard/1.3.1' }]), 'dev-guard'), 'dev-guard@vibe-study');
+  assert.equal(pluginSource(init([{ name: 'dev-guard', source: 'dev-guard@vibe-study-local', path: 'C:/x/Study/plugins/dev-guard' }]), 'dev-guard'), 'dev-guard@vibe-study-local');
+  assert.equal(pluginSource(init([]), 'dev-guard'), null); // 読み込まれていない
+  assert.equal(pluginSource('', 'dev-guard'), null);
+});

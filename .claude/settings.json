@@ -17,14 +17,14 @@
     ]
   },
   "extraKnownMarketplaces": {
-    "vibe-study": {
+    "vibe-study-local": {
       "source": {
         "source": "directory",
-        "path": "."
+        "path": "./plugins"
       }
     }
   },
   "enabledPlugins": {
-    "dev-guard@vibe-study": true
+    "dev-guard@vibe-study-local": true
   }
 }

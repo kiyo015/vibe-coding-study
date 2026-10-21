@@ -16,7 +16,7 @@
 |---|---|---|---|---|
 | PowerShellツール | `dev-guard`フック | 止める | **自動** | 2026-09-17 対照実験で合格 |
 | Bashツール | `dev-guard`フック | 止める | **自動** | 2026-09-25 対照実験で合格（`dotnet ef database drop --force`） |
-| Bashツール（`sales-core`） | `dev-guard`フック（GitHubからタグ固定で配布） | 止める | **自動** | 2026-09-28 対照実験で合格（`dotnet ef database drop --force`） |
+| Bashツール（`sales-core`） | `dev-guard`フック（GitHubからタグ固定で配布） | 止める | **自動** | 2026-09-28 対照実験で合格（`dotnet ef database drop --force`）。**2026-10-21 に、それまでの合格は GitHub 配布でなく Study の作業中のソースで止めていたと分かった**（下記）。以後、起動時の記録で読み込み元が`dev-guard@vibe-study`でなければ合格にしない |
 | Readツール（`sales-core`） | denyルール `Read(./**/.env)`など | 秘密情報を読ませない | **自動** | 2026-09-25 対照実験で合格（同じ内容でも名前が`.env`でなければ読めた） |
 | Bashツール | denyルール `Bash(git push -f *)`など | 先頭一致のみ止める | 手動 | Day11（`git -C .`やフラグ後置は抜ける） |
 | PowerShellツール | denyルール `Bash(...)` | **効かない** | 手動 | Day11（Bash用ルールはBashツールにしか効かない） |
@@ -43,7 +43,22 @@
 - **「拒否の記録があるか」で判定すると、守れていなくても緑になる。** `permission_denials`は「何かが1回拒否された」としか言っておらず、狙ったファイルを守った証拠ではない。読ませたファイルに目印の文字列を仕込み、**その目印が返ってきていないこと**を主な判定にした上で、拒否の記録は対象ファイルのものだけを数える（2026-09-25 `classifyDeny`）
 - **denyルールの対照実験は、ファイル名だけを変えて行う。** 同じリポジトリ・同じツール・同じ頼み方のまま、`.env`（deny対象）と`guard-probe-secret-7f3a.txt`（対象外）を入れ替える。ガードを外すために設定ファイルを差し替えると、他のルールまで一緒に消えて「何が止めたのか」が曖昧になる
 
-- **マーケットプレイスの登録は、マシン全体で名前ごとに1つ。** `Study`は`vibe-study`をローカルフォルダとして、`sales-core`は同じ名前をGitHub（タグ固定）として登録する。起動したプロジェクトが自分の登録で上書きするので、`~/.claude/plugins/known_marketplaces.json`は開くたびに行き来する（2026-09-28 実測）。それでも**読み込まれる版はどちらも意図どおり**（Study＝作業中のコード、sales-core＝`cache/vibe-study/dev-guard/1.2.0`）。影響するのはプラグイン作者のマシンだけで、Studyを持たないメンバーには起きない
+- **マーケットプレイスの登録は、マシン全体で名前ごとに1つ。** `Study`は`vibe-study`をローカルフォルダとして、`sales-core`は同じ名前をGitHub（タグ固定）として登録する。起動したプロジェクトが自分の登録で上書きするので、`~/.claude/plugins/known_marketplaces.json`は開くたびに行き来する（2026-09-28 実測）。9/28の時点では、読み込まれる版はどちらも意図どおりだった（Study＝作業中のコード、sales-core＝`cache/vibe-study/dev-guard/1.2.0`）。
+
+**2026-10-21 に、この上書きし合いが安全柵を黙って無効にしていたと分かった。**
+- **症状:** sales-coreのセッションで、dev-guardが読み込まれていなかった。DBを壊すコマンドが、PowerShellツールで素通りした（`--dry-run`と存在しないプロジェクト名のおかげで何も消えなかった）。
+- **原因:**
+  - キャッシュの1.2.0が消えていた。インストールの記録は、Study用の欠けた1.1.0しか残っていなかった。
+  - それまで止まっていたのは、Studyの登録（作業中のソース）を読んでいたから。登録がGitHubに切り替わった時点で、読み込みに失敗した。
+  - 失敗は`--debug`の記録に`Plugin "dev-guard" not cached`と出るだけで、画面には何も出なかった。
+- **対策:**
+  - Studyのローカルの目録を別の名前（`plugins/.claude-plugin/marketplace.json`、`vibe-study-local`）にして、上書きし合いを無くした。
+  - sales-coreには、GitHubのv1.3.1を`claude plugin install`で入れ直した。
+  - 両方のセッションで、読み込み元がそれぞれの目録になったことを確かめた。
+- **その他:**
+  - `claude -p`のセッションは、バックグラウンドでのマーケットプレイスの取得を終える前に閉じる。取得が終わるまで待つ`claude plugin marketplace add`を使った。
+  - `claude plugin marketplace remove`をsales-coreの中で実行すると、プロジェクトの`settings.json`からも登録が消えた（元に戻した）。
+  - 新しく参加した人が初日に確かめる手順は、sales-coreの`docs/onboarding.md`にある。
 
 - **対照実験の「安全の根拠」は、環境が変わると崩れる。** Day17・18は「`dotnet-ef`が入っていないので、ガードを外して実行してもエラーで終わる」ことを安全の根拠にしていた。Day19でsales-coreに`dotnet-ef`と`DbContext`を入れた時点で、その対照実験は**本当に開発用DBを消せる**状態になった。ツールを入れる前に、コマンドを`dotnet ef database drop --dry-run --project <存在しない名前>`に変え、環境に頼らず2重に止まる形にした。E2Eの前後で開発用DBのマイグレーションが適用済みのまま残ることも確かめた（2026-09-29）
 
