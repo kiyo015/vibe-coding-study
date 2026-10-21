@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day34 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bar.on{background:var(--accent);color:#fff}
+.rm-ms{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day34 ／ 基幹システム開発 段階1の最終日</p>
+    <h1>段階1の総振り返りと段階2の計画 — 初日の手順を試して、黙って無効になっていた安全柵を見つけた</h1>
+    <p class="lead">段階1を振り返り、チーム用の雛形を基幹システム版にし、段階2（画面と権限）を日単位に展開した。新しく参加した人の確認手順を試す中で、sales-core で dev-guard が読み込まれていなかったことを見つけ、直して再発に気付ける形にした。</p>
+    <div class="doc-meta"><span>2026-10-21</span><span>対象: Study（計画・雛形・guard-e2e）／ sales-core（初日の手順）</span><span>段階1 / Day34</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>段階2の Day35〜49 を、毎日に完了条件をつけて書いた。</li>
+      <li><b>安全柵が黙って無効だった。</b>マーケットプレイスの名前の重複で dev-guard が読み込まれず、PowerShell で DB を壊すコマンドが素通りした（何も消えていない）。名前を分けて直し、guard-e2e が読み込み元まで確かめるようにした。</li>
+      <li><b>段階1は予定の20日で終わった。</b>テスト 201件・API 10本・強制にしたルール 計画の7本すべて。最も多かった失敗は「設定したつもり」。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">15<small>日分</small></div><div class="l">段階2の日単位の計画</div></div>
+      <div class="kpi"><div class="v">6<small>/6</small></div><div class="l">初日の確認（直した後）</div></div>
+      <div class="kpi"><div class="v">7<small>/7</small></div><div class="l">guard-e2e（読み込み元の確認つき）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>安全柵が黙って無効になっていた</h2>
+    <p class="msg">設定・テスト・guard-e2e の合格がそろっていても、実際には別の経路で止まっていた。読み込まれたことを、起動時の記録で確かめるまでは効いていない。</p>
+    <figure>
+      <figcaption>図表1: 原因を突き止めるまで</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">初日の手順を試す<small>新しいセッション</small></div>
+        <div class="chev on">PowerShell で素通り<small>DB 破壊（dry-run）</small></div>
+        <div class="chev">フック単体は deny<small>判定は正しい</small></div>
+        <div class="chev">--debug<small>not cached</small></div>
+        <div class="chev">名前の重複<small>vibe-study を上書き</small></div>
+      </div></div>
+    </figure>
+    <div class="tbl">
+    <table>
+      <caption>図表2: 読み込み元（起動時の記録の plugins）</caption>
+      <thead><tr><th>時点</th><th>Study</th><th>sales-core</th></tr></thead>
+      <tbody>
+        <tr><td>前日まで</td><td>vibe-study（ローカル・作業中のソース）</td><td>同じ登録を読んでいた（GitHub 配布ではなかった）</td></tr>
+        <tr><td>今朝 00:17 以降</td><td>—</td><td><b>読み込まれない</b>（GitHub 版がキャッシュに無い）</td></tr>
+        <tr class="total"><td>直した後</td><td>vibe-study-local（作業中のソース）</td><td>vibe-study（GitHub v1.3.1 のキャッシュ）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <ul>
+      <li><b>直し方（本人の決定）:</b> Study のローカル用の目録を別の名前（plugins/.claude-plugin/marketplace.json、vibe-study-local）にした。sales-core には GitHub の版を claude plugin marketplace add と install で入れ直した</li>
+      <li><b>再発の防止:</b> guard-e2e の sales-core のセルは、読み込み元が dev-guard@vibe-study でなければ合格にしない。対照として、期待をわざと違えると判定不能になることを確かめた</li>
+      <li><b>途中のつまずき:</b> marketplace remove をリポジトリの中で実行すると、プロジェクトの設定からも登録が消えた（戻した）。claude -p は、バックグラウンドの取得を終える前に閉じる</li>
+    </ul>
+    <p class="note">止まらなかった DB 破壊のコマンドも、--dry-run と存在しないプロジェクト名（Day19 に決めた2重の安全）のおかげで、何も消えなかった。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>初日に安全柵を確かめる手順</h2>
+    <p class="msg">新しく参加した人が、自分の機械で「止まって実行されない」ことを15分で確かめる。どの項目も、止まらなくても何も壊れない形にした。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表3: 確認の6項目と、直した後の結果</caption>
+      <thead><tr><th>#</th><th>確認すること</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>1・2</td><td>DB を壊すコマンド（Bash・PowerShell）</td><td>pre-bash-guard で止まる</td></tr>
+        <tr><td>3</td><td>強制 push（--dry-run、PowerShell・Bash）</td><td>pre-bash-guard で止まる</td></tr>
+        <tr><td>4・5</td><td>.env の読み取りと、同じ中身の別名のファイル（対照）</td><td>.env は読めない／対照は読める</td></tr>
+        <tr><td>6</td><td>編集後の自動テスト</td><td>全件パス（混んでいると 60秒で打ち切り）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: sales-core の docs/onboarding.md、Study の evidence/2026-10-21-onboarding-and-marketplace.md。PR #7 の AI レビューで「文言でなく、止まったかで見る」と書き足した。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>段階1の振り返り</h2>
+    <p class="msg">予定の20日で、API で受注から締め請求まで通った。効いたのは対照実験で、最も多かった失敗は画面にエラーの出ない「設定したつもり」だった。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表4: 段階1の始めと終わり</caption>
+      <thead><tr><th>指標</th><th>始め（Day15）</th><th>終わり（Day34）</th></tr></thead>
+      <tbody>
+        <tr><td>sales-core のテスト</td><td>空テストのみ</td><td>201件（Domain 147・結合 45・アーキテクチャ 9）</td></tr>
+        <tr><td>API ／ マイグレーション</td><td>なし</td><td>10本 ／ 5本</td></tr>
+        <tr><td>「お願い」から「強制」へ</td><td>0</td><td>計画の7本すべて＋二重請求・main の保護・PowerShell の deny</td></tr>
+        <tr><td>guard-e2e ／ 健康診断</td><td>3セル ／ 9項目</td><td>7セル・週1回 ／ 14項目</td></tr>
+        <tr><td>AI レビュー</td><td>—</td><td>17回・$5.96（API 換算）・マージ可 8／修正後 9</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <h3>繰り返した失敗</h3>
+    <ul>
+      <li><b>設定したつもり:</b> Day16（信頼していないフォルダ）、Day17（未接続）、Day33（ログイン切れ）、Day34（黙って無効）</li>
+      <li><b>思い込みで説明した:</b> Day32（古い版が動いている）、Day34（GitHub 配布で止まっている）</li>
+      <li><b>シェル経由の書き換えでエスケープが崩れる:</b> 複数行・記号は Edit ツールで書く</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>段階2の日単位の計画</h2>
+    <p class="msg">権限の検査はユースケースの入口の1か所に置き、API と画面の両方で、外したら通ってしまうことを対照実験で示す。</p>
+    <div class="fig-scroll"><div class="roadmap">
+      <div class="rm-row rm-head">
+        <div class="rm-lane"></div>
+        <div class="rm-h">Day35-36</div><div class="rm-h">Day37-39</div><div class="rm-h">Day40-41</div>
+        <div class="rm-h">Day42-44</div><div class="rm-h">Day45-46</div><div class="rm-h">Day47-49</div>
+      </div>
+      <div class="rm-row">
+        <div class="rm-lane">認証と権限</div>
+        <div class="rm-bar on" style="grid-column:2/4">Identity・役割・検査</div>
+      </div>
+      <div class="rm-row">
+        <div class="rm-lane">画面</div>
+        <div class="rm-bar" style="grid-column:4/6">マスタ・受注・出荷・締め</div>
+      </div>
+      <div class="rm-row">
+        <div class="rm-lane">端から端まで</div>
+        <div class="rm-bar" style="grid-column:6/7">E2E・権限</div>
+        <div class="rm-ms" style="grid-column:7">◆ 段階2の振り返り</div>
+      </div>
+    </div></div>
+    <ul>
+      <li><b>本人の決定:</b> Interactive Server。画面から Application を直接呼ぶ。承認は税抜合計100万円以上なら管理者</li>
+      <li><b>訂正:</b> 業務ルール集には Day16 に「税抜」と決めてあったのに、確かめずに「税込」で聞いてしまった。AI レビューの指摘で気付き、本人に確かめて税抜に戻した</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>次のアクション</h2>
+    <p class="msg">次は Day35 で、段階2の設計と画面の骨格から始める。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表5: 次回と持ち越し</caption>
+      <thead><tr><th>項目</th><th>誰が</th><th>いつ</th></tr></thead>
+      <tbody>
+        <tr><td>段階2の設計の文書、SalesCore.Web と bUnit、Web から Domain を直接呼ばないアーキテクチャテスト、CI</td><td>Claude</td><td>Day35</td></tr>
+        <tr><td>10/26（月）9:00 の初めての定期実行を健康診断で確かめる</td><td>Claude</td><td>10/26 以降</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>成果物</h2>
+    <p class="msg">リンクは day34 のタグに固定してある。</p>
+    <h3>Study</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day34/study_plan_next_month.md">study_plan_next_month.md</a>（段階1の振り返り・段階2の計画）・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day34/templates/team-CLAUDE.md">templates/team-CLAUDE.md</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day34/plugins/.claude-plugin/marketplace.json">plugins/.claude-plugin/marketplace.json</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day34/.claude/settings.json">.claude/settings.json</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day34/checks/guard-e2e.js">guard-e2e.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day34/checks/guard-e2e.test.js">guard-e2e.test.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day34/checks/guard-matrix.md">guard-matrix.md</a></li>
+      <li>証拠: <a href="https://github.com/kiyo015/vibe-coding-study/blob/day34/evidence/2026-10-21-onboarding-and-marketplace.md">onboarding-and-marketplace.md</a></li>
+    </ul>
+    <h3>sales-core</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day34/docs/onboarding.md">docs/onboarding.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day34/CLAUDE.md">CLAUDE.md</a></li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day34 学習記録 ／ 総振り返りとチーム展開の準備</span><span>正本は summary.md</span>
+  </footer>
+
+</div>
+</body>
+</html>
