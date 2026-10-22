@@ -12,6 +12,12 @@
       "runtimeExecutable": "dotnet",
       "runtimeArgs": ["run", "--project", "../sales-core/src/SalesCore.Api", "--launch-profile", "http"],
       "port": 5070
+    },
+    {
+      "name": "sales-core-web",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "../sales-core/src/SalesCore.Web", "--launch-profile", "http"],
+      "port": 5159
     }
   ]
 }

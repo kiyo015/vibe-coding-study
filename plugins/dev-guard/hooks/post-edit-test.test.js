@@ -88,6 +88,18 @@ test('C#: 編集したファイルのプロジェクトに対応する .Tests �
   assert.ok(target.command.includes(path.join(base, 'tests/App.Tests/App.Tests.csproj')));
 });
 
+test('Blazor: 画面の部品(.razor)を編集しても、対応する .Tests プロジェクトを走らせる', () => {
+  // 2026-10-22: sales-core に Blazor の画面を足した時、.razor の編集ではテストが走らないことに気付いた
+  const base = makeTree({
+    'src/App.Web/App.Web.csproj': CSPROJ,
+    'src/App.Web/Components/Pages/Home.razor': '',
+    'tests/App.Web.Tests/App.Web.Tests.csproj': CSPROJ,
+  });
+  const target = findTestTarget(path.join(base, 'src/App.Web/Components/Pages/Home.razor'), base);
+  assert.equal(target && target.name, 'App.Web.Tests');
+  assert.match(target.command, /^dotnet test /);
+});
+
 test('C#: テストプロジェクト自身を編集したら、そのプロジェクトを走らせる', () => {
   const base = makeTree({
     'tests/App.Tests/App.Tests.csproj': CSPROJ,

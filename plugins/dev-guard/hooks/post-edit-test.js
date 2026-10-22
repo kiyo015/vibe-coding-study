@@ -10,8 +10,9 @@ const fs = require('fs');
 const path = require('path');
 
 // テストを走らせる価値があるファイルだけに絞る(ドキュメント編集で毎回テストしない)
-const CODE_FILE = /\.(js|mjs|cjs|jsx|ts|tsx|cs)$/i;
-const CSHARP_FILE = /\.cs$/i;
+const CODE_FILE = /\.(js|mjs|cjs|jsx|ts|tsx|cs|razor)$/i;
+// .razor は Blazor の画面の部品。C# と同じく、属するプロジェクトの .Tests を走らせる
+const CSHARP_FILE = /\.(cs|razor)$/i;
 
 // C#はビルドを含むので時間がかかる。2026-09-18 実測(sales-core):
 // ソリューション全体=編集直後30秒〜1分29秒 / 対応するテストプロジェクトだけ=12.3秒。
