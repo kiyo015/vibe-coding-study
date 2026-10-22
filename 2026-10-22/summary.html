@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day35 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bar.on{background:var(--accent);color:#fff}
+.rm-ms{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day35 ／ 基幹システム開発 段階2の1日目</p>
+    <h1>段階2の設計と画面の骨格 — 画面を足したら、既存の守りに .razor の穴が2つあった</h1>
+    <p class="lead">Blazor（Interactive Server）の画面の骨格と bUnit のテストを作り、画面から Domain を直接使う誤りをアーキテクチャテストで止めた。金額の決まりと dev-guard が .cs しか見ていなかったので、.razor にも効くようにした。</p>
+    <div class="doc-meta"><span>2026-10-22</span><span>対象: sales-core（Web・テスト・設計）／ Study（dev-guard 1.3.2）</span><span>段階2 / Day35</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>Web が起動し、bUnit とアーキテクチャテストが CI で通った。画面から Domain を直接呼ぶ誤りは、対照実験でテストが止めた。</li>
+      <li><b>.razor の穴を2つ塞いだ。</b>.razor の double がビルドを通っていた（SALES001）。.razor の編集でテストが走らなかった（dev-guard）。どちらも、誤りを入れて初めて分かった。</li>
+      <li><b>次に決めることが1つ見つかった。</b>Interactive Server では DbContext が回線の間ずっと生き続ける（AI レビューの Important）。ユースケースを呼ぶ最初の画面より前に決める。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">207<small>件</small></div><div class="l">全テスト成功（147・14・1・45）</div></div>
+      <div class="kpi"><div class="v">5<small>通り</small></div><div class="l">画面の層の対照実験</div></div>
+      <div class="kpi"><div class="v">2<small>つ</small></div><div class="l">塞いだ .razor の穴</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>画面の骨格</h2>
+    <p class="msg">画面は Application だけを参照し、DB とユースケースの登録も API と共通の1か所（AddSalesCore）に置いた。</p>
+    <figure>
+      <figcaption>図表1: 依存の向き（段階2）</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev on">Web<small>Blazor・表示と入力</small></div>
+        <div class="chev">Api<small>HTTP の入口</small></div>
+        <div class="chev on">Application<small>ユースケース・AddSalesCore</small></div>
+        <div class="chev">Infrastructure<small>EF Core</small></div>
+        <div class="chev">Domain<small>業務ルール</small></div>
+      </div></div>
+    </figure>
+    <ul>
+      <li>テンプレートの英語の文言を日本語にした。エラー画面には問い合わせ番号だけを出し、例外の中身は出さない</li>
+      <li>http://localhost:5159 で起動を確かめた。bUnit のテストは RED（Hello, world!）を見てから直した</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>画面から Domain を直接使わない</h2>
+    <p class="msg">権限の検査はユースケースの入口に置くので、画面が Domain を直接触ると素通りできる。Web の DLL（.razor から生成されたコードを含む）を読んで止める。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表2: 対照実験（Home.razor に誤りを入れて WebLayerTests を流す）</caption>
+      <thead><tr><th>入れた誤り</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>Money.Of(1m).Yen を呼ぶ</td><td>失敗（Money.Of・get_Yen を検出）</td></tr>
+        <tr><td>@inject SalesCoreDbContext</td><td>失敗（Infrastructure の型の参照）</td></tr>
+        <tr><td>e is BusinessRuleException（例外の型で判定するだけ）</td><td>通る（許す）</td></tr>
+        <tr class="total"><td>Domain の入れ子の型のメソッド（2回目の AI レビューの指摘）</td><td>直す前は素通り → 直した後は失敗（NestedProbe+Inner.Value）</td></tr>
+        <tr><td>画面に DELETE FROM の SQL</td><td>失敗（Web を物理削除の検査の対象に足した後）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">DLL を読む部品は AssemblyMetadata に切り出した（AI レビューの Minor）。切り出した後も、Money.Of の誤りと Application の DbContext.Remove を検出することを確かめた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>画面を足して見つかった穴</h2>
+    <p class="msg">金額の決まりも dev-guard も .cs を前提にしていた。新しい種類のファイルを足したら、既存の守りがそれを見ているかを、誤りを入れて確かめる。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表3: .razor の誤りと、それぞれの守り</caption>
+      <thead><tr><th>.razor に入れたもの</th><th>守り</th><th>直す前</th><th>直した後</th></tr></thead>
+      <tbody>
+        <tr><td>double</td><td>SALES001（ソースの文字列）</td><td><b>ビルドが通った</b></td><td>止まる</td></tr>
+        <tr><td>Math.Round</td><td>RS0030（アナライザ）</td><td>止まった</td><td>止まる</td></tr>
+        <tr><td>編集そのもの</td><td>dev-guard の編集後のテスト</td><td><b>走らない</b></td><td>1.3.2 で走る</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">アナライザはコンパイル後のコードを見るので .razor も止まった。SALES001 はファイルの一覧（Compile）を見ていて、.razor は Content に入るので素通りした。守りの種類で、見ている範囲が違う。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>AI レビュー</h2>
+    <p class="msg">1回目はマージ可、直した後の2回目は修正後マージ可。自分の対照実験3通りでは見つからなかった、入れ子の型のすり抜けを見つけてくれた。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表4: 指摘と対応（kiyo015/sales-core#8。1回目はマージ可 $0.3719・66秒、2回目は修正後マージ可 $0.3940・65秒、3回目はマージ可 $0.3987・70秒）</caption>
+      <thead><tr><th>指摘</th><th>対応</th></tr></thead>
+      <tbody>
+        <tr><td>2回目 Important: 入れ子の型が画面の層の検査を素通り</td><td>素通りを確かめてから Outer+Inner の名前にした。直した後は検出</td></tr>
+        <tr><td>2回目 Important: Web が物理削除の検査の対象外</td><td>対象に足した。DELETE FROM で失敗を確認</td></tr>
+        <tr><td>Important: DbContext が回線の間ずっと生き続ける（楽観ロック・未保存の変更・同時操作）</td><td>設計の文書に書いた。Day41 の前に決め、二重の操作が版数で止まることをテストする</td></tr>
+        <tr><td>Minor: app.css に英語の文言</td><td>日本語にした</td></tr>
+        <tr><td>Minor: テスト同士の結合</td><td>AssemblyMetadata に切り出した</td></tr>
+        <tr><td>Minor: プラグインの変更点が PR に無い</td><td>本文に変更点と比較の URL を書いた</td></tr>
+        <tr><td>Minor: .razor の SALES001 を自動で守っていない</td><td>持ち越し</td></tr>
+        <tr><td>Minor: 業務ルール集に無い決まりが設計の文書にある</td><td>Day37・38 に業務ルール集へ</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>次のアクション</h2>
+    <p class="msg">次は Day36 で、ASP.NET Core Identity（ログイン・ロック・初期利用者）。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表5: 次回と持ち越し</caption>
+      <thead><tr><th>項目</th><th>誰が</th><th>いつ</th></tr></thead>
+      <tbody>
+        <tr><td>Identity の表（migration スキル）、ログイン・ログアウト、パスワードの規則とロック、初期利用者</td><td>Claude</td><td>Day36</td></tr>
+        <tr><td>設計の文書の承認の行の出典を正確にする（3回目の Minor）</td><td>Claude</td><td>Day36</td></tr>
+        <tr><td>DbContext の寿命の決め方</td><td>Claude</td><td>Day41 の前まで</td></tr>
+        <tr><td>.razor の SALES001 を自動で守る</td><td>Claude</td><td>段階2の中</td></tr>
+        <tr><td>10/26（月）9:00 の初めての定期実行を確かめる</td><td>Claude</td><td>10/26 以降</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>成果物</h2>
+    <p class="msg">リンクは day35 のタグに固定してある。</p>
+    <h3>sales-core</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day35/src/SalesCore.Application/SalesCoreServices.cs">SalesCoreServices.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day35/src/SalesCore.Web/Program.cs">Web/Program.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day35/src/SalesCore.Web/Components/Pages/Home.razor">Home.razor</a>・<a href="https://github.com/kiyo015/sales-core/blob/day35/src/SalesCore.Web/Components/Pages/Error.razor">Error.razor</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day35/tests/SalesCore.Web.Tests/HomePageTests.cs">HomePageTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day35/tests/SalesCore.Architecture.Tests/WebLayerTests.cs">WebLayerTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day35/tests/SalesCore.Architecture.Tests/AssemblyMetadata.cs">AssemblyMetadata.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day35/src/Directory.Build.props">Directory.Build.props</a>・<a href="https://github.com/kiyo015/sales-core/blob/day35/docs/specs/2026-10-22-stage2-screens-and-permissions-design.md">段階2の設計</a>・<a href="https://github.com/kiyo015/sales-core/blob/day35/CLAUDE.md">CLAUDE.md</a></li>
+    </ul>
+    <h3>Study</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day35/plugins/dev-guard/hooks/post-edit-test.js">post-edit-test.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day35/plugins/dev-guard/hooks/post-edit-test.test.js">post-edit-test.test.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day35/.claude/launch.json">.claude/launch.json</a></li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day35 学習記録 ／ 段階2の設計と画面の骨格</span><span>正本は summary.md</span>
+  </footer>
+
+</div>
+</body>
+</html>

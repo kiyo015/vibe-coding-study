@@ -410,7 +410,7 @@ Day34（2026-10-21）に日単位に展開した。
 
 **週の区切り:** 1週目（Day35〜39）で認証と権限の土台、2週目（Day40〜44）で画面、3週目（Day45〜49）で端から端までと仕上げ。各週の最終日に振り返る。
 
-### Day35 — 段階2の設計と画面の骨格
+### Day35（2026-10-22 実施）— 段階2の設計と画面の骨格 ✅ 完了
 
 **Day34からの申し送り:** 10/26（月）9:00 の初めての定期実行を、健康診断の「ガードの実効性テスト（週1回）の結果」で確かめる（Day35 が 10/26 より前なら、その日の作業に回す）。業務の判断を本人に聞く前に、業務ルール集で既に決めてあるかを確かめる（Day34 の税抜・税込の取り違えの再発防止）。
 
@@ -419,9 +419,15 @@ Day34（2026-10-21）に日単位に展開した。
 - アーキテクチャテスト：Web は Application だけを使い、Domain の操作（状態遷移のメソッドなど）を直接呼ばない。直接呼ぶ誤りを入れて落ちることを確かめる
 - CI に Web のビルドとテストを足す
 
-**完了条件:** Web が起動し、空のページの bUnit テストとアーキテクチャテストが CI で通る。Web から Domain を直接呼ぶ誤りがテストで止まる
+**完了条件:** Web が起動し、空のページの bUnit テストとアーキテクチャテストが CI で通る。Web から Domain を直接呼ぶ誤りがテストで止まる — 達成
+
+**実測値:** `src/SalesCore.Web`（`dotnet new blazor --interactivity Server --empty`、参照はApplicationだけ、DBとユースケースの登録を`SalesCoreServices.AddSalesCore`に移しAPIと共通化）。http://localhost:5159 で起動を確認。`tests/SalesCore.Web.Tests`（bunit 2.12.5）のトップページのテストはRED（"Hello, world!"）→GREEN。`WebLayerTests`（WebのDLLにDomain・Infrastructureのメンバー呼び出しとInfrastructureの型の参照が無いこと）の対照実験3通り：`Money.Of`を呼ぶ→失敗、DbContextを注入→失敗、例外型の判定→通る。DLLを読む部品を`AssemblyMetadata`に切り出した後も、`Money.Of`と`DbContext.Remove`の誤りを検出。**.razorの穴を2つ塞いだ**：SALES001が.razorの`double`を素通り（Contentに入るため）→Directory.Build.propsが.razorも調べる、dev-guardが.razorの編集でテストを走らせない→1.3.2（RED→GREEN、sales-coreの新しいセッションで`[dev-guard] SalesCore.Web.Tests: 編集後のテスト 全件パス`を確認）。RS0030は.razorでももともと止まった。全テスト：Domain 147・アーキテクチャ 14・Web 1・結合 45。[kiyo015/sales-core#8](https://github.com/kiyo015/sales-core/pull/8)のAIレビュー：マージ可 $0.3719・66秒（Important 1・Minor 5）、直した後は修正後マージ可 $0.3940・65秒、再度直した後はマージ可 $0.3987・70秒（Important 2：入れ子の型が画面の層の検査を素通り→対照実験で素通りを確かめてから`Outer+Inner`の名前にして検出、Webが物理削除の検査の対象外→足して`DELETE FROM`で失敗を確認）。
+
+**予定と違う点:** (1) .razorの穴（SALES001・dev-guard）を見つけて塞いだ。dev-guardを1.3.2に上げ、各自の機械での入れ替えの手順をCLAUDE.mdに書いた。(2) AIレビューのImportant（Interactive ServerではscopedのDbContextが回線の間ずっと生き続ける）は、設計の文書に「業務画面の前に決めること」として書き、Day41の前に決める。(3) 本人の依頼で画面のサーバーを起動して見せ、起動方法を案内した。(4) 自分の対照実験3通りでは、入れ子の型のすり抜けに気付かなかった（AIレビューが発見）。
 
 ### Day36 — ASP.NET Core Identity
+
+**Day35からの申し送り:** 設計の文書（`docs/specs/2026-10-22-stage2-…`）の承認の行の出典を正確にする（「未満は営業でも承認できる」と役割の表は本人の決定で、業務ルール集には未反映。AIレビュー3回目のMinor。業務ルール集への反映はDay37・38）。Interactive ServerでのDbContextの寿命（回線の間ずっと生きる）の直し方を、ユースケースを呼ぶ最初の画面（Day41）より前に決める（`OwningComponentBase`・`IServiceScopeFactory`・`IDbContextFactory`のどれか。二重の操作が版数で止まることをテスト）。.razorのSALES001を自動で守る（CIか健康診断で、doubleを含む.razorのビルドが失敗することを毎回確かめる）。10/26（月）9:00の初めての定期実行を確かめる。
 
 - 利用者・役割の表（Identity の標準の表。migration スキルで SQL をレビューしてから適用）
 - ログイン・ログアウトの画面。パスワードの規則（長さ・種類）、5回失敗で15分ロック（数は本人と決める）
@@ -577,7 +583,7 @@ PDF（請求書・納品書・発注書、発行履歴と再発行の管理）�
 | 32 | 2026-10-19 | hooksの他イベント・健康診断のC#対応（Stop・PreCompactの受け取るJSONを実測してから作りdev-guard 1.3.0に／/compactで決定1件を書き出し／健康診断にC#の3項目、初回でxunitの下のHigh 2件を見つけ13/13 OKに／二重請求の検査を外部キーでも見る） | [x] |
 | 33 | 2026-10-20 | ガードの定期実行・Windowsの整理（decision: 'block'は非推奨→permissionDecisionへ、dev-guard 1.3.1／PowerShellのdenyは`PowerShell(...)`、10通りの対照実験で並べ替えは抜ける／孫プロセスは残る／guard-e2eを月曜9:00の定期実行にし無人で7セル全合格、健康診断が結果を毎日読む） | [x] |
 | 34 | 2026-10-21 | 総振り返り・チーム展開の準備（段階2を日単位に展開／初日の確認手順を試してsales-coreのdev-guardが黙って無効だったと発見、マーケットプレイスの名前を分けて直し、guard-e2eが読み込み元まで確かめる形に／雛形を基幹システム版に／段階1の振り返り） | [x] |
-| 35 | | 段階2の設計と画面の骨格 | [ ] |
+| 35 | 2026-10-22 | 段階2の設計と画面の骨格（Blazor Interactive Server・bUnit・AddSalesCoreで組み立てを共通化／画面からDomainを直接使わないアーキテクチャテスト、対照実験3通り／.razorの穴2つ（SALES001・dev-guard 1.3.2）を塞いだ） | [x] |
 | 36 | | ASP.NET Core Identity | [ ] |
 | 37 | | 役割と操作した人 | [ ] |
 | 38 | | 権限の検査（ユースケースの入口） | [ ] |
