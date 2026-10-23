@@ -40,6 +40,8 @@ function run(command, cwd, timeout = TIMEOUT_MS) {
 // ── C#(sales-core)。Study と同じ階層に置いてある前提 ──
 const SALES_CORE = path.resolve(ROOT, '..', 'sales-core');
 const EF_PROJECTS = '--project src/SalesCore.Infrastructure --startup-project src/SalesCore.Api';
+// 業務の DbContext と、利用者・役割(Identity)の DbContext。マイグレーションも履歴の表も別
+const EF_CONTEXTS = ['SalesCoreDbContext', 'SalesCoreIdentityDbContext'];
 
 /** dotnet ef migrations list の出力から、未適用(Pending)のマイグレーション。 */
 function pendingMigrations(output) {
@@ -58,8 +60,13 @@ function checkSalesCore() {
   }
   // 結合テストはテスト用DBに接続する(接続文字列は user-secrets)。全部で1分半ほどかかるので長めに待つ
   const test = run('dotnet test --nologo', SALES_CORE, 600000);
-  const migrations = run(`dotnet ef migrations list ${EF_PROJECTS}`, SALES_CORE, 300000);
-  const pending = migrations.ok ? pendingMigrations(migrations.output) : null;
+  // DbContext ごとに調べる。2つ以上あると --context を付けないと止まる(2026-10-23、Identity の DbContext を足して気付いた)
+  const lists = EF_CONTEXTS.map(context =>
+    ({ context, ...run(`dotnet ef migrations list --context ${context} ${EF_PROJECTS}`, SALES_CORE, 300000) }));
+  const migrations = lists.find(l => !l.ok) ?? { ok: true, output: '', note: undefined };
+  const pending = migrations.ok
+    ? lists.flatMap(l => pendingMigrations(l.output).map(name => `${l.context}: ${name}`))
+    : null;
   // 推移的なパッケージ(xunit の下など)も見る。テストのプロジェクトも、開発機と CI で動くので対象にする
   const packages = run('dotnet list package --vulnerable --include-transitive', SALES_CORE, 300000);
   const vulnerable = packages.ok ? vulnerableProjects(packages.output) : null;
