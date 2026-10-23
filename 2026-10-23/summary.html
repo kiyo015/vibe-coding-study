@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day36 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bar.on{background:var(--accent);color:#fff}
+.rm-ms{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day36 ／ 基幹システム開発 段階2の2日目</p>
+    <h1>ASP.NET Core Identity — 既定値の CASCADE と、戻り先の判定の穴を見つけて塞いだ</h1>
+    <p class="lead">ログイン・ログアウト・ロックを作った。パスワードとロックの規則は本人が決めた。利用者の表は業務と別の DbContext に置き、SQL レビューで ON DELETE CASCADE を RESTRICT に直した。AI レビューは、ログインの後の戻り先から外のサイトへ飛ばせる穴を見つけた。</p>
+    <div class="doc-meta"><span>2026-10-23</span><span>対象: sales-core（Identity・ログイン画面）／ Study（健康診断）</span><span>段階2 / Day36</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>ログイン・ログアウト・ロックを結合テスト18件で確かめ、DB にハッシュだけが入ることを SQL で確かめた。</li>
+      <li><b>既定値をそのまま信じなかった。</b>Identity の既定の ON DELETE CASCADE を RESTRICT に直した。差し替えた時計がロックの判定に使われないことにも、テストの失敗で気付いた。</li>
+      <li><b>手書きのセキュリティの判定に穴があった。</b>タブを挟んだ戻り先を通していた（ブラウザは //evil.example と読む）。以前の判定でテストが落ちることを確かめてから直した。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">18<small>件</small></div><div class="l">ログインの結合テスト</div></div>
+      <div class="kpi"><div class="v">5<small>/5</small></div><div class="l">対照実験で検出</div></div>
+      <div class="kpi"><div class="v">6<small>か所</small></div><div class="l">CASCADE → RESTRICT</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>決めたこと</h2>
+    <p class="msg">規則は本人が決め、業務ルール集「8. 利用者とログイン」に書いた。Identity の表は「7. データの扱い」の例外として理由も書いた。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表1: ログインの決まり</caption>
+      <thead><tr><th>項目</th><th>決定</th></tr></thead>
+      <tbody>
+        <tr><td>パスワード</td><td>12文字以上、種類は問わない（本人。NIST SP 800-63B）</td></tr>
+        <tr><td>ロック</td><td>5回続けて間違えると15分（本人）。成功で回数は0に戻る</td></tr>
+        <tr><td>無効な利用者</td><td>正しいパスワードでも入れない。物理削除しない</td></tr>
+        <tr><td>失敗の伝え方</td><td>ロック中かどうかだけ（利用者名を探られないため）</td></tr>
+        <tr class="total"><td>Identity の表</td><td>別の DbContext。共通の列・監査ログの対象外（パスワードのハッシュが監査ログに写るため）</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>利用者の表と SQL のレビュー</h2>
+    <p class="msg">Identity の既定では、利用者を消すと割り当てが黙って一緒に消える。生成された SQL を読む手順が、適用の前に拾った。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表2: AddIdentity の SQL レビュー（migration スキル）</caption>
+      <thead><tr><th>確かめたこと</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>データを消す・型を変える</td><td>無し</td></tr>
+        <tr class="total"><td>削除の連鎖</td><td>ON DELETE CASCADE が6か所 → RESTRICT にして作り直した（未適用）</td></tr>
+        <tr><td>一意・名前</td><td>利用者名・役割名に一意。名前は Identity の既定（足した2列だけ snake_case）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">DbContext が2つになり、--context 無しの dotnet ef が「More than one DbContext was found」で止まるようになった。CLAUDE.md・migration スキル・健康診断を直した。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>テストと対照実験</h2>
+    <p class="msg">決まりを1つずつ崩すと、5通りとも狙ったテストが落ちた。時計の差し替えはロックの判定に効かなかったので、期限の値と前後の動きを分けて確かめた。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表3: 対照実験（AccountTests）</caption>
+      <thead><tr><th>崩したもの</th><th>落ちたテスト</th></tr></thead>
+      <tbody>
+        <tr><td>長さ 12 → 11</td><td>12文字未満は作れない</td></tr>
+        <tr><td>回数 5 → 6</td><td>5回でロック、期限は15分後</td></tr>
+        <tr><td>期限 15 → 14 分</td><td>期限は15分後</td></tr>
+        <tr><td>無効の判定を外す</td><td>無効な利用者は入れない</td></tr>
+        <tr><td>失敗を数えない</td><td>5回でロック、期限は15分後</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">.NET 8 の Identity（8.0.31）の DLL には TimeProvider が無く、ロックは UtcNow で判定する（2026-10-23 確認）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>画面と、戻り先の判定の穴</h2>
+    <p class="msg">画面はすべてログインを求め、付け忘れはテストが止める。戻り先の手書きの判定は、自分の試した書き方は止めていたが、タブを挟む書き方を通していた。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表4: 戻り先（?ReturnUrl=）の判定（LocalReturnUrlTests 11件）</caption>
+      <thead><tr><th>入力</th><th>以前の判定</th><th>直した後</th></tr></thead>
+      <tbody>
+        <tr><td>/sales-orders/1</td><td>そのまま</td><td>そのまま</td></tr>
+        <tr><td>//evil.example ／ /\evil.example ／ https://…</td><td>トップへ</td><td>トップへ</td></tr>
+        <tr class="total"><td>/&lt;タブ&gt;/evil.example ／ /&lt;改行&gt;/…</td><td><b>そのまま（外のサイトへ）</b></td><td>トップへ</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <ul>
+      <li>全画面に [Authorize]（_Imports.razor）。ログインとエラーだけ [AllowAnonymous]。付け忘れは PageAuthorizationTests が止める</li>
+      <li>全部を拒む既定の方針（FallbackPolicy）は、画面の部品のスクリプトの配信まで拒んだので使わない</li>
+      <li>ブラウザで、未ログインのトップページがログインへ回ること、誤った値で決めた文言が出ることを確かめた</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>2回目の AI レビュー</h2>
+    <p class="msg">応答時間の差で利用者名を探られる、という指摘を実測した。差は約60倍で、ダミーのハッシュでそろえた。もう1件の指摘は、テストを書くと再現しなかった。</p>
+    <figure>
+      <figcaption>図表5: ログインに失敗した時の応答時間（3回の平均、ミリ秒）</figcaption>
+      <svg viewBox="0 0 640 150" role="img" aria-label="そろえる前 利用者無し3.1 パスワード違い192.4、そろえた後 181.0と183.1">
+        <text x="0" y="28" font-size="12" fill="#555">前: 利用者が無い</text>
+        <rect x="170" y="16" width="6" height="16" fill="#a33c2e"/><text x="184" y="29" font-size="12" fill="#a33c2e">3.1</text>
+        <text x="0" y="58" font-size="12" fill="#555">前: パスワード違い</text>
+        <rect x="170" y="46" width="385" height="16" fill="#c9ccd1"/><text x="562" y="59" font-size="12" fill="#1a1a1a">192.4</text>
+        <text x="0" y="98" font-size="12" fill="#555">後: 利用者が無い</text>
+        <rect x="170" y="86" width="362" height="16" fill="#173f66"/><text x="540" y="99" font-size="12" font-weight="700" fill="#173f66">181.0</text>
+        <text x="0" y="128" font-size="12" fill="#555">後: パスワード違い</text>
+        <rect x="170" y="116" width="366" height="16" fill="#c9ccd1"/><text x="544" y="129" font-size="12" fill="#1a1a1a">183.1</text>
+      </svg>
+    </figure>
+    <p class="src">2回目は修正後マージ可（$0.5074・82秒）、3回目はマージ可（$0.5224・90秒、Minor 4件は持ち越し）。is_active の既定値で false が省かれるという指摘は、EF Core 8.0.31 では再現しなかった（テストとして残した）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>次のアクション</h2>
+    <p class="msg">次は Day37 で、役割と操作した人。持ち越しのうち、画面でのログイン成功の確認は、開発用 DB に初期の利用者を置いてから行う。</p>
+    <div class="tbl">
+    <table>
+      <caption>図表6: 次回と持ち越し</caption>
+      <thead><tr><th>項目</th><th>誰が</th><th>いつ</th></tr></thead>
+      <tbody>
+        <tr><td>役割と役割×ユースケースの表を業務ルール集へ。CurrentUser を監査ログと作成者・更新者に</td><td>Claude・本人</td><td>Day37</td></tr>
+        <tr><td>初期の利用者を user-secrets に置く（パスワードは本人が決める）</td><td>本人</td><td>Day37 まで</td></tr>
+        <tr><td>画面でのログイン成功の確認、Routes.razor の AuthorizeRouteView</td><td>Claude</td><td>Day37</td></tr>
+        <tr><td>ログアウトの 500 → 400、「15分」の二重の定義、表示名の長さの検査</td><td>Claude</td><td>Day47</td></tr>
+        <tr><td>DbContext の寿命、.razor の SALES001 の自動化、10/26 の定期実行</td><td>Claude</td><td>Day41 の前・以降</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>成果物</h2>
+    <p class="msg">リンクは day36 のタグに固定してある。</p>
+    <h3>sales-core</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day36/docs/domain/business-rules.md">business-rules.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day36/docs/domain/er-diagram.md">er-diagram.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day36/docs/migrations/2026-10-23-AddIdentity.sql">AddIdentity.sql</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day36/src/SalesCore.Infrastructure/Persistence/Identity/SalesCoreIdentityDbContext.cs">SalesCoreIdentityDbContext.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day36/src/SalesCore.Infrastructure/Persistence/Identity/SalesCoreUser.cs">SalesCoreUser.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day36/src/SalesCore.Application/AccountUseCases.cs">AccountUseCases.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day36/src/SalesCore.Application/SalesCoreServices.cs">SalesCoreServices.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day36/src/SalesCore.Web/Components/Pages/Account/Login.razor">Login.razor</a>・<a href="https://github.com/kiyo015/sales-core/blob/day36/src/SalesCore.Web/Components/Pages/Account/LocalReturnUrl.cs">LocalReturnUrl.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day36/src/SalesCore.Web/Program.cs">Web/Program.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day36/tests/SalesCore.Integration.Tests/AccountTests.cs">AccountTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day36/tests/SalesCore.Integration.Tests/MigrationTests.cs">MigrationTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day36/tests/SalesCore.Web.Tests/PageAuthorizationTests.cs">PageAuthorizationTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day36/tests/SalesCore.Web.Tests/LocalReturnUrlTests.cs">LocalReturnUrlTests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day36/CLAUDE.md">CLAUDE.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day36/.claude/skills/migration/SKILL.md">migration スキル</a></li>
+    </ul>
+    <h3>Study</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day36/checks/health-check.js">health-check.js</a></li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day36 学習記録 ／ ASP.NET Core Identity</span><span>正本は summary.md</span>
+  </footer>
+
+</div>
+</body>
+</html>
