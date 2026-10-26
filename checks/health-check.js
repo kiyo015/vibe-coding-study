@@ -61,8 +61,10 @@ function checkSalesCore() {
   // 結合テストはテスト用DBに接続する(接続文字列は user-secrets)。全部で1分半ほどかかるので長めに待つ
   const test = run('dotnet test --nologo', SALES_CORE, 600000);
   // DbContext ごとに調べる。2つ以上あると --context を付けないと止まる(2026-10-23、Identity の DbContext を足して気付いた)
+  // --no-build: 直前の dotnet test が同じ構成(Debug)でビルドしている。2026-10-25 にここで300秒の打ち切りが1回あったので、
+  // DbContext ごとのビルドのやり直しを省いて短くする(原因は特定できず、翌日は94秒・35秒で成功)
   const lists = EF_CONTEXTS.map(context =>
-    ({ context, ...run(`dotnet ef migrations list --context ${context} ${EF_PROJECTS}`, SALES_CORE, 300000) }));
+    ({ context, ...run(`dotnet ef migrations list --no-build --context ${context} ${EF_PROJECTS}`, SALES_CORE, 300000) }));
   const migrations = lists.find(l => !l.ok) ?? { ok: true, output: '', note: undefined };
   const pending = migrations.ok
     ? lists.flatMap(l => pendingMigrations(l.output).map(name => `${l.context}: ${name}`))
