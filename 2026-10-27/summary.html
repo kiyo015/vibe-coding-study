@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day38 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bar.on{background:var(--accent);color:#fff}
+.rm-ms{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day38 ／ 基幹システム開発 段階2の4日目</p>
+    <h1>権限の検査 — 役割の表をユースケースの入口で強制し、表をそのまま読むテストで全組み合わせを確かめた</h1>
+    <p class="lead">業務ルール集の役割の表を、すべての公開ユースケースの最初の行で検査するようにした。画面も API も同じユースケースを通るので、両方の経路に効く。テストの期待は、業務ルール集の表から機械的に作る。</p>
+    <div class="doc-meta"><span>2026-10-27</span><span>対象: sales-core（権限の検査）</span><span>段階2 / Day38</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>10 のユースケース × 6 通りの利用者＝60通りが、業務ルール集の表のとおりに許され、拒まれる。対照実験は10通りで、すべて検出した。</li>
+      <li><b>ログインしていなければ、画面も API も何もできない。</b>本人の決定。表に無い操作は管理者だけができる（書き忘れた時に、拒む側に倒す）。</li>
+      <li><b>AI レビューが、件数の誤りとテストの漏れを見つけた。</b>報告の「11・66」は実際には「10・60」だった。全操作が表にあるので、「表に無い操作」の経路はどのテストも通っていなかった。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">60<small>通り</small></div><div class="l">役割×ユースケースの全組み合わせ</div></div>
+      <div class="kpi"><div class="v">10<small>/10</small></div><div class="l">対照実験の検出</div></div>
+      <div class="kpi"><div class="v">259<small>件</small></div><div class="l">全テスト成功（147・14・19・79）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>決めたこと（本人の決定）</h2>
+    <p class="msg">前日の AI レビューで「最初に決めてもらう」とされた2点を、作業の前に聞いた。どちらも推奨どおりで、業務ルール集「8.」の「役割」に書いた。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>質問</th><th>決定</th></tr></thead>
+      <tbody>
+        <tr><td>入口で検査すると、ログインの仕組みがまだ無い API は全部拒まれる</td><td><b>今日から API も拒む。</b>API は、ログインを付ける Day39 まで使えない</td></tr>
+        <tr><td>表に無い参照（マスタ・売上・監査ログ）と、表に無い操作</td><td><b>マスタと売上の参照は全員、監査ログの参照は管理者だけ。</b>表に無い操作は管理者だけ</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">承認の金額の基準（税抜100万円以上は管理者）は Day40 で強制する。それまでは、営業も金額を問わず承認できる。この扱いも業務ルール集に書いた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>入口の検査</h2>
+    <p class="msg">ユースケースの最初の行で、ログインの有無と役割を順に確かめる。画面と API は同じユースケースを通るので、1か所で両方に効く。</p>
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">画面・API<small>同じユースケースを呼ぶ</small></div>
+      <div class="chev on">ログインの確認<small>未ログイン → 401</small></div>
+      <div class="chev on">役割の確認<small>足りない → 403</small></div>
+      <div class="chev">業務の処理<small>DB を読む・変える</small></div>
+    </div></div>
+    <ul>
+      <li>判定は「付いた役割のどれかが許されていれば通す」（できる操作は役割の合計）。</li>
+      <li>権限を検査する利用者と、作成者として記録する利用者は、同じ <code>LoggedInUser</code> から来る。ずれない。</li>
+      <li>承認と取消は、共通の処理を通る。この処理は操作を引数で受け、DB を読む前に検査する。</li>
+    </ul>
+    <div class="tbl">
+    <table>
+      <caption>役割の表（業務ルール集。ユースケースがある行）</caption>
+      <thead><tr><th>操作</th><th>営業</th><th>経理</th><th>管理者</th><th>未ログイン</th></tr></thead>
+      <tbody>
+        <tr><td>受注・出荷・請求書の参照</td><td>○</td><td>○</td><td>○</td><td>401</td></tr>
+        <tr><td>受注の登録・取消</td><td>○</td><td>403</td><td>○</td><td>401</td></tr>
+        <tr><td>受注の承認（金額の基準は Day40）</td><td>○</td><td>403</td><td>○</td><td>401</td></tr>
+        <tr><td>出荷の指示・確定・取消</td><td>○</td><td>403</td><td>○</td><td>401</td></tr>
+        <tr><td>締め請求</td><td>403</td><td>○</td><td>○</td><td>401</td></tr>
+        <tr><td>表に無い操作</td><td>403</td><td>403</td><td>○</td><td>401</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">API の状態コード。役割が無い利用者は、どの操作も 403。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>テストと対照実験</h2>
+    <p class="msg">期待を業務ルール集の表から作るので、コードを変えても、表だけを変えても、ずれれば落ちる。組み合わせの元の漏れ（表の行・公開メソッド）も別のテストで止める。</p>
+    <ul>
+      <li>利用者は6通り: 営業・経理・管理者・営業＋経理・役割なし・未ログイン。</li>
+      <li>権限の検査を通れば、存在しない id などで別の例外になる。それで「通った」と分かる。</li>
+      <li>先に RED（検査が何もしない状態）で落ちることを見てから実装した。</li>
+    </ul>
+    <div class="tbl">
+    <table>
+      <caption>対照実験（入れた誤り）</caption>
+      <thead><tr><th>入れた誤り</th><th>止めたテスト</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>締めの入口の検査を外す</td><td>全組み合わせ</td><td>検出</td></tr>
+        <tr><td>締めを営業にも許す</td><td>全組み合わせ</td><td>検出</td></tr>
+        <tr><td>ログインの確認を外す</td><td>全組み合わせ</td><td>検出</td></tr>
+        <tr><td>「どれかの役割」を「全部の役割」にする</td><td>全組み合わせ（営業＋経理）</td><td>検出</td></tr>
+        <tr><td>出荷の参照で別の操作を検査する</td><td>全組み合わせ</td><td>検出</td></tr>
+        <tr><td>承認で別の操作を検査する</td><td>全組み合わせ</td><td>検出</td></tr>
+        <tr><td>業務ルール集の表だけを変える</td><td>全組み合わせ</td><td>検出</td></tr>
+        <tr><td>公開メソッドを足し、表との対応を書かない</td><td>公開メソッドの対応</td><td>検出</td></tr>
+        <tr><td>表に無い操作の既定を「全員」にする</td><td>表に無い操作（レビュー1回目の後に足した）</td><td>検出</td></tr>
+        <tr><td>新しいユースケースのクラスを足し、対応を書かない</td><td>公開メソッドの対応（レビュー2回目の後に広げた）</td><td>検出</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <ul>
+      <li>HTTP の段階: 未ログインは 401。経理が受注を登録しようとすると 403 で、理由に「営業・管理者」と出る。</li>
+      <li>前日の Minor: 対話的な画面遷移で未ログインなら、元の画面を戻り先にしてログインへ送る（bUnit で確かめた）。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>AI レビュー（PR #11）</h2>
+    <p class="msg">1回目は、決めたのに通らない経路（表に無い操作）を、2回目は、新しいクラスで検査が漏れることを指摘された。どちらもテストを足し、対照実験で確かめた。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>指摘</th><th>対応</th></tr></thead>
+      <tbody>
+        <tr><td>PR 本文の件数が違う（11 → 10、66 → 60）</td><td>直した。締めの前の報告も同じ誤りだった</td></tr>
+        <tr><td>「表に無い操作は管理者だけ」を守るテストが無い</td><td>無い操作をテストで作って確かめる。既定を全員にすると落ちる</td></tr>
+        <tr><td><code>IsInRole</code> が利用者を2回取り直す</td><td>1回だけ取ってから判定する</td></tr>
+        <tr><td><code>CurrentUserTests</code> の2つ目は、本番で起きない組み合わせ</td><td>「操作した人のいない保存」として位置づけを書いた</td></tr>
+        <tr><td>画面のボタンで役割が足りない時の表示</td><td>Day39 へ持ち越し</td></tr>
+        <tr><td><b>2回目 Important:</b> 公開メソッドの足し忘れの検査が、手書きの2クラスだけ</td><td>名前が UseCases で終わる公開クラスをすべて集める。検査を掛けないメソッドは理由付きで書く</td></tr>
+        <tr><td>2回目 Minor: 変更の後の再読込にも参照の検査が掛かる／役割を外した時の反映の遅れ</td><td>Day39 へ持ち越し／業務ルール集「9.」に足す</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">1回目 マージ可 $0.4180・81秒、2回目 修正後マージ可 $0.4051・73秒、3回目 マージ可 $0.4226・84秒（Minor 6件は Day39 へ。API 換算。実際はプランの利用枠）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>学んだこと</h2>
+    <p class="msg">「全組み合わせ」は、組み合わせの元の漏れと、通らない経路まで押さえて初めて全部になる。</p>
+    <ul>
+      <li><b>組み合わせの元は、手で並べない。</b>並べた範囲しか守れない。新しいクラスも拾うよう、アセンブリから集める。</li>
+      <li><b>期待は文書から機械的に作る。</b>手で書き写すと、文書とコードのずれを見逃す。表を読めば、文書が唯一の定義元であることをテストが守る。</li>
+      <li><b>決めたのに、通らない経路がある。</b>全操作が表にある今は、既定を壊してもテストは緑だった。通らない経路は、テストの中で作って通す。</li>
+      <li><b>数はテストの結果から書く。</b>承認と取消は共通の処理で検査するため、検査の行（9）・公開メソッド（10）・思い込み（11）がずれた。</li>
+    </ul>
+    <h3>つまずき</h3>
+    <ul>
+      <li>ユースケースのファイルの置き換えが空振りした → 改行が CRLF だった → 改行に合わせて流し直した（空振りの時点では変更なし）。</li>
+      <li>決定の記録が Study 側にできた → 会話の作業場所の関係 → 秘密情報が無いことを見てから sales-core の <code>docs/decisions/</code> へ移した。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>次のアクション</h2>
+    <p class="msg">次は Day39 で、API にログインを付け、権限の効き目を HTTP の段階で対照実験の形で確かめる。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>アクション</th><th>担当</th><th>時期</th></tr></thead>
+      <tbody>
+        <tr><td>API の認証、「営業が締めの API を呼ぶと 403」を検査を外した場合と比べる、1週目の振り返り</td><td>Claude</td><td>Day39</td></tr>
+        <tr><td>AI レビューの Minor（画面のボタンの表示・再読込の検査・役割を外した時・検査の無いメソッドを internal に・401 の WWW-Authenticate ほか）、「権限がありません」の分岐の bUnit テスト</td><td>Claude</td><td>Day39</td></tr>
+        <tr><td>承認の金額の基準（PermissionTests にも足す）</td><td>Claude</td><td>Day40</td></tr>
+        <tr><td>開発用 DB の初期の利用者（user-secrets）→ 画面でのログイン成功の確認</td><td>本人 → Claude</td><td>任意の日</td></tr>
+        <tr><td>DbContext の寿命、.razor の SALES001 の自動化、Day47 の3件</td><td>Claude</td><td>Day41 の前・以降</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">次の guard-e2e は 11/02 9:00。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>成果物</h2>
+    <p class="msg">リンクは day38 のタグに固定してある。</p>
+    <h3>sales-core</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day38/docs/domain/business-rules.md">business-rules.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day38/CLAUDE.md">CLAUDE.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day38/docs/decisions/2026-10-27.md">決定の記録 2026-10-27</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day38/src/SalesCore.Application/Permissions.cs">Permissions.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day38/src/SalesCore.Application/ICurrentUser.cs">ICurrentUser.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day38/src/SalesCore.Application/LoggedInUser.cs">LoggedInUser.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day38/src/SalesCore.Application/SalesOrderUseCases.cs">SalesOrderUseCases.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day38/src/SalesCore.Application/InvoiceUseCases.cs">InvoiceUseCases.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day38/src/SalesCore.Api/Program.cs">Api/Program.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day38/src/SalesCore.Web/Components/Account/RedirectToLogin.razor">RedirectToLogin.razor</a>・<a href="https://github.com/kiyo015/sales-core/blob/day38/src/SalesCore.Web/Components/Routes.razor">Routes.razor</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day38/tests/SalesCore.Integration.Tests/PermissionTests.cs">PermissionTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day38/tests/SalesCore.Integration.Tests/ApiPermissionTests.cs">ApiPermissionTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day38/tests/SalesCore.Integration.Tests/TestUser.cs">TestUser.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day38/tests/SalesCore.Web.Tests/RedirectToLoginTests.cs">RedirectToLoginTests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/pull/11">kiyo015/sales-core#11</a></li>
+    </ul>
+    <h3>Study</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day38/2026-10-27/summary.md">summary.md</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day38/study_plan_next_month.md">study_plan_next_month.md</a></li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day38 学習記録 ／ 権限の検査</span><span>正本は summary.md</span>
+  </footer>
+
+</div>
+</body>
+</html>
