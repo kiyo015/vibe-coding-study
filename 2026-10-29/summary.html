@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day40 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bar.on{background:var(--accent);color:#fff}
+.rm-ms{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day40 ／ 基幹システム開発 段階2の6日目</p>
+    <h1>受注の承認の金額の基準 — 税抜合計100万円以上は登録の時から「承認待ち」にし、管理者だけが承認できるようにした</h1>
+    <p class="lead">業務ルール集には「受付 →（承認待ち →）承認済」としか書いていなかった。いつ承認待ちになるかを本人に決めてもらい、登録の時に税抜合計で判定する形にした。承認の入口は金額でなく状態を見る。</p>
+    <div class="doc-meta"><span>2026-10-29</span><span>対象: sales-core（受注の承認）</span><span>段階2 / Day40</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>境界値（税抜 999,999円・1,000,000円・1,000,001円 × 営業・管理者）のテストが通り、境界を <code>&gt;=</code> から <code>&gt;</code> に取り違えると10件が落ちる。</li>
+      <li><b>登録の時に税抜合計で判定し、承認待ちは管理者だけが承認できる。</b>本人の決定。基準額は設定で持ち、既定は100万円。後で変えても登録済みの受注は変えない。</li>
+      <li><b>対照実験は12通りで、11通りを検出した。</b>「テストの外側を書き出す」を試し、設定の誤りが起動で止まらない経路を見つけて塞いだ。画面の起動の確かめだけ未検出。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">6<small>通り</small></div><div class="l">境界値 × 役割（API を通して確かめる）</div></div>
+      <div class="kpi"><div class="v">11<small>/12</small></div><div class="l">対照実験の検出（残り1は画面の起動）</div></div>
+      <div class="kpi"><div class="v">296<small>件</small></div><div class="l">全テスト成功（157・14・19・106）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>決めたこと（本人の決定）</h2>
+    <p class="msg">「Day16 に決定済み」だったのは「100万円以上は管理者が承認する」ことだけ。いつ承認待ちになるかは、作業の前に聞いた。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>質問</th><th>決定</th></tr></thead>
+      <tbody>
+        <tr><td>税抜合計100万円以上の受注は、いつ・どうやって「承認待ち」になる？</td><td><b>登録の時に自動で承認待ち。</b>未満なら今までどおり受付で始まる</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <h3>決定に合わせて業務ルール集に書いたこと</h3>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>項目</th><th>決まり</th></tr></thead>
+      <tbody>
+        <tr><td>境界</td><td>ちょうど100万円は承認待ち</td></tr>
+        <tr><td>比べる金額</td><td>税抜合計。税込で超えても、税抜で未満なら受付</td></tr>
+        <tr><td>承認できる人</td><td>承認待ちは管理者だけ（営業は API で 403）</td></tr>
+        <tr><td>基準額を変えた時</td><td>登録済みの受注の状態は変えない（判定は登録の時の基準額）</td></tr>
+        <tr><td>取消・却下</td><td>承認待ちも営業・管理者が取り消せる。管理者が承認しない時も取消</td></tr>
+        <tr><td>基準額の設定</td><td><code>SalesCore:ApprovalThreshold</code>（円）。無ければ100万円。負・円未満の端数は誤り、0 は全件承認待ち</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">業務フローの状態の図は「受付 → 承認待ち」と描いてあり、決定と食い違っていた。「登録 → 承認待ち」に直した。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>作り</h2>
+    <p class="msg">分かれ目は登録の時に1回だけ決める。承認の入口は状態を見るだけなので、基準額を後で変えても扱いがぶれない。</p>
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">受注の登録<small>SalesOrder(明細, 基準額)</small></div>
+      <div class="chev on">税抜合計で判定<small>≥ 基準額 → 承認待ち</small></div>
+      <div class="chev on">承認の入口<small>承認待ちなら管理者だけ</small></div>
+      <div class="chev">出荷<small>承認済からだけ</small></div>
+    </div></div>
+    <ul>
+      <li><code>Permissions</code> に <code>ApprovePendingSalesOrder</code>（管理者だけ）を足した。<code>ApproveAsync</code> は、受注が承認待ちならこれも確かめる。</li>
+      <li><code>ApprovalThreshold</code> が設定を読む。API と画面は起動の直後に1回読み、設定の誤りを最初の受注の登録（500）でなく起動で止める。</li>
+      <li>状態は文字列で保存しているので、マイグレーションは要らない。承認の記録の表（<code>sales_order_approvals</code>）はまだ作らず、承認した人は更新者と監査ログに残る。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>境界値のテスト</h2>
+    <p class="msg">税込で100万円を超える 999,999円でも、税抜で未満なら受付で、営業が承認できる。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>税抜合計（税込）</th><th>登録の時の状態</th><th>営業が承認</th><th>管理者が承認</th></tr></thead>
+      <tbody>
+        <tr><td>999,999円（1,099,999円）</td><td>受付</td><td>できる</td><td>できる</td></tr>
+        <tr><td><b>1,000,000円</b>（1,100,000円）</td><td><b>承認待ち</b></td><td>拒む（403）</td><td>できる</td></tr>
+        <tr><td>1,000,001円（1,100,001円）</td><td>承認待ち</td><td>拒む（403）</td><td>できる</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <ul>
+      <li>承認待ちのままでは出荷を指示できず、管理者が承認すると指示できる。承認待ちは営業も取り消せる。</li>
+      <li>基準額を後で下げても、受付で登録した受注は営業が承認できる。明細を合わせて届けば承認待ち（合計で比べる）。</li>
+      <li>状態×操作の表に承認待ちの4通りを足した（全24通り）。<code>PermissionTests</code> の「100万円以上」の行は、承認待ちの受注を毎回作って6通りの利用者で確かめる。</li>
+      <li>API: 設定が無ければ100万円、50万円に設定すればその額で判定する。設定が負なら API は起動しない。</li>
+      <li>先に RED（Domain 7件・結合 3件・起動の確かめ 1件）を見てから実装した。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>対照実験</h2>
+    <p class="msg">入れた誤り12通りのうち11通りで、テストが落ちた。境界の取り違えは Domain と結合の両方で捕まる。</p>
+    <figure>
+      <figcaption>誤りごとに落ちたテストの件数（Domain／結合）</figcaption>
+        <svg viewBox="0 0 640 328" role="img" aria-label="対照実験12通りで落ちたテストの件数。11通り検出、Webの起動の確かめだけ未検出">
+        <rect x="230" y="4" width="10" height="10" fill="#173f66"/><text x="246" y="13" font-size="11" fill="#555">Domain</text>
+        <rect x="310" y="4" width="10" height="10" fill="#c9ccd1"/><text x="326" y="13" font-size="11" fill="#555">結合</text>
+        <text x="0" y="42" font-size="12" fill="#555">境界を >= から > にする</text>
+        <rect x="230" y="30" width="180" height="15" fill="#173f66"/>
+        <rect x="410" y="30" width="120" height="15" fill="#c9ccd1"/>
+        <text x="538" y="42" font-size="12" fill="#1a1a1a">6／4</text>
+        <text x="0" y="66" font-size="12" fill="#555">承認待ちの管理者の確かめを外す</text>
+        <rect x="230" y="54" width="120" height="15" fill="#c9ccd1"/>
+        <text x="358" y="66" font-size="12" fill="#1a1a1a">0／4</text>
+        <text x="0" y="90" font-size="12" fill="#555">承認待ちを営業にも許す（表）</text>
+        <rect x="230" y="78" width="120" height="15" fill="#c9ccd1"/>
+        <text x="358" y="90" font-size="12" fill="#1a1a1a">0／4</text>
+        <text x="0" y="114" font-size="12" fill="#555">税込で比べる</text>
+        <rect x="230" y="102" width="60" height="15" fill="#173f66"/>
+        <rect x="290" y="102" width="90" height="15" fill="#c9ccd1"/>
+        <text x="388" y="114" font-size="12" fill="#1a1a1a">2／3</text>
+        <text x="0" y="138" font-size="12" fill="#555">明細ごとに比べる</text>
+        <rect x="230" y="126" width="30" height="15" fill="#173f66"/>
+        <text x="268" y="138" font-size="12" fill="#1a1a1a">1／0</text>
+        <text x="0" y="162" font-size="12" fill="#555">承認の時に判定し直す</text>
+        <rect x="230" y="150" width="30" height="15" fill="#c9ccd1"/>
+        <text x="268" y="162" font-size="12" fill="#1a1a1a">0／1</text>
+        <text x="0" y="186" font-size="12" fill="#555">承認待ちでも出荷できる</text>
+        <rect x="230" y="174" width="60" height="15" fill="#173f66"/>
+        <rect x="290" y="174" width="30" height="15" fill="#c9ccd1"/>
+        <text x="328" y="186" font-size="12" fill="#1a1a1a">2／1</text>
+        <text x="0" y="210" font-size="12" fill="#555">承認待ちを取り消せない</text>
+        <rect x="230" y="198" width="30" height="15" fill="#173f66"/>
+        <rect x="260" y="198" width="30" height="15" fill="#c9ccd1"/>
+        <text x="298" y="210" font-size="12" fill="#1a1a1a">1／1</text>
+        <text x="0" y="234" font-size="12" fill="#555">設定を読まずに既定値</text>
+        <rect x="230" y="222" width="60" height="15" fill="#c9ccd1"/>
+        <text x="298" y="234" font-size="12" fill="#1a1a1a">0／2</text>
+        <text x="0" y="258" font-size="12" fill="#555">起動で確かめない（API）</text>
+        <rect x="230" y="246" width="30" height="15" fill="#c9ccd1"/>
+        <text x="268" y="258" font-size="12" fill="#1a1a1a">0／1</text>
+        <text x="0" y="282" font-size="12" fill="#555">負の設定を通す</text>
+        <rect x="230" y="270" width="60" height="15" fill="#c9ccd1"/>
+        <text x="298" y="282" font-size="12" fill="#1a1a1a">0／2</text>
+        <text x="0" y="306" font-size="12" fill="#555">起動で確かめない（Web）</text>
+        <text x="230" y="306" font-size="12" font-weight="700" fill="#a33c2e">未検出（画面を起動するテストが無い）</text>
+        </svg>
+    </figure>
+    <h3>1週目の振り返りで決めたことを試した</h3>
+    <ul>
+      <li>対照実験の前に「テストが手で並べている範囲」と「どのテストも通らない経路」を書き出した。</li>
+      <li>どのテストも、起動しただけでは設定を読まない。設定の誤りが最初の受注の登録まで気付かれない経路だった。</li>
+      <li>起動の直後に読む作りとテストを足した。API 側は検出する。画面側は、画面を起動するテストがまだ無いので検出しない。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>前日の持ち越しと AI レビュー（PR #13）</h2>
+    <p class="msg">AI レビューはマージ可で、Important は0件。Minor 3件は今の差分の不具合ではないので、Day41 に持ち越した。</p>
+    <ul>
+      <li>前日の持ち越し: トークンの期限切れの 401 にも <code>WWW-Authenticate: Bearer</code> が付くことを、テストで確かめた。</li>
+    </ul>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>指摘（Minor）</th><th>対応</th></tr></thead>
+      <tbody>
+        <tr><td>設定のキーが空文字だと、黙って既定の100万円で動く</td><td>Day41。誤りとして止めるか、「空文字は既定値」とテストで固定する</td></tr>
+        <tr><td>将来、明細を変える操作を作ると、合計が基準額を超えても受付のまま営業が承認できる</td><td>Day41。業務ルール集「9.」に書く</td></tr>
+        <tr><td>画面の起動の時の確かめにテストが無い</td><td>既知の限界。画面を起動するテストを作る時に足す</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">マージ可 $0.4007・61秒（API 換算。実際はプランの利用枠）。Release ビルド（警告もエラー）警告0件、CI 成功。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>学んだこと</h2>
+    <p class="msg">「決定済み」と書いてあっても、決まっているのは一部だけのことがある。作る前に文書の食い違いを探す。</p>
+    <ul>
+      <li><b>「決定済み」を疑う。</b>決まっていたのは「誰が承認するか」だけで、「いつ承認待ちになるか」は空いていた。図はそのまま作ると決定と違う動きになる形だった。</li>
+      <li><b>権限の分かれ目を状態で決める。</b>承認の時に金額で判定し直すと、基準額を変えた時に登録済みの受注の扱いが変わる。登録の時に状態を決めれば、入口は状態を見るだけで済む。</li>
+      <li><b>テストの外側を先に書き出す。</b>思いつきで並べた誤りでは出てこなかった「起動で設定を読まない」経路が見えた。</li>
+      <li><b>状態が変わる操作の全組み合わせは、毎回新しい対象で試す。</b>管理者が承認すると承認済になり、同じ受注で次の利用者を試せない。</li>
+    </ul>
+    <h3>つまずき</h3>
+    <ul>
+      <li><code>PermissionTests</code> の編集が「File has not been read yet」で空振り → 編集の前に読んでいなかった → 読んでから編集し直した。</li>
+      <li>決定の記録が Study 側にできた → 前日と同じ → 秘密情報が無いことを見てから sales-core へ移した。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>次のアクション</h2>
+    <p class="msg">次は Day41 で、画面の共通部品とマスタの画面。画面からユースケースを呼ぶ前に、DbContext の寿命を決める。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>アクション</th><th>担当</th><th>時期</th></tr></thead>
+      <tbody>
+        <tr><td>DbContext の寿命を決める（画面からユースケースを呼ぶ前）</td><td>Claude・本人</td><td>Day41 の最初</td></tr>
+        <tr><td>画面の共通部品（メニュー・400/403/404/409 の表示）とマスタの一覧・登録（管理者だけ）</td><td>Claude</td><td>Day41</td></tr>
+        <tr><td>PR #13 の Minor（設定の空文字、明細の変更と承認待ち、画面の起動の確かめ）</td><td>Claude</td><td>Day41</td></tr>
+        <tr><td>Swagger の Bearer、SignInManager の上書きの順、再読込の検査の分離、internal 化、画面の 403 の表示と bUnit</td><td>Claude</td><td>Day41〜</td></tr>
+        <tr><td>開発用 DB の初期の利用者（user-secrets）→ 画面と API でのログインの確認</td><td>本人 → Claude</td><td>任意の日</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">開発用 DB の今日より前の受注は、金額にかかわらず受付のまま（判定は登録の時）。次の guard-e2e は 11/02 9:00。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>成果物</h2>
+    <p class="msg">リンクは day40 のタグに固定してある。</p>
+    <h3>sales-core</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day40/docs/domain/business-rules.md">business-rules.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day40/docs/domain/business-flow.md">business-flow.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day40/CLAUDE.md">CLAUDE.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day40/docs/decisions/2026-10-29.md">決定の記録 2026-10-29</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day40/src/SalesCore.Domain/SalesOrder.cs">SalesOrder.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day40/src/SalesCore.Application/ApprovalThreshold.cs">ApprovalThreshold.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day40/src/SalesCore.Application/SalesOrderUseCases.cs">SalesOrderUseCases.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day40/src/SalesCore.Application/Permissions.cs">Permissions.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day40/src/SalesCore.Api/Program.cs">Api/Program.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day40/src/SalesCore.Web/Program.cs">Web/Program.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day40/tests/SalesCore.Integration.Tests/ApprovalTests.cs">ApprovalTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day40/tests/SalesCore.Domain.Tests/SalesOrderTests.cs">SalesOrderTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day40/tests/SalesCore.Integration.Tests/PermissionTests.cs">PermissionTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day40/tests/SalesCore.Integration.Tests/SalesOrderApiTests.cs">SalesOrderApiTests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/pull/13">kiyo015/sales-core#13</a></li>
+    </ul>
+    <h3>Study</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day40/2026-10-29/summary.md">summary.md</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day40/study_plan_next_month.md">study_plan_next_month.md</a></li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day40 学習記録 ／ 受注の承認の金額の基準</span><span>正本は summary.md</span>
+  </footer>
+
+</div>
+</body>
+</html>
