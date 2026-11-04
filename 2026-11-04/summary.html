@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day43 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bar.on{background:var(--accent);color:#fff}
+.rm-ms{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day43 ／ 基幹システム開発 段階2の9日目</p>
+    <h1>出荷の画面 — 画面から分納の出荷を指示・確定でき、受注数量を超える出荷は画面でも理由付きで止まる</h1>
+    <p class="lead">Day42 の受注の画面の上に、出荷の指示・確定・取消を作った。あわせて、出荷日の検査を Domain へ移し（Day30 から）、PR #15 の AI レビューの Minor を片付けた。</p>
+    <div class="doc-meta"><span>2026-11-04</span><span>対象: sales-core（出荷の画面・出荷日の検査）</span><span>段階2 / Day43</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>分納で指示し、出荷日を入れて確定できる。受注数量を超える出荷は、指示の時も確定の時も 409 と理由で止まる。bUnit とブラウザで確かめた。</li>
+      <li><b>出荷日の検査は Domain が持つ。</b>受注日を Domain の <code>SalesOrder.OrderedOn</code> に移し、出荷日が受注日より前なら Domain が 400 で止める。</li>
+      <li><b>DB から読んだ値の形はブラウザで初めて見えた。</b>理由が「残り 3.000」と出た。対照実験は23通りすべて検出、AI レビューは1回目でマージ可。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">23<small>/23</small></div><div class="l">対照実験の検出</div></div>
+      <div class="kpi"><div class="v">417<small>件</small></div><div class="l">全テスト成功（前日 393）</div></div>
+      <div class="kpi"><div class="v">1<small>回</small></div><div class="l">AI レビュー（マージ可）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>出荷日の検査を Domain へ</h2>
+    <p class="msg">受注日を Domain に持たせたので、DB を読まずに Domain の中で出荷日を止められた。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>項目</th><th>直す前</th><th>直した後</th></tr></thead>
+      <tbody>
+        <tr><td>受注日</td><td>DB の裏の列（シャドウプロパティ）。Domain から見えない</td><td><code>SalesOrder.OrderedOn</code>。コンストラクタで受け取る</td></tr>
+        <tr><td>出荷日が受注日より前</td><td>ユースケースが DB から受注日を読んで止める</td><td><code>SalesOrder.RecordShipment</code> が 400 で止める（RED を見た）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <ul>
+      <li>受注日の移動は、振る舞いを変えずに全テストが通ることを確かめてから、別のコミットにした。DB の形は変わらない（<code>has-pending-model-changes</code>）。</li>
+      <li>止まった出荷は指示のまま残る。受注日と同じ日はできる。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>出荷の画面</h2>
+    <p class="msg">ボタンは Day42 と同じく、Domain の状態の規則と、入口と同じ役割の表の両方が許す時だけ出す。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>画面</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td><code>/orders/{id}/shipments/new</code></td><td>指示。倉庫と明細ごとの今回の数量（初期値は残り）。空にした明細は今回は出さない（分納）。出荷を終えた明細・無効の倉庫は出さない</td></tr>
+        <tr><td><code>/orders/{id}</code></td><td>出荷の一覧（番号・状態・明細・出荷日・売上の番号）、指示への入口、確定（出荷日の初期値は日本時間の今日）、指示の取消</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <figure>
+      <figcaption>図表1　ボタンを出すかどうかの決め方（SalesOrderActions）</figcaption>
+      <div class="fig-scroll"><div class="chevrons">
+        <div class="chev">受注の状態<small>SalesOrderStatusRules.CanShip</small></div>
+        <div class="chev">出荷の状態<small>ShipmentStatusRules</small></div>
+        <div class="chev">役割<small>Permissions.Allows</small></div>
+        <div class="chev on">すべてが許す時だけ出す<small>Domain の操作も同じ規則</small></div>
+      </div></div>
+      <p class="src">取り消した受注に残った指示は、確定のボタンを出さず、取消のボタンは出す（片付けられるように）。</p>
+    </figure>
+    <ul>
+      <li><b>受注数量を超える出荷は 409 と理由で止まる。</b>指示の時と、確定の時（開いている間に別の出荷が先に確定した場合）。</li>
+      <li><b>URL を直接開いた時も拒む。</b>指示の画面は最初に <code>Permissions.Require</code> を呼ぶ。経理が開くと 403 で入力欄なし。</li>
+      <li>操作の後と拒まれた時は、受注と出荷の両方を読み直す（確定で受注の状態と残りが変わる）。</li>
+      <li><code>ListShipmentsAsync</code> を足し、<code>PermissionTests</code> の参照の行にも足した。倉庫を選ばずに指示すると「倉庫を選ぶ。」。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>PR #15 の Minor</h2>
+    <p class="msg">単価の空欄を止めた。注釈の検証はリストの中まで届かず、Validate() は通知もしない。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>項目</th><th>直す前</th><th>直した後</th></tr></thead>
+      <tbody>
+        <tr><td>単価の欄を空にする</td><td>見ていない標準単価で受注された</td><td>画面で止めて理由を出す（RED を見た）</td></tr>
+        <tr><td>商品を選び直す</td><td>手で直した単価の扱いが未定</td><td>その商品の標準単価に入れ直す。テストとコメントに書いた</td></tr>
+        <tr><td><code>SalesOrderActions</code></td><td>入出力の型のファイルに同居</td><td>別のファイルに</td></tr>
+        <tr><td>メニューの CSS</td><td><code>nav</code> が全ページに当たる</td><td><code>nav.menu</code> に絞った</td></tr>
+        <tr><td>一覧の税抜合計</td><td>テストが無い</td><td>テストを足した</td></tr>
+        <tr><td>税区分のマイグレーション</td><td>行が既にある環境で黙って残るか失敗する</td><td>当てる前に行を見ることを手順に書いた</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">1回目の実装では止まったのに理由が出なかった。<code>EditContext.Validate()</code> は検証の状態の変化を通知しないので、<code>ValidationSummary</code> が描き直されない。自分で <code>NotifyValidationStateChanged()</code> を呼んで直した。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>テストと対照実験</h2>
+    <p class="msg">23通りすべて検出。「通らない経路」から、出荷の一覧で受注を絞る条件のテストを足した（足す前は0件）。</p>
+    <ul>
+      <li>RED: 出荷日の検査（例外が出ない）、単価の空欄（登録できた）、理由の数量の書式（3.000）。</li>
+      <li><code>ShipmentPageTests</code> 20件（bUnit。ユースケースは本物、テストのトランザクション）。分納・初期値・409・400・403・入口・確定・読み直し・出荷日・取消・表示名を確かめる。</li>
+      <li>出荷日の初期値のテストは、時計を日本時間 11/10 に固定した。実行する日（11/04）と同じだと、誤りがあっても偶然に通る。</li>
+    </ul>
+    <figure>
+      <figcaption>図表2　入れた誤りごとに落ちたテストの件数（Domain／結合）</figcaption>
+      <div class="fig-scroll">
+<svg viewBox="0 0 640 560" role="img" aria-label="対照実験23通りで落ちたテストの件数。すべて検出">
+<g font-size="12">
+<text x="0" y="16" fill="#555">出荷日の検査を外す</text><rect x="280" y="4" width="36" height="15" fill="#173f66"/><rect x="316" y="4" width="72" height="15" fill="#c9ccd1"/><text x="396" y="16" fill="#1a1a1a">1／2</text>
+<text x="0" y="40" fill="#555">受付でも出荷できる</text><rect x="280" y="28" width="36" height="15" fill="#173f66"/><rect x="316" y="28" width="72" height="15" fill="#c9ccd1"/><text x="396" y="40" fill="#1a1a1a">1／2</text>
+<text x="0" y="64" fill="#555">確定した出荷も確定できる</text><rect x="280" y="52" width="36" height="15" fill="#173f66"/><rect x="316" y="52" width="72" height="15" fill="#c9ccd1"/><text x="396" y="64" fill="#1a1a1a">1／2</text>
+<text x="0" y="88" fill="#555">指示の入口で役割を見ない</text><rect x="280" y="76" width="36" height="15" fill="#c9ccd1"/><text x="324" y="88" fill="#1a1a1a">0／1</text>
+<text x="0" y="112" fill="#555">確定のボタンで受注の状態を見ない</text><rect x="280" y="100" width="36" height="15" fill="#c9ccd1"/><text x="324" y="112" fill="#1a1a1a">0／1</text>
+<text x="0" y="136" fill="#555">確定のボタンで役割を見ない</text><rect x="280" y="124" width="36" height="15" fill="#c9ccd1"/><text x="324" y="136" fill="#1a1a1a">0／1</text>
+<text x="0" y="160" fill="#555">取消のボタンで役割を見ない</text><rect x="280" y="148" width="36" height="15" fill="#c9ccd1"/><text x="324" y="160" fill="#1a1a1a">0／1</text>
+<text x="0" y="184" fill="#555">出荷の一覧の参照で入口の検査をしない</text><rect x="280" y="172" width="36" height="15" fill="#c9ccd1"/><text x="324" y="184" fill="#1a1a1a">0／1</text>
+<text x="0" y="208" fill="#555">倉庫が空の文言を外す</text><rect x="280" y="196" width="36" height="15" fill="#c9ccd1"/><text x="324" y="208" fill="#1a1a1a">0／1</text>
+<text x="0" y="232" fill="#555">指示の画面で入口の検査をしない</text><rect x="280" y="220" width="36" height="15" fill="#c9ccd1"/><text x="324" y="232" fill="#1a1a1a">0／1</text>
+<text x="0" y="256" fill="#555">無効の倉庫を選択肢に出す</text><rect x="280" y="244" width="36" height="15" fill="#c9ccd1"/><text x="324" y="256" fill="#1a1a1a">0／1</text>
+<text x="0" y="280" fill="#555">今回の数量の初期値を空にする</text><rect x="280" y="268" width="36" height="15" fill="#c9ccd1"/><text x="324" y="280" fill="#1a1a1a">0／1</text>
+<text x="0" y="304" fill="#555">出荷を終えた明細も出す</text><rect x="280" y="292" width="36" height="15" fill="#c9ccd1"/><text x="324" y="304" fill="#1a1a1a">0／1</text>
+<text x="0" y="328" fill="#555">空の明細も0で送る</text><rect x="280" y="316" width="36" height="15" fill="#c9ccd1"/><text x="324" y="328" fill="#1a1a1a">0／1</text>
+<text x="0" y="352" fill="#555">操作の後に読み直さない</text><rect x="280" y="340" width="180" height="15" fill="#c9ccd1"/><text x="468" y="352" fill="#1a1a1a">0／5</text>
+<text x="0" y="376" fill="#555">拒まれた時に読み直さない</text><rect x="280" y="364" width="72" height="15" fill="#c9ccd1"/><text x="360" y="376" fill="#1a1a1a">0／2</text>
+<text x="0" y="400" fill="#555">出荷日の初期値をサーバーの時刻で</text><rect x="280" y="388" width="36" height="15" fill="#c9ccd1"/><text x="324" y="400" fill="#1a1a1a">0／1</text>
+<text x="0" y="424" fill="#555">出荷の状態の表示名を1つ忘れる</text><rect x="280" y="412" width="72" height="15" fill="#c9ccd1"/><text x="360" y="424" fill="#1a1a1a">0／2</text>
+<text x="0" y="448" fill="#555">受注の単価の空を止めない</text><rect x="280" y="436" width="36" height="15" fill="#c9ccd1"/><text x="324" y="448" fill="#1a1a1a">0／1</text>
+<text x="0" y="472" fill="#555">検証の状態を通知しない</text><rect x="280" y="460" width="36" height="15" fill="#c9ccd1"/><text x="324" y="472" fill="#1a1a1a">0／1</text>
+<text x="0" y="496" fill="#555">選び直しで手で直した単価を残す</text><rect x="280" y="484" width="36" height="15" fill="#c9ccd1"/><text x="324" y="496" fill="#1a1a1a">0／1</text>
+<text x="0" y="520" fill="#555">一覧の金額を出さない</text><rect x="280" y="508" width="108" height="15" fill="#c9ccd1"/><text x="396" y="520" fill="#1a1a1a">0／3</text>
+<text x="0" y="544" fill="#555">出荷の一覧で受注を絞らない</text><rect x="280" y="532" width="36" height="15" fill="#c9ccd1"/><text x="324" y="544" fill="#1a1a1a">0／1</text>
+</g>
+</svg>
+      </div>
+      <p class="src">濃紺は Domain のテスト、グレーは結合のテスト。Domain の規則を崩した3通りは、両方で落ちた。</p>
+    </figure>
+    <div class="tbl">
+    <table>
+      <caption>全テスト（すべて成功。Release ビルドの警告0件、モデルの変更なし）</caption>
+      <thead><tr><th>対象</th><th class="num">件数</th><th class="num">前日</th></tr></thead>
+      <tbody>
+        <tr><td>Domain</td><td class="num">183</td><td class="num">181</td></tr>
+        <tr><td>アーキテクチャ</td><td class="num">16</td><td class="num">16</td></tr>
+        <tr><td>Web</td><td class="num">31</td><td class="num">31</td></tr>
+        <tr><td>結合</td><td class="num">187</td><td class="num">165</td></tr>
+        <tr class="total"><td>合計</td><td class="num">417</td><td class="num">393</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>ブラウザでの確認（管理者）</h2>
+    <p class="msg">超過で止まり、分納の2回の確定で出荷済になるまで、画面だけで通った。見つけた2点は直した。</p>
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">4個を指示<small>409 で止まる（3個の受注）</small></div>
+      <div class="chev">1個を確定<small>一部出荷・SR-000001</small></div>
+      <div class="chev">残り2個<small>11/01 は受注日より前</small></div>
+      <div class="chev on">11/04 で確定<small>出荷済・SR-000002</small></div>
+    </div></div>
+    <p class="src">事前に倉庫 W01 を登録（開発用 DB に倉庫が無かった）。サーバーのログとコンソールにエラーなし。W01・SH-000001〜2・SR-000001〜2 が残る（物理削除しない）。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>見つけたこと</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>理由が「残り 3.000」</td><td>DB から読んだ数量は小数3桁で戻る。Domain のテストは手元で作った値</td><td>文言を <code>0.###</code> で書く（RED を見た）。入力欄の初期値も0を落とす</td></tr>
+        <tr><td>受注の「取消」と出荷の「取消」が並ぶ</td><td>名前の付け方</td><td>出荷の方を「指示を取消」に（ブラウザでは未確認、テストで確認）</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>CI と AI レビュー（PR #16）</h2>
+    <p class="msg">1回目でマージ可。Minor 6件は直さずに Day44 へ持ち越した。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>回</th><th class="num">費用</th><th class="num">時間</th><th>判定</th><th>対応</th></tr></thead>
+      <tbody>
+        <tr><td>1回目</td><td class="num">$0.5520</td><td class="num">73秒</td><td>マージ可（Important 0・Minor 6）</td><td>Day44 へ持ち越し</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <ul>
+      <li>理由の数量の書式は丸めを伴う。小数4桁以上は手前の <code>EnsureQuantity</code> で 400 になり届かない（コメントに書く）。入力欄の0を落とす変換も同じ。</li>
+      <li>出荷できない受注でも、URL から指示の入力欄が出る（送れば 409）。</li>
+      <li><code>ListShipmentsAsync</code> は無い受注で 404 でなく空の一覧。</li>
+      <li>確定の後の読み直しの失敗が、確定の失敗に見える。単価の誤りの文言が次に送るまで消えない。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>今日学んだこと</h2>
+    <p class="msg">テストが手元で作った値や、実行する日の日付に頼ると、誤りが見えない。</p>
+    <ol class="summary">
+      <li><b>DB から読んだ値は、手元で作った値と形が違う。</b>数量が 10.000 で戻り、入力欄にも文言にも出た。ブラウザと DB を通すテストで初めて見えた。</li>
+      <li><b>テストの日付が実行する日と重なると、偶然に通る。</b>固定の時計を別の日にずらした。</li>
+      <li><b>検証の仕組みには届く範囲がある。</b>注釈の検証はリストの中に届かず、<code>Validate()</code> は通知しない。</li>
+      <li><b>規則を Domain に寄せると、画面とユースケースが同じ答えを出す。</b>出荷できる状態も出荷日の検査も Domain に置いた。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>つまずき</h2>
+    <p class="msg">道具の使い方と、テストのデータ作りの前提。どれもその場で直した。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>症状</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td><code>has-pending-model-changes</code> が「More than one DbContext」</td><td><code>-c</code> が文脈の名前と読まれた・DbContext が2つ</td><td><code>--configuration Release --context SalesCoreDbContext</code></td></tr>
+        <tr><td>単価の空欄の理由が出ない</td><td><code>Validate()</code> が通知しない</td><td><code>NotifyValidationStateChanged()</code></td></tr>
+        <tr><td><code>messages.Add(() =&gt; …)</code> で CS8603</td><td>式が null を返しうる</td><td><code>new FieldIdentifier(line, nameof(Line.UnitPrice))</code></td></tr>
+        <tr><td>受注を絞るテストで DbUpdateException</td><td><code>TestScenario</code> 2つで番号が重なった</td><td>1つの <code>TestScenario</code> で2つの受注を作る</td></tr>
+        <tr><td>対照実験の出力が文字化け</td><td>Python の出力が cp932</td><td>以後 <code>PYTHONIOENCODING=utf-8</code></td></tr>
+        <tr><td><code>sed -i</code> で改行が LF になった</td><td>CRLF のファイル</td><td>Python で CRLF に戻した</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">09</span>成果物</h2>
+    <p class="msg">どちらのリポジトリもタグ day43 で固定した。</p>
+    <h3>sales-core</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day43/src/SalesCore.Web/Components/Pages/Orders/NewShipment.razor">NewShipment.razor</a>（新規）・<a href="https://github.com/kiyo015/sales-core/blob/day43/src/SalesCore.Web/Components/Pages/Orders/SalesOrderDetail.razor">SalesOrderDetail.razor</a>・<a href="https://github.com/kiyo015/sales-core/blob/day43/src/SalesCore.Web/Components/Pages/Orders/ShipmentStatusText.cs">ShipmentStatusText.cs</a>（新規）・<a href="https://github.com/kiyo015/sales-core/blob/day43/src/SalesCore.Web/Components/Pages/Orders/NewSalesOrder.razor">NewSalesOrder.razor</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day43/src/SalesCore.Domain/SalesOrder.cs">SalesOrder.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day43/src/SalesCore.Domain/Shipment.cs">Shipment.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day43/src/SalesCore.Domain/SalesOrderLine.cs">SalesOrderLine.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day43/src/SalesCore.Application/SalesOrderActions.cs">SalesOrderActions.cs</a>（新規）・<a href="https://github.com/kiyo015/sales-core/blob/day43/src/SalesCore.Application/SalesOrderUseCases.cs">SalesOrderUseCases.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day43/src/SalesCore.Web/wwwroot/app.css">app.css</a>・<a href="https://github.com/kiyo015/sales-core/blob/day43/src/SalesCore.Web/Components/Layout/NavMenu.razor">NavMenu.razor</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day43/docs/domain/business-rules.md">docs/domain/business-rules.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day43/.claude/skills/migration/SKILL.md">.claude/skills/migration/SKILL.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day43/CLAUDE.md">CLAUDE.md</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day43/tests/SalesCore.Integration.Tests/ShipmentPageTests.cs">ShipmentPageTests.cs</a>（新規）・<a href="https://github.com/kiyo015/sales-core/blob/day43/tests/SalesCore.Integration.Tests/SalesOrderPageTests.cs">SalesOrderPageTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day43/tests/SalesCore.Domain.Tests/SalesOrderTests.cs">SalesOrderTests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/pull/16">kiyo015/sales-core#16</a></li>
+    </ul>
+    <h3>Study</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day43/2026-11-04/summary.md">2026-11-04/summary.md</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day43/2026-11-04/summary.html">summary.html</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day43/study_plan_next_month.md">study_plan_next_month.md</a>（Day43）</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">10</span>次回予告</h2>
+    <p class="msg">Day44 は締め請求の画面と2週目の振り返り。開発用 DB の売上 SR-000001〜2 を締めの確認に使える。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>やること</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>締め請求の画面</td><td>締め（請求先・締め日を選ぶ）、請求書の一覧・詳細（税率ごとの内訳）。請求先を Domain で守る、二重請求のテストの前提を確かめる</td></tr>
+        <tr><td>完了条件</td><td>経理が画面で締め請求でき、営業は締めの画面を開けない</td></tr>
+        <tr><td>PR #16 の Minor</td><td>数量の書式の丸め（コメント）、出荷できない受注の指示の画面、無い受注の出荷の一覧、確定の後の読み直しの失敗、単価の誤りの文言が残る</td></tr>
+        <tr><td>前からの持ち越し</td><td>「指示を取消」をブラウザで見る、桁あふれの文言、受注の一覧のページ分け、起動の文言と明細を消すボタンのテスト、Swagger の Bearer、SignInManager の登録の順、CreateUserAsync を internal に、Routes.razor の bUnit テスト、SALES001 の自動化、Day47 の3件、無効の得意先を請求先に、DB のテストの一度きりの失敗</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day43 学習記録（2026-11-04）</span><span>出所: sales-core PR #16・dotnet test・ブラウザでの確認</span>
+  </footer>
+
+</div>
+</body>
+</html>
