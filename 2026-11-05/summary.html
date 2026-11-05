@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day44 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bar.on{background:var(--accent);color:#fff}
+.rm-ms{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day44 ／ 基幹システム開発 段階2の10日目（2週目の最終日）</p>
+    <h1>締め請求の画面 — 経理が画面で締め請求でき、営業は締めの画面を開けない。請求先は Domain が守る</h1>
+    <p class="lead">締め請求の一覧・締め・詳細を作った。段階1から持ち越していた「請求先を Domain で守る」を済ませ、読み込み忘れの支店が黙って請求先になる穴を塞いだ。最後に2週目（画面）を振り返った。</p>
+    <div class="doc-meta"><span>2026-11-05</span><span>対象: sales-core（締め請求の画面・請求先の検査）</span><span>段階2 / Day44</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>経理は請求先を選ぶと締め日の初期値が入り、締めると請求書へ移る。営業が締めの画面の URL を開くと 403 で入力欄が出ない。bUnit とブラウザで確かめた。</li>
+      <li><b>請求先は Domain が守る。</b>支店での締めと別の請求先の売上を <code>Invoice.Create</code> が止める。支店の請求先を読み込まずに売上を作ると、直す前は黙って支店あてになっていた。</li>
+      <li><b>対照実験は22通り中21通りを検出した。</b>未検出の1通りは検査が二重なだけと確かめた。AI レビューは1回目でマージ可。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">21<small>/22</small></div><div class="l">対照実験の検出</div></div>
+      <div class="kpi"><div class="v">443<small>件</small></div><div class="l">全テスト成功（前日 417）</div></div>
+      <div class="kpi"><div class="v">1<small>回</small></div><div class="l">AI レビュー（マージ可）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>請求先を Domain で守る</h2>
+    <p class="msg">売上の請求先は、受注の得意先から Domain が決める。読み込み忘れは黙って通さず、例外で止める。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>項目</th><th>直す前</th><th>直した後</th></tr></thead>
+      <tbody>
+        <tr><td>受注の得意先</td><td>DB の裏の列。Domain から見えない</td><td><code>SalesOrder.Customer</code></td></tr>
+        <tr><td>売上の得意先・請求先</td><td>ユースケースとテストが外部キーの値を入れる</td><td>Domain が受注の得意先から写す</td></tr>
+        <tr><td>支店で締める</td><td>ユースケースが止める</td><td><code>Invoice.Create</code> が 400</td></tr>
+        <tr><td>別の請求先の売上</td><td>ユースケースの検索だけが頼り</td><td><code>Invoice.Create</code> が 409（RED を見た）</td></tr>
+        <tr><td>支店の請求先を読み込まずに売上を作る</td><td><b>黙って支店あての売上になる</b>（RED）</td><td>例外で止まる</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <ul>
+      <li>読み込み忘れは、売上の <code>InvoiceId</code> と同じ形で塞いだ。<code>Customer.BillingCustomerId</code> を Domain に出し、請求先を持つのに読み込んでいなければ止める。</li>
+      <li>振る舞いを変えない変更を先にコミットした。DB の形は変わらない。</li>
+      <li>二重請求のテストで、前提（売上の請求書を読み込んでいない）も確かめる。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>締め請求の画面</h2>
+    <p class="msg">締めは経理と管理者だけ。URL を直接開いても拒み、締め日の誤りは Domain とユースケースの理由がそのまま出る。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>画面</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td><code>/invoices</code></td><td>一覧（全員）。新しい順、状態は日本語。締めの入口は経理と管理者だけ。読み込んでから表を出す</td></tr>
+        <tr><td><code>/invoices/new</code></td><td>締め。請求先は請求先を持たない得意先。締め日の初期値は今日以前で最近の締め日。締めると請求書へ移る</td></tr>
+        <tr><td><code>/invoices/{id}</code></td><td>金額・税率ごとの内訳・売上の番号</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">PR #16 の Minor 3件も直した: 出荷できない受注の指示の画面は理由だけを出す、無い受注の出荷の一覧は 404、数量の書式のコメント。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>画面のテストのホストが落ちた件</h2>
+    <p class="msg">読み込みの途中でテストを終えると、後始末と読み込みが同じ接続を同時に使う。症状は原因から遠い形で出た。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>症状</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>全部流すとホストが落ちる（85件目で中止）か4分20秒。単独や <code>--blame</code> では起きない</td><td>締めの入口のテストが、読み込み前から出ている表を見て終わった</td><td>一覧は読み込んでから出し、テストはそれを待つ。3回続けて201件成功（約50秒）</td></tr>
+        <tr><td><code>dotnet test</code> が10分を超える</td><td>出力を <code>head</code> で途中まで読んで捨てた</td><td>出力はファイルに書いてから読む</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>テストと対照実験</h2>
+    <p class="msg">22通り中21通りを検出。未検出の1通りは、両方の検査を外すと落ちることで「検査が二重なだけ」と切り分けた。</p>
+    <ul>
+      <li>RED: Domain 7件（支店での締め・別の請求先・最近の締め日）、結合 3件（請求先を読み込まない支店・出荷できない受注・無い受注の出荷の一覧）。</li>
+      <li><code>InvoicePageTests</code> 13件（bUnit。ユースケースは本物）。</li>
+      <li><b>時計を実行した日（11/05）と同じ日にした。</b>前日の学びに反した。今日をサーバーの時刻で決める誤りがあっても、今日に限っては偶然に通る（Day45 へ持ち越し）。</li>
+    </ul>
+    <figure>
+      <figcaption>図表1　入れた誤りごとに落ちたテストの件数（Domain／結合／Web）</figcaption>
+      <div class="fig-scroll">
+<svg viewBox="0 0 640 536" role="img" aria-label="対照実験22通りで落ちたテストの件数。21通り検出">
+<g font-size="12">
+<text x="0" y="16" fill="#555">請求先を持つ得意先で締められる</text><rect x="270" y="4" width="24" height="15" fill="#173f66"/><rect x="294" y="4" width="24" height="15" fill="#c9ccd1"/><text x="326" y="16" fill="#1a1a1a">1／1／0</text>
+<text x="0" y="40" fill="#555">別の請求先の売上を入れる</text><rect x="270" y="28" width="24" height="15" fill="#173f66"/><text x="302" y="40" fill="#1a1a1a">1／0／0</text>
+<text x="0" y="64" fill="#555">請求先を読み込まなくても通す</text><rect x="270" y="52" width="24" height="15" fill="#c9ccd1"/><text x="302" y="64" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="88" fill="#555">売上の請求先を受注の得意先に</text><rect x="270" y="76" width="24" height="15" fill="#173f66"/><rect x="294" y="76" width="264" height="15" fill="#c9ccd1"/><text x="566" y="88" fill="#1a1a1a">1／11／0</text>
+<text x="0" y="112" fill="#555">受注の得意先の読み込みを見ない</text><rect x="270" y="100" width="24" height="15" fill="#c9ccd1"/><text x="302" y="112" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="136" fill="#555">最近の締め日で当日を含めない</text><rect x="270" y="124" width="24" height="15" fill="#173f66"/><text x="302" y="136" fill="#1a1a1a">1／0／0</text>
+<text x="0" y="160" fill="#555">締める売上を請求先で絞らない</text><rect x="270" y="148" width="72" height="15" fill="#c9ccd1"/><text x="350" y="160" fill="#1a1a1a">0／3／0</text>
+<text x="0" y="184" fill="#555">一覧の参照で入口の検査をしない</text><rect x="270" y="172" width="24" height="15" fill="#c9ccd1"/><text x="302" y="184" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="208" fill="#555">選択肢で入口の検査をしない</text><rect x="270" y="196" width="24" height="15" fill="#c9ccd1"/><text x="302" y="208" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="232" fill="#555">選択肢に支店も出す</text><rect x="270" y="220" width="24" height="15" fill="#c9ccd1"/><text x="302" y="232" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="256" fill="#555">請求先が空の文言を外す</text><rect x="270" y="244" width="24" height="15" fill="#c9ccd1"/><text x="302" y="256" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="280" fill="#555">一覧を古い順にする</text><rect x="270" y="268" width="24" height="15" fill="#c9ccd1"/><text x="302" y="280" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="304" fill="#555">無い受注の出荷の一覧を空で返す</text><rect x="270" y="292" width="24" height="15" fill="#c9ccd1"/><text x="302" y="304" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="328" fill="#555">締めの画面で入口の検査をしない</text><text x="278" y="328" fill="#a33c2e">0／0／0 未検出（検査が二重）</text>
+<text x="0" y="352" fill="#555">締めの入口を全員に出す</text><rect x="270" y="340" width="24" height="15" fill="#c9ccd1"/><text x="302" y="352" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="376" fill="#555">締め日の初期値を入れない</text><rect x="270" y="364" width="48" height="15" fill="#c9ccd1"/><text x="326" y="376" fill="#1a1a1a">0／2／0</text>
+<text x="0" y="400" fill="#555">締めた後に請求書へ移らない</text><rect x="270" y="388" width="24" height="15" fill="#c9ccd1"/><text x="302" y="400" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="424" fill="#555">状態の表示名を1つ忘れる</text><rect x="270" y="412" width="24" height="15" fill="#c9ccd1"/><text x="302" y="424" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="448" fill="#555">税率ごとの内訳を出さない</text><rect x="270" y="436" width="24" height="15" fill="#c9ccd1"/><text x="302" y="448" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="472" fill="#555">売上の番号を出さない</text><rect x="270" y="460" width="24" height="15" fill="#c9ccd1"/><text x="302" y="472" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="496" fill="#555">出荷できない受注でも入力欄</text><rect x="270" y="484" width="24" height="15" fill="#c9ccd1"/><text x="302" y="496" fill="#1a1a1a">0／1／0</text>
+<text x="0" y="520" fill="#555">メニューに請求書を出さない</text><rect x="270" y="508" width="72" height="15" fill="#a8adb5"/><text x="350" y="520" fill="#1a1a1a">0／0／3</text>
+</g>
+</svg>
+      </div>
+      <p class="src">濃紺は Domain、淡いグレーは結合、濃いグレーは Web のテスト。「別の請求先の売上」は Domain が、「請求先で絞らない」は結合（Domain の検査）が捕まえる。2段で守っている。</p>
+    </figure>
+    <div class="tbl">
+    <table>
+      <caption>全テスト（すべて成功。Release ビルドの警告0件、モデルの変更なし）</caption>
+      <thead><tr><th>対象</th><th class="num">件数</th><th class="num">前日</th></tr></thead>
+      <tbody>
+        <tr><td>Domain</td><td class="num">192</td><td class="num">183</td></tr>
+        <tr><td>アーキテクチャ</td><td class="num">16</td><td class="num">16</td></tr>
+        <tr><td>Web</td><td class="num">31</td><td class="num">31</td></tr>
+        <tr><td>結合</td><td class="num">204</td><td class="num">187</td></tr>
+        <tr class="total"><td>合計</td><td class="num">443</td><td class="num">417</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>ブラウザでの確認（管理者）</h2>
+    <p class="msg">5日締めの得意先を作り、受注から締めまで画面だけで通した。Day43 のボタン名も確かめた。</p>
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">T005 を登録<small>5日締め</small></div>
+      <div class="chev">受注・承認<small>SO-000002 210円</small></div>
+      <div class="chev">出荷<small>「指示を取消」を確認</small></div>
+      <div class="chev on">締め<small>IN-000001 231円</small></div>
+      <div class="chev">もう一度<small>409 締め済み</small></div>
+    </div></div>
+    <ul>
+      <li>T001（月末締め）は初期値 10/31。売上が 11/04 なので 409「請求する売上が無い」。11/30 は 400「まだ来ていない」。</li>
+      <li>IN-000001 は期間 10/06〜11/05（最初の締め）、10%: 210円・税 21円。</li>
+    </ul>
+    <p class="src">サーバーのログとコンソールにエラーなし。開発用 DB に T005・SO-000002・SH-000003・SR-000003・IN-000001 が残る（物理削除しない）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>CI と AI レビュー（PR #17）</h2>
+    <p class="msg">1回目でマージ可。Minor 5件は直さずに Day45 へ持ち越した。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>回</th><th class="num">費用</th><th class="num">時間</th><th>判定</th><th>対応</th></tr></thead>
+      <tbody>
+        <tr><td>1回目</td><td class="num">$0.6204</td><td class="num">73秒</td><td>マージ可（Important 0・Minor 5）</td><td>Day45 へ持ち越し</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <ul>
+      <li>締め日を空にして送った時の文言（0001-01-01）のテストが無い。</li>
+      <li>売上の請求先を読み込まずに <code>Invoice.Create</code> へ渡した時の例外のテストが無い。</li>
+      <li>得意先の登録で読み込み忘れが 500（意図をコメントに）。一覧の字下げ。一覧が全件を読む。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>今日学んだこと</h2>
+    <p class="msg">読み込みに頼る検査は3回目で、塞ぎ方が定まった。画面のテストは読み込みの終わりを待ってから終える。</p>
+    <ol class="summary">
+      <li><b>読み込んでいない関連が null に見えて、検査を黙って通す（3回目）。</b>外部キーの値を Domain に出し、「関連はあるのに読み込んでいない」を例外にする。</li>
+      <li><b>画面のテストは読み込みの終わりを待つ。</b>早く終えると、ホストが落ちる・遅くなる、という原因から遠い症状になる。</li>
+      <li><b>検出しなかった対照実験は、外すものを2つに増やして確かめる。</b>二重の検査か、テストの抜けかが分かる。</li>
+      <li><b>決めたことを手順にしないと繰り返す。</b>前日に決めた「時計を実行日と重ねない」を、今日も破った。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>2週目（Day40〜44）の振り返り</h2>
+    <p class="msg">予定の作業はすべて完了した。10画面ができ、どれも役割で入口とボタンが変わり、URL を直接開いても拒む。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>指標</th><th>2週目の始め（Day39 の終わり）</th><th>2週目の終わり</th></tr></thead>
+      <tbody>
+        <tr><td>テスト</td><td>Domain 147・アーキ 14・Web 19・結合 89</td><td>Domain 192・アーキ 16・Web 31・結合 204</td></tr>
+        <tr><td>画面</td><td>ログインとトップ</td><td>10画面（マスタ3・受注3・出荷の指示・請求3）</td></tr>
+        <tr><td>本人の決定</td><td>―</td><td>4件（承認の基準・DbContext の寿命・請求先は1段・税区分の入れ方）</td></tr>
+        <tr><td>対照実験</td><td>―</td><td>90通り。未検出2通りはどちらも理由を確かめた</td></tr>
+        <tr><td>AI レビュー</td><td>―</td><td>PR 5件で9回。Important は計2件（Day42）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <figure>
+      <figcaption>図表2　2週目の見え方（続けること・直すこと）</figcaption>
+      <div class="fig-scroll"><div class="matrix" style="--mx-cols:2">
+        <div class="mx-h"></div>
+        <div class="mx-h">起きたこと</div>
+        <div class="mx-h">3週目にすること</div>
+        <div class="mx-label alt"><small>続ける</small>通らない経路の書き出し</div>
+        <div class="mx-cell">毎日1件以上の抜けが見つかった（設定・登録・選択肢・絞り込み・読み込み）</div>
+        <div class="mx-cell">続ける。時計を書いた日と重ねないことを毎回1行入れる</div>
+        <div class="mx-label alt"><small>続ける</small>ブラウザで操作する</div>
+        <div class="mx-cell">税区分が無い・3.000・同名のボタンなど、テストに見えない誤り</div>
+        <div class="mx-cell">Playwright（Day45）でも人の操作の順で通す</div>
+        <div class="mx-label"><small>直す</small>読み込みに頼る検査</div>
+        <div class="mx-cell">3回目（請求書・得意先の請求先・支店の請求先）</div>
+        <div class="mx-cell">Domain の判断に関連を使う時は、最初から外部キーの値も見る</div>
+        <div class="mx-label"><small>直す</small>画面のテストの待ち方</div>
+        <div class="mx-cell">2回（入力の反映前に送る・読み込み前に終える）</div>
+        <div class="mx-cell">画面は読み込んでから中身を出し、テストはその中身を待つ</div>
+        <div class="mx-label"><small>直す</small>テストの時計</div>
+        <div class="mx-cell">3回（UTC・実行日と重なる日付を2回）</div>
+        <div class="mx-cell">決めたことを手順（書き出しの1行）にする</div>
+      </div></div>
+    </figure>
+  </section>
+
+  <section>
+    <h2><span class="no">09</span>成果物</h2>
+    <p class="msg">どちらのリポジトリもタグ day44 で固定した。</p>
+    <h3>sales-core</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day44/src/SalesCore.Domain/Invoice.cs">Invoice.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day44/src/SalesCore.Domain/Customer.cs">Customer.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day44/src/SalesCore.Domain/SalesOrder.cs">SalesOrder.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day44/src/SalesCore.Domain/SalesRecord.cs">SalesRecord.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day44/src/SalesCore.Domain/SalesOrderLine.cs">SalesOrderLine.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day44/src/SalesCore.Infrastructure/Persistence/Configurations.cs">Configurations.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day44/src/SalesCore.Application/InvoiceUseCases.cs">InvoiceUseCases.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day44/src/SalesCore.Application/InvoiceContracts.cs">InvoiceContracts.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day44/src/SalesCore.Application/SalesOrderUseCases.cs">SalesOrderUseCases.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/tree/day44/src/SalesCore.Web/Components/Pages/Invoices">Pages/Invoices/</a>（新規）・<a href="https://github.com/kiyo015/sales-core/blob/day44/src/SalesCore.Web/Components/Pages/Orders/NewShipment.razor">NewShipment.razor</a>・<a href="https://github.com/kiyo015/sales-core/blob/day44/src/SalesCore.Web/Components/Layout/NavMenu.razor">NavMenu.razor</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day44/tests/SalesCore.Integration.Tests/InvoicePageTests.cs">InvoicePageTests.cs</a>（新規）・<a href="https://github.com/kiyo015/sales-core/blob/day44/tests/SalesCore.Integration.Tests/PersistenceMappingTests.cs">PersistenceMappingTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day44/tests/SalesCore.Integration.Tests/AuditAndConcurrencyTests.cs">AuditAndConcurrencyTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day44/tests/SalesCore.Integration.Tests/TestScenario.cs">TestScenario.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day44/tests/SalesCore.Domain.Tests/InvoiceTests.cs">InvoiceTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day44/tests/SalesCore.Domain.Tests/CustomerTests.cs">CustomerTests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day44/docs/domain/business-rules.md">docs/domain/business-rules.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day44/CLAUDE.md">CLAUDE.md</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/pull/17">kiyo015/sales-core#17</a></li>
+    </ul>
+    <h3>Study</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day44/2026-11-05/summary.md">2026-11-05/summary.md</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day44/2026-11-05/summary.html">summary.html</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day44/study_plan_next_month.md">study_plan_next_month.md</a>（Day44・2週目の振り返り）</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">10</span>次回予告</h2>
+    <p class="msg">Day45 は Playwright で端から端まで。画面の読み込みの終わりを待つ形で書く。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>やること</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>端から端までのテスト</td><td>Playwright の導入（手元と CI）。営業が受注→承認→分納で出荷、経理が締め→請求額が段階1の API のテストと同じ</td></tr>
+        <tr><td>完了条件</td><td>端から端までのテストが CI で通る</td></tr>
+        <tr><td>今日の持ち越し</td><td>InvoicePageTests の時計を実行日とずらし「サーバーの時刻」の対照実験を入れる、PR #17 の Minor 5件、PR #16 の Minor 残り2件</td></tr>
+        <tr><td>前からの持ち越し</td><td>桁あふれの文言、受注の一覧のページ分け、起動の文言と明細を消すボタンのテスト、Swagger の Bearer、SignInManager の登録の順、CreateUserAsync を internal に、Routes.razor の bUnit テスト、SALES001 の自動化、Day47 の3件、無効の得意先を請求先に、DB のテストの一度きりの失敗</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day44 学習記録（2026-11-05）</span><span>出所: sales-core PR #17・dotnet test・ブラウザでの確認</span>
+  </footer>
+
+</div>
+</body>
+</html>
