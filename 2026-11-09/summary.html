@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day46 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bar.on{background:var(--accent);color:#fff}
+.rm-ms{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day46 ／ 基幹システム開発 段階2の12日目</p>
+    <h1>画面での権限の実効性テスト — 3つの役割で、許された操作だけが画面に出る。隠し忘れた時に止めるのはユースケースの入口</h1>
+    <p class="lead">営業・経理・管理者でログインし、メニュー・ボタン・URL の直接入力を本物のブラウザで確かめた。対照実験で、画面の守りの3段のどれが何を止めているかを測った。</p>
+    <div class="doc-meta"><span>2026-11-09</span><span>対象: sales-core（端から端までのテスト・画面の入力の検査）</span><span>段階2 / Day46</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>権限の実効性テスト（画面）が、手元でも CI でも通る。AI レビューは1回目でマージ可。</li>
+      <li><b>予定の仮説は実測で外れた。</b>入口の検査だけを外しても、画面の2段（隠す・開いた時に拒む）が先に止めるので、画面からは通らない。隠し忘れと入口の両方が欠けた時に、経理が得意先を登録できた。</li>
+      <li><b>持ち越しを片付けた。</b>直した欄の理由が次に送るまで残る件（RED 2件）、失敗の一覧のロック、CI のスクリーンショット、決定の記録の移動。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">3<small>役割</small></div><div class="l">営業・経理・管理者で確かめた</div></div>
+      <div class="kpi"><div class="v">6<small>通り</small></div><div class="l">対照実験</div></div>
+      <div class="kpi"><div class="v">453<small>件</small></div><div class="l">全テスト成功（前回 447）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>役割ごとに確かめたこと</h2>
+    <p class="msg">許されない役割には、リンクもボタンも描かれず、URL を直接入れても「権限がありません」が出る。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>確かめる所</th><th>営業</th><th>経理</th><th>管理者</th></tr></thead>
+      <tbody>
+        <tr><td>メニュー（5画面）</td><td>出る</td><td>出る</td><td>出る</td></tr>
+        <tr><td>受注の登録（リンク・URL を直接）</td><td>出る・開ける</td><td>出ない・403</td><td>出る・開ける</td></tr>
+        <tr><td>締め請求（リンク・URL を直接）</td><td>出ない・403</td><td>出る・開ける</td><td>出る・開ける</td></tr>
+        <tr><td>マスタ3画面の登録の欄</td><td>出ない</td><td>出ない</td><td>出る</td></tr>
+        <tr><td>受付の受注の承認・取消</td><td>出る</td><td>出ない</td><td>出る</td></tr>
+        <tr><td>出荷の指示（リンク・URL を直接）</td><td>出る・開ける</td><td>出ない・403</td><td>出る・開ける</td></tr>
+        <tr><td>承認待ち（税抜1,050,000円）の承認</td><td>出ない（取消は出る）</td><td>–</td><td>承認できる</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">期待は業務ルール集の役割の表から書き写した（画面と同じ表から作ると、表の誤りを見逃す）。「出ない」ことは、読み込みが終わったのを確かめてから数える。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>対照実験</h2>
+    <p class="msg">画面の中では2段が先に止め、入口の検査は結合テストが見張る。隠し忘れた時の最後の砦が入口で、両方欠けると通る。</p>
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">隠す<small>Permissions.Allows</small></div>
+      <div class="chev">開いた時に拒む<small>画面の Require</small></div>
+      <div class="chev on">ユースケースの入口<small>Require（API と共通）</small></div>
+    </div></div>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>入れた誤り</th><th class="num">端から端まで</th><th class="num">結合</th><th>経理が送った時（観測）</th></tr></thead>
+      <tbody>
+        <tr><td>なし</td><td class="num">0</td><td class="num">0</td><td>欄が出ない・URL で開くと 403</td></tr>
+        <tr><td>E1 入口だけ外す</td><td class="num"><span class="em">0</span></td><td class="num">8</td><td>欄が出ない・URL で開くと 403</td></tr>
+        <tr><td>E2 開いた時の検査だけ外す</td><td class="num">1</td><td class="num">–</td><td>出荷の指示の画面に「指示できない」（403 でない）</td></tr>
+        <tr><td>E3 隠し忘れるだけ</td><td class="num">2</td><td class="num">–</td><td>欄から送ると <b>403</b>（入口が止める）</td></tr>
+        <tr><td>E1+E2</td><td class="num">2</td><td class="num">–</td><td>営業に締め請求の欄が開く</td></tr>
+        <tr><td>E1+E3</td><td class="num">2</td><td class="num">–</td><td><span class="em">経理が得意先を登録できた</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">E1 = 参照以外のユースケースの入口の検査（11か所）、E2 = 画面が開いた時の検査（3画面）、E3 = 得意先の登録の欄を全員に出す。観測は一時的に足したテストで確かめ、コミットしていない。</p>
+    <p class="note">E1+E2 で営業も落ちたのは揺らぎではない。締め請求の画面は欄を隠さず、開いた時の検査だけで守っているので、そこが外れると営業にも欄が出る。1通りだけ流し直して確かめた。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>直した欄の理由を、次に送るのを待たずに消す</h2>
+    <p class="msg">画面で足す検査を部品（FormCheck）にまとめ、最初に送った後は欄を入れ直すたびに確かめ直す。</p>
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">空のまま送る<small>理由が出る</small></div>
+      <div class="chev">欄を入れ直す<small>欄の変更を受ける</small></div>
+      <div class="chev on">確かめ直す<small>理由が消える</small></div>
+    </div></div>
+    <ul>
+      <li>対象: 受注の登録の単価の空、締め請求の請求先・締め日の空。RED を2件見てから直した。購読を外すと2件落ちる。</li>
+      <li>請求先を選ぶと締め日の初期値も入るので、締め日の理由も一緒に消える。</li>
+      <li>その他: 失敗の一覧をロックの中で読む、CI で落ちた時の画面を成果物に上げる、決定の記録 2026-11-06 を sales-core へ移した。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>学んだこと</h2>
+    <p class="msg">守りの層が多いと、1つを外しても上の層のテストでは見えない。どの層をどのテストが見張るかを、実験で表にしておく。</p>
+    <ul>
+      <li><b>仮説が外れたら、外れた形をそのまま記録する。</b>「入口を外すと画面から通る」を無理に再現せず、どの組み合わせで通るかを測った。</li>
+      <li><b>「出ない」ことのテストは、何もしなくても通る。</b>読み込みの完了を先に確かめる。</li>
+      <li><b>テストの期待を、守る側と同じ表から作らない。</b>表の誤りは、テストも一緒に誤る。</li>
+    </ul>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>つまずき</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>得意先の一覧の行を待つ所が落ちた</td><td>支店の行にも本社のコードが請求先として出る</td><td>支店のコードで待つ</td></tr>
+        <tr><td>観測用のテストが時間切れ（E2）</td><td>「指示できない」と出て、待っていた欄も 403 も出なかった</td><td>観測の結果として記録</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>次のアクション</h2>
+    <p class="msg">Day47 はセキュリティの確認。PR #19 の Minor 3件と、前からの持ち越しを先頭に書き写した。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>何を</th><th>いつ</th></tr></thead>
+      <tbody>
+        <tr><td>CSRF・Cookie の属性・ログインの総当たり・監査ログの抜け・エラー画面の情報。<code>security-review</code> で差分を見る</td><td>Day47</td></tr>
+        <tr><td>決定の書き出し（PreCompact）で秘密を機械で伏せる。書き出す先が Study になる件も見る</td><td>Day47</td></tr>
+        <tr><td>PR #19 の Minor: <code>FormCheck</code> がフォームの作り直しに追わない、コードから入れた値で確かめ直さない、出荷の確定・取消のボタンが画面のテストに無い</td><td>Day47 以降</td></tr>
+        <tr><td>一覧のページ分け、PR #16 の残り、前からの持ち越し（計画シートの Day47 の先頭）</td><td>段階2の中で</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>成果物</h2>
+    <p class="msg">リンクはタグ day46 に固定している。</p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day46/tests/SalesCore.E2E.Tests/PermissionE2ETests.cs">PermissionE2ETests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day46/tests/SalesCore.E2E.Tests/E2EScreens.cs">E2EScreens.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day46/tests/SalesCore.E2E.Tests/WebAppFixture.cs">WebAppFixture.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day46/tests/SalesCore.E2E.Tests/E2EData.cs">E2EData.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day46/tests/SalesCore.E2E.Tests/SalesFlowE2ETests.cs">SalesFlowE2ETests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day46/src/SalesCore.Web/Components/Shared/FormCheck.cs">FormCheck.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day46/src/SalesCore.Web/Components/Pages/Orders/NewSalesOrder.razor">NewSalesOrder.razor</a>・<a href="https://github.com/kiyo015/sales-core/blob/day46/src/SalesCore.Web/Components/Pages/Invoices/NewInvoice.razor">NewInvoice.razor</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day46/tests/SalesCore.Integration.Tests/InvoicePageTests.cs">InvoicePageTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day46/tests/SalesCore.Integration.Tests/SalesOrderPageTests.cs">SalesOrderPageTests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day46/.github/workflows/ci.yml">ci.yml</a>・<a href="https://github.com/kiyo015/sales-core/blob/day46/CLAUDE.md">CLAUDE.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day46/docs/domain/business-rules.md">business-rules.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day46/docs/decisions/2026-11-06.md">decisions/2026-11-06.md</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/pull/19">kiyo015/sales-core#19</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day46/2026-11-09/summary.md">summary.md</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day46/study_plan_next_month.md">study_plan_next_month.md</a></li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day46 学習記録（2026-11-09）</span><span>テスト: Domain 192・アーキテクチャ 16・Web 32・結合 208・端から端まで 5</span>
+  </footer>
+
+</div>
+</body>
+</html>
