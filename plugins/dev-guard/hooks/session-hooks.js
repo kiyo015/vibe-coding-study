@@ -6,7 +6,8 @@
 //     編集したリポジトリに未コミットの変更があれば件数を知らせる。止めはしない(systemMessage で知らせるだけ)
 //   node session-hooks.js pre-compact <決定の記録を置くフォルダ>
 //     PreCompact(会話を要約する前)。その日(日本時間)に本人に確認して決めたこと(AskUserQuestion の質問と回答)を、
-//     <フォルダ>/<日付>.md に書き出す(フォルダはセッションを開いたリポジトリ(cwd)からの相対)。要約で決定の文脈が消える前に、ファイルに残すため
+//     <フォルダ>/<日付>.md に書き出す(フォルダはセッションを開いたリポジトリ(cwd)からの相対。環境変数 DEV_GUARD_DECISIONS_DIR で替えられる)。
+//     要約で決定の文脈が消える前に、ファイルに残すため。パスワードやキーの形をした値は伏せる
 //
 // 受け取る stdin は 2026-10-19 に実測した(evidence/2026-10-19-hook-input.jsonl)。
 //   Stop: transcript_path・cwd・stop_hook_active・last_assistant_message など
@@ -78,6 +79,16 @@ function decisionsOn(entries, date) {
     })));
 }
 
+// 質問と回答に入ったパスワードやキーの形をした値を伏せる(Day47)。決定の記録はリポジトリに入り、公開されるため。
+// 形は sales-core の AI レビューの投稿(.github/scripts/ai-review.mjs の redact)と同じ。github_pat_ を足した
+function redact(text) {
+  return String(text)
+    .replace(/(?<![a-z])(password|pwd|secret|api[_-]?key)(["']?\s*[:=]\s*["']?)[^;"'\s<>`,}]+/gi, '$1$2***')
+    .replace(/sk-ant-[A-Za-z0-9_-]{8,}/g, 'sk-ant-***')
+    .replace(/\bgh[pousr]_[A-Za-z0-9]{20,}/g, '***')
+    .replace(/\bgithub_pat_[A-Za-z0-9_]{20,}/g, '***');
+}
+
 function renderDecisions(date, decisions) {
   return [
     `# 決定の記録 ${date}`,
@@ -85,7 +96,7 @@ function renderDecisions(date, decisions) {
     '会話を要約する前(PreCompact)に、その日に本人に確認して決めたことを自動で書き出した。時刻は日本時間。',
     '業務ルール集などに反映したかどうかは、ここでは分からない。反映先は各文書を見る。',
     '',
-    ...decisions.flatMap(d => [`## ${d.time} ${d.header}`, '', `- 質問: ${d.question}`, `- 回答: ${d.answer}`, '']),
+    ...decisions.flatMap(d => [`## ${d.time} ${redact(d.header)}`, '', `- 質問: ${redact(d.question)}`, `- 回答: ${redact(d.answer)}`, '']),
   ].join('\n');
 }
 
@@ -126,6 +137,14 @@ function preCompact(input, folder) {
   return { systemMessage: `[PreCompact] 今日の決定 ${decisions.length} 件を ${file} に書き出した` };
 }
 
+/**
+ * 決定の記録を置くフォルダ。環境変数 DEV_GUARD_DECISIONS_DIR があればそれ、無ければ plugin.json の引数。どちらもセッションのフォルダ(cwd)からの相対。
+ * Study で開いたセッションの決定は sales-core のものなので、Study の .claude/settings.json の env で sales-core を指す(本人の決定 2026-11-10)。
+ */
+function decisionsFolder(cwd, argFolder, env) {
+  return path.resolve(cwd ?? '.', env.DEV_GUARD_DECISIONS_DIR || argFolder || 'docs/decisions');
+}
+
 function main() {
   const [event, folder] = process.argv.slice(2);
   let raw = '';
@@ -134,7 +153,7 @@ function main() {
   process.stdin.on('end', () => {
     try {
       const input = JSON.parse(raw);
-      const output = event === 'stop' ? stop(input) : event === 'pre-compact' ? preCompact(input, path.resolve(input.cwd ?? '.', folder ?? 'docs/decisions')) : null;
+      const output = event === 'stop' ? stop(input) : event === 'pre-compact' ? preCompact(input, decisionsFolder(input.cwd, folder, process.env)) : null;
       if (output) process.stdout.write(JSON.stringify(output));
     } catch (err) {
       // フックの失敗でセッションを止めない。理由だけを知らせる
@@ -145,4 +164,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { currentTurn, findUntestedCsEdit, editedFiles, decisionsOn, renderDecisions };
+module.exports = { currentTurn, findUntestedCsEdit, editedFiles, decisionsOn, renderDecisions, decisionsFolder };

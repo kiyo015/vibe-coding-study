@@ -26,5 +26,8 @@
   },
   "enabledPlugins": {
     "dev-guard@vibe-study-local": true
+  },
+  "env": {
+    "DEV_GUARD_DECISIONS_DIR": "../sales-core/docs/decisions"
   }
 }

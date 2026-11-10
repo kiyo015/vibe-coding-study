@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day47 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bar.on{background:var(--accent);color:#fff}
+.rm-ms{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day47 ／ 基幹システム開発 段階2の13日目</p>
+    <h1>セキュリティの確認 — 役割を外しても無効にしても、画面では最長14日効かなかった。1分以内に効くようにした</h1>
+    <p class="lead">偽のリクエスト・Cookie の属性・総当たり・権限の取り消し・監査ログ・エラー画面を、発行した画面に本物のブラウザと素の HTTP で確かめた。見つかった問題は直し、直せないものは理由を残した。</p>
+    <div class="doc-meta"><span>2026-11-10</span><span>対象: sales-core（ログインと権限の取り消し）・Study（決定の書き出しのフック）</span><span>段階2 / Day47</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>確かめた9項目と結果の表があり、問題は直したか、直さない理由を書いた。CI 成功、AI レビューは4回目でマージ可。</li>
+      <li><b>一番大きい穴は「ログインし続けている人」だった。</b>管理者の役割を外しても、開いたままの画面で倉庫を登録できた。無効にした後も使えた。本人の決定で1分以内に効かせた。</li>
+      <li><b>ログインの記録と Cookie の Secure を足し、決定の書き出しで秘密を伏せた。</b>対照実験10通りすべて検出。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">9<small>項目</small></div><div class="l">確かめた項目</div></div>
+      <div class="kpi"><div class="v">14日→1<small>分</small></div><div class="l">権限の取り消しが画面に効くまで（最長）</div></div>
+      <div class="kpi"><div class="v">10<small>通り</small></div><div class="l">対照実験（すべて検出）</div></div>
+      <div class="kpi"><div class="v">469<small>件</small></div><div class="l">全テスト成功（前回 453）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>確かめた項目と結果</h2>
+    <p class="msg">偽のリクエスト・枠・総当たり・エラー画面は問題なし。権限の取り消し、ログインの記録、Cookie の Secure に穴があった。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>項目</th><th>実測の結果</th><th>対応</th></tr></thead>
+      <tbody>
+        <tr><td>偽のリクエスト（CSRF）</td><td>印の無いログイン・ログアウトは 400。Cookie 付きでもログアウトされない</td><td>問題なし。テストで守る</td></tr>
+        <tr><td>ログインの Cookie</td><td>HttpOnly・SameSite=Lax・閉じると消える。<b>http では Secure が付かない</b></td><td>常に Secure</td></tr>
+        <tr><td>印の Cookie</td><td>HttpOnly・SameSite=Strict・Secure なし</td><td>強制できない（03）。そのまま</td></tr>
+        <tr><td>枠に入れる攻撃</td><td><code>X-Frame-Options: SAMEORIGIN</code></td><td>問題なし</td></tr>
+        <tr><td>ログインの総当たり</td><td>5回でロック。画面でもロック中と出る</td><td>問題なし。画面のテストを足した</td></tr>
+        <tr><td><b>役割を外す・無効にする</b></td><td><span class="em">開いたままの画面でも開き直しても使えた（最長14日）</span></td><td><b>1分以内に効かせた</b>（本人の決定）</td></tr>
+        <tr><td>監査ログの抜け</td><td><b>ログインの成功・失敗・ロックがどこにも残らない</b></td><td>アプリのログに残す（本人の決定）</td></tr>
+        <tr><td>エラーの画面</td><td>問い合わせ番号だけ。無い画面は 404</td><td>問題なし</td></tr>
+        <tr><td><code>security-review</code></td><td>Study から起動すると <code>origin/HEAD</code> が無く動かない</td><td>同じ観点で手で読み、間隔の設定の検査を足した</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">テスト: SecurityE2ETests（4件）・UserRevocationE2ETests（2件）・AccountTests のログの確認。前日からの「Day47の3件」のうち、「15分」の二重の定義は残った。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>権限の取り消しを1分以内に効かせる</h2>
+    <p class="msg">Cookie と開いたままの画面（回線）は別々に確かめ直す必要がある。役割の変更は変更の印を変えないので、回線では役割そのものを突き合わせる。</p>
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">役割を外す・無効にする<small>DB を変える</small></div>
+      <div class="chev on">確かめ直す<small>Cookie と回線、30秒ごと</small></div>
+      <div class="chev on">ログインの画面へ<small>OperationPage</small></div>
+      <div class="chev">開き直す<small>新しい役割で使う</small></div>
+    </div></div>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>どこ</th><th>仕組み</th><th>足したこと</th></tr></thead>
+      <tbody>
+        <tr><td>Cookie（開くたびの要求）</td><td>Identity の SecurityStampValidator</td><td>間隔を既定30分→設定の半分。<code>SalesCoreSignInManager</code> で無効の利用者も通さない</td></tr>
+        <tr><td>開いたままの画面（回線）</td><td>回線は Cookie を読み直さない</td><td><code>RevalidatingUserStateProvider</code> で同じ決まり＋役割の突き合わせ</td></tr>
+        <tr><td>画面の描き直し</td><td>認証の状態が変わっても描き直さない</td><td><code>OperationPage</code> が受け取り、ログインの画面へ送る</td></tr>
+        <tr><td>間隔の設定</td><td><code>SalesCore:UserRevalidationInterval</code></td><td>既定1分。短くだけできる。空・0以下・1分超は起動で止める</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <figure>
+      <figcaption>図表1　変更から画面に効くまでの最長（AI レビュー3回目の指摘と対応）</figcaption>
+      <svg viewBox="0 0 700 150" role="img" aria-label="直す前は最長約2分、直した後は1分">
+        <text x="0" y="36" font-size="13">両方を1分ごと（直す前）</text>
+        <rect x="200" y="20" width="200" height="24" fill="#c9ccd1"/>
+        <rect x="402" y="20" width="200" height="24" fill="#a8adb5"/>
+        <text x="300" y="37" font-size="11" text-anchor="middle">Cookie 1分</text>
+        <text x="502" y="37" font-size="11" text-anchor="middle">回線 1分</text>
+        <text x="612" y="37" font-size="13" font-weight="700">約2分</text>
+        <text x="0" y="96" font-size="13">両方を半分ごと（直した後）</text>
+        <rect x="200" y="80" width="100" height="24" fill="#173f66"/>
+        <rect x="302" y="80" width="100" height="24" fill="#173f66" opacity=".7"/>
+        <text x="250" y="97" font-size="11" text-anchor="middle" fill="#fff">30秒</text>
+        <text x="352" y="97" font-size="11" text-anchor="middle" fill="#fff">30秒</text>
+        <text x="412" y="97" font-size="13" font-weight="700" fill="#173f66">1分以内</text>
+        <line x1="200" y1="125" x2="602" y2="125" stroke="#d9d9d9"/>
+        <text x="200" y="142" font-size="11" fill="#8e8e8e">0</text>
+        <text x="402" y="142" font-size="11" fill="#8e8e8e" text-anchor="middle">1分</text>
+        <text x="602" y="142" font-size="11" fill="#8e8e8e" text-anchor="end">2分</text>
+      </svg>
+    </figure>
+    <p class="src">変更の直後に開き直すと、まだ確かめ直していない Cookie で回線が始まり、回線の最初の確かめ直しまで古いまま残る。端から端までのテストは間隔2秒で起動する。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>ログインの記録と Cookie の Secure</h2>
+    <p class="msg">ログは入力をそのまま書くと漏れ口になる。Secure は強められる所だけ強め、強められない所は理由を残した。</p>
+    <ul>
+      <li><b>ログインの記録:</b>成功は Information、失敗（利用者が無い・無効・パスワード違い）とロックは Warning。理由はログにだけ書き、画面には出さない。</li>
+      <li><b>無い利用者の名前は残さない:</b>利用者名の欄にパスワードを打つと平文で残るため。打ったパスワードがどのログにも出ないことをテストで確かめる。</li>
+      <li><b>ログインの Cookie は常に Secure:</b>TLS を終える中継の後ろでも付く。<code>http://127.0.0.1</code> ではブラウザが送るので、手元のテストはそのまま通る。</li>
+      <li><b>印の Cookie の Secure は強制できない:</b>強制すると印の仕組みが https でない要求を例外で拒み、画面が起動しなかった（端から端までが全部落ちた）。戻して理由をテストのコメントに残した。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>決定の書き出しのフック（dev-guard 1.4.0）</h2>
+    <p class="msg">決定の記録は公開リポジトリに入るので秘密の形を伏せ、書き出す先を sales-core にして手で移す作業を無くした。</p>
+    <ul>
+      <li><b>伏せる形:</b><code>password</code>・<code>pwd</code>・<code>secret</code>・<code>api_key</code> の値、<code>sk-ant-</code>、GitHub のトークン（<code>ghp_</code> など・<code>github_pat_</code>）。見出し・質問・回答のすべてに当てる。</li>
+      <li><b>書き出す先:</b>環境変数 <code>DEV_GUARD_DECISIONS_DIR</code>。Study の設定で <code>../sales-core/docs/decisions</code> を指す。今日の要約の時に、フックが sales-core に書き出したことで効くのを確かめた。</li>
+      <li>テスト9件が通る。回答を伏せないと1件落ちる。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>対照実験と AI レビュー</h2>
+    <p class="msg">入れた誤りは10通りすべてテストが見つけた。AI レビューは、自分の実験の外にあった「時間の足し算」を見つけた。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>入れた誤り</th><th>落ちたテスト</th><th class="num">件数</th></tr></thead>
+      <tbody>
+        <tr><td>開いたままの画面を確かめ直さない</td><td>端から端まで</td><td class="num">2</td></tr>
+        <tr><td>無効を見ない</td><td>端から端まで</td><td class="num">1</td></tr>
+        <tr><td>役割を突き合わせない</td><td>端から端まで</td><td class="num">1</td></tr>
+        <tr><td>ログインの画面へ送らない</td><td>端から端まで</td><td class="num">1</td></tr>
+        <tr><td>間隔の設定を当てない（既定30分のまま）</td><td>端から端まで</td><td class="num">2</td></tr>
+        <tr><td>既定を30分にする</td><td>Web</td><td class="num">1</td></tr>
+        <tr><td>ロックのログを出さない</td><td>結合</td><td class="num">1</td></tr>
+        <tr><td>ログインの Cookie に Secure を付けない</td><td>端から端まで</td><td class="num">1</td></tr>
+        <tr><td><code>SalesCoreSignInManager</code> を登録しない</td><td>端から端まで</td><td class="num">1</td></tr>
+        <tr><td>フックで回答を伏せない</td><td>node</td><td class="num">1</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>回</th><th>判定</th><th>主な指摘と対応</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>修正後マージ可</td><td>業務ルール集「9.」の未決が古い、無い利用者名をログに残す、間隔の空と上限、<code>AddSignInManager</code>。RED を見てから直した</td></tr>
+        <tr><td>2</td><td>マージ可</td><td>コメントの誤り、ログアウトの確かめ方、http で開けるのは手元の2つだけ</td></tr>
+        <tr><td>3</td><td>修正後マージ可</td><td>最悪で約2分残る → 両方を半分ごと（RED を見た）</td></tr>
+        <tr><td>4</td><td><b>マージ可</b></td><td>Important なし。Minor 4件は持ち越し</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>学んだこと</h2>
+    <p class="msg">「ログインを守る」と「ログインし続けている人を守る」は別の問題で、後者は誰も測っていなかった。</p>
+    <ul>
+      <li><b>Identity の変更の印は、役割の変更では変わらない。</b>仕組みの名前でなく、何を比べているかを測って確かめる。</li>
+      <li><b>時間の約束は、仕組みが重なると足し算になる。</b>Cookie と回線を1分ずつにすると最悪で約2分。</li>
+      <li><b>安全の設定を強めると、起動しなくなることがある。</b>強められない理由を残せば、次に同じことを試さずに済む。</li>
+    </ul>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>つまずき</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>確かめ直しを入れても開いたままの画面が変わらない</td><td>画面が描き直さない。役割の変更では印が変わらない</td><td>ログインの画面へ送る。役割を突き合わせる</td></tr>
+        <tr><td>役割を外すテストの期待が違った</td><td>管理者に他の役割が無く、参照も 403</td><td>期待を直した</td></tr>
+        <tr><td>無効にするテストが1回落ちた</td><td>ログインの画面へ移る途中に開き直した</td><td>移り終わるのを待つ（5回連続で通過）</td></tr>
+        <tr><td>印の Cookie を Secure にすると起動しない</td><td>https でない要求を例外で拒む</td><td>戻して理由を記録</td></tr>
+        <tr><td>フックのファイルに見えない文字</td><td>Python の文字列で <code>\b</code> がバックスペースに</td><td><code>chr(92)+'b'</code> で書き直した</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>次のアクション</h2>
+    <p class="msg">Day48 は段階2の仕上げ。PR #20 の Minor 4件と残った持ち越しを先頭に書き写した。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>何を</th><th>いつ</th></tr></thead>
+      <tbody>
+        <tr><td>CLAUDE.md・業務フロー・onboarding を段階2の形に。段階の完了条件を新しいセッションで確かめる</td><td>Day48</td></tr>
+        <tr><td>PR #20 の Minor: 極小の間隔で半分が0、送る前に初期化が動く、Application が Blazor Server の型に依存、業務ルール集「8.」の揺れ</td><td>Day48</td></tr>
+        <tr><td>「15分」の二重の定義、役割の変更・無効化を監査ログに残すか</td><td>Day48 以降</td></tr>
+        <tr><td>PR #19 の Minor、一覧のページ分け、前からの持ち越し（計画シートの Day48 の先頭）</td><td>段階2の中で</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>成果物</h2>
+    <p class="msg">リンクはタグ day47 に固定している。</p>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day47/src/SalesCore.Application/UserRevalidation.cs">UserRevalidation.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day47/src/SalesCore.Application/SalesCoreServices.cs">SalesCoreServices.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day47/src/SalesCore.Application/AccountUseCases.cs">AccountUseCases.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day47/src/SalesCore.Web/Components/Shared/OperationPage.cs">OperationPage.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day47/src/SalesCore.Web/Program.cs">Program.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day47/tests/SalesCore.E2E.Tests/SecurityE2ETests.cs">SecurityE2ETests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day47/tests/SalesCore.E2E.Tests/UserRevocationE2ETests.cs">UserRevocationE2ETests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day47/tests/SalesCore.E2E.Tests/WebAppFixture.cs">WebAppFixture.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day47/tests/SalesCore.Web.Tests/UserRevalidationTests.cs">UserRevalidationTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day47/tests/SalesCore.Integration.Tests/AccountTests.cs">AccountTests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day47/tests/SalesCore.Integration.Tests/CapturedLogs.cs">CapturedLogs.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day47/docs/domain/business-rules.md">business-rules.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day47/CLAUDE.md">CLAUDE.md</a>・<a href="https://github.com/kiyo015/sales-core/blob/day47/docs/decisions/2026-11-10.md">decisions/2026-11-10.md</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/pull/20">kiyo015/sales-core#20</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day47/plugins/dev-guard/hooks/session-hooks.js">session-hooks.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day47/plugins/dev-guard/hooks/session-hooks.test.js">session-hooks.test.js</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day47/plugins/dev-guard/.claude-plugin/plugin.json">plugin.json</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day47/.claude/settings.json">settings.json</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day47/2026-11-10/summary.md">summary.md</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day47/study_plan_next_month.md">study_plan_next_month.md</a></li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day47 学習記録（2026-11-10）</span><span>テスト: Domain 192・アーキテクチャ 16・Web 41・結合 209・端から端まで 11</span>
+  </footer>
+
+</div>
+</body>
+</html>

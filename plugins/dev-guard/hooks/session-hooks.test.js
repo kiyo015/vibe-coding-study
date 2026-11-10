@@ -1,7 +1,8 @@
 // node --test .claude/hooks/session-hooks.test.js
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { currentTurn, findUntestedCsEdit, editedFiles, decisionsOn, renderDecisions } = require('./session-hooks');
+const path = require('path');
+const { currentTurn, findUntestedCsEdit, editedFiles, decisionsOn, renderDecisions, decisionsFolder } = require('./session-hooks');
 
 const user = text => ({ type: 'user', message: { role: 'user', content: text } });
 const toolUse = (name, input) => ({ type: 'assistant', message: { content: [{ type: 'tool_use', name, input }] } });
@@ -47,4 +48,24 @@ test('決定の記録は、時刻・見出し・質問・回答の Markdown に�
   const text = renderDecisions('2026-10-19', [{ time: '09:30', header: '番号', question: '番号はどう振る？', answer: '通し番号' }]);
   assert.match(text, /^# 決定の記録 2026-10-19/);
   assert.match(text, /## 09:30 番号\n\n- 質問: 番号はどう振る？\n- 回答: 通し番号/);
+});
+
+test('パスワードやキーの形をした値は、決定の記録に書く前に伏せる(Day47)', () => {
+  const secrets = ['Pa55word-xyz', 'sk-ant-api03-abcdefgh1234', `ghp_${'a'.repeat(36)}`, `github_pat_${'B'.repeat(30)}`, 'hunter2!'];
+  const text = renderDecisions('2026-11-10', [{
+    time: '10:00',
+    header: '接続',
+    question: `接続文字列は Host=localhost;Password=${secrets[0]}; でよい？ キーは ${secrets[1]}、トークンは ${secrets[2]} と ${secrets[3]}`,
+    answer: `password: ${secrets[4]}`,
+  }]);
+  for (const secret of secrets) assert.ok(!text.includes(secret), `伏せていない: ${secret}`);
+  assert.match(text, /Password=\*\*\*/);
+  assert.match(text, /- 回答: password: \*\*\*/);
+});
+
+test('書き出す先は、環境変数 DEV_GUARD_DECISIONS_DIR があればそれ、無ければ引数(どちらもセッションのフォルダからの相対)', () => {
+  const cwd = path.resolve('/work/Study');
+  assert.equal(decisionsFolder(cwd, 'docs/decisions', {}), path.join(cwd, 'docs', 'decisions'));
+  assert.equal(decisionsFolder(cwd, 'docs/decisions', { DEV_GUARD_DECISIONS_DIR: '../sales-core/docs/decisions' }), path.resolve('/work/sales-core/docs/decisions'));
+  assert.equal(decisionsFolder(cwd, undefined, {}), path.join(cwd, 'docs', 'decisions'));
 });
