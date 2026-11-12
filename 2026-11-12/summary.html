@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day49 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bar.on{background:var(--accent);color:#fff}
+.rm-ms{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day49 ／ 基幹システム開発 段階2の最終日</p>
+    <h1>段階2の振り返りと段階3の展開 — 「時間が絡む誤り6回」を、日付が中心の段階3の最初の試みにした</h1>
+    <p class="lead">段階2の15日間を、予定と実際・効いたやり方・繰り返した失敗で振り返った。業務の判断4件を本人に決めてもらってから、段階3（販売の完結）を14日に展開した。チームの CLAUDE.md の雛形に画面と権限の決まりを足し、前日の AI レビューの Minor 2件を片付けた。</p>
+    <div class="doc-meta"><span>2026-11-12</span><span>対象: Study（計画・雛形）、sales-core（ログアウトのテスト・設計）</span><span>段階2 / Day49</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>段階3の計画を Day50〜63 の14日に展開し、14日すべてに完了条件を付けた。</li>
+      <li><b>段階2で一番多かった失敗は、時間が絡む誤り（6回）。</b>段階3は日付が業務の中心になるため、日付の境目の書き出しを試すことの1番目にした。</li>
+      <li><b>業務の判断4件を、計画の前に本人に決めてもらった。</b>消込は古い請求書から自動。差額は残高のまま。締めた月の日付は止める。見積は全明細で1受注。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">14<small>日</small></div><div class="l">段階3の日割り（全日に完了条件）</div></div>
+      <div class="kpi"><div class="v">4<small>件</small></div><div class="l">本人の決定（すべて推奨の案）</div></div>
+      <div class="kpi"><div class="v">8<small>行</small></div><div class="l">雛形の「画面と権限」の表</div></div>
+      <div class="kpi"><div class="v">3<small>通り</small></div><div class="l">対照実験（PR #22）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>段階2の振り返り</h2>
+    <p class="msg">予定の15日で終わり、テストは201件から476件になった。一番大きい穴は2回とも、本物のブラウザで測って初めて見えた。</p>
+    <figure>
+      <figcaption>図表1　sales-core のテストの件数（段階2の始めと終わり）</figcaption>
+      <svg viewBox="0 0 700 120" role="img" aria-label="段階2の始め201件、終わり476件">
+        <text x="0" y="34" font-size="13" fill="#555">始め（Day34）</text>
+        <rect x="130" y="18" width="164" height="24" fill="#c9ccd1"/>
+        <text x="302" y="35" font-size="13" font-weight="700" fill="#1a1a1a">201件</text>
+        <text x="0" y="84" font-size="13" fill="#555">終わり（Day48）</text>
+        <rect x="130" y="68" width="390" height="24" fill="#173f66"/>
+        <text x="528" y="85" font-size="13" font-weight="700" fill="#173f66">476件</text>
+      </svg>
+      <p class="src">終わりの内訳: Domain 192・アーキテクチャ 17・Web 47・結合 209・端から端まで 11。Web と端から端までのテストは段階2で新しくできた。</p>
+    </figure>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>指標</th><th>段階2の始め</th><th>段階2の終わり</th></tr></thead>
+      <tbody>
+        <tr><td>画面</td><td>なし</td><td>ログイン・トップと業務の10画面</td></tr>
+        <tr><td>権限</td><td>なし（API は誰でも全部できた）</td><td>役割×ユースケースの全60通りを、業務ルール集の表から確かめる</td></tr>
+        <tr><td>本人の決定</td><td>―</td><td>16件（作業の前に聞き、聞き直し0回）</td></tr>
+        <tr><td>AI レビュー</td><td>―</td><td>PR 15本で33回（#22 を除く）、API 換算 $15.54。マージ可 24・修正後マージ可 9</td></tr>
+        <tr><td>dev-guard</td><td>1.3.1</td><td>1.4.0</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">AI レビューの回数と費用は、PR のコメントの「判定:」の行を数えて足した。</p>
+
+    <h3>効いたやり方と、繰り返した失敗</h3>
+    <div class="fig-scroll"><div class="matrix" style="--mx-label:120px">
+      <div class="mx-h"></div>
+      <div class="mx-h">効いたやり方（段階3も続ける）</div>
+      <div class="mx-h">繰り返した失敗</div>
+      <div class="mx-label"><small>01</small>測り方</div>
+      <div class="mx-cell"><ul><li>本物のブラウザで端から端まで（Day45 入力の消失、Day47 取り消しが効かない）</li><li>新しいセッションで確かめる</li></ul></div>
+      <div class="mx-cell"><ul><li><b>時間が絡む誤り 6回</b>（テストの時計、待ち方、約束の足し算、確かめ直しの副作用）</li></ul></div>
+      <div class="mx-label"><small>02</small>テスト</div>
+      <div class="mx-cell"><ul><li>「通らない経路」を先に書き出す</li><li>期待を役割の表から機械的に作る</li></ul></div>
+      <div class="mx-cell"><ul><li>自分の対照実験は、思いついた誤りしか入れない</li><li>件数を出力から写さない（2回）</li></ul></div>
+      <div class="mx-label"><small>03</small>記録と判断</div>
+      <div class="mx-cell"><ul><li>業務の判断は作業の前に聞く</li></ul></div>
+      <div class="mx-cell"><ul><li>記録が散らばる</li><li>タグを誤ったコミットに打った（Day47）</li></ul></div>
+    </div></div>
+
+    <h3>段階3で試すこと</h3>
+    <ol class="summary">
+      <li><b>日付の境目を「通らない経路」の必須の行にする。</b>期間の初日・末日・翌日、締め日の当日、月の変わり目、日本時間と UTC のずれ。</li>
+      <li><b>完了条件 → テスト → 対照実験の対応表を Day50 に作り、毎日埋める。</b>Day48 のように最後に集めない。</li>
+      <li><b>件数と回数は、テストの出力からそのまま写す。</b></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>段階3の本人の決定</h2>
+    <p class="msg">消込の方法や締めた後の扱いで、作るテーブルと完了条件が変わる。計画の前に聞いたので、日割りに迷いが無かった。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>問い</th><th>決定</th></tr></thead>
+      <tbody>
+        <tr><td>入金を、どの請求書に充てるか</td><td><b>古い請求書から自動で充てる。</b>手で選ぶ画面は作らない</td></tr>
+        <tr><td>入金額が請求額と合わない時</td><td><b>差は残高のまま。</b>足りない分は未回収として繰越に、多い分は前受として次の請求から差し引く</td></tr>
+        <tr><td>月次締めの後、その月の日付で入れられるか</td><td><b>止める。</b>誤りは翌月に赤黒で直す（業務ルール集の未決が1つ決まった）</td></tr>
+        <tr><td>見積から受注を作る単位</td><td><b>全明細を1つの受注に。</b>有効期限を過ぎた見積からは作れない</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">決定は会話を要約する前のフック（PreCompact）が sales-core の docs/decisions/2026-11-12.md に書き出した。Day47 に置き場を sales-core にしてから初めて、書き出した記録が sales-core に入った。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>段階3を14日に展開した</h2>
+    <p class="msg">見積から入金・消込まで通し、月次締めで売掛金の残高を確定する。各週の最終日に振り返る。</p>
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev on">見積<small>新規</small></div>
+      <div class="chev">受注・出荷<small>段階1</small></div>
+      <div class="chev">締め・請求<small>繰越の形式に</small></div>
+      <div class="chev on">入金・消込<small>新規</small></div>
+      <div class="chev on">月次締め<small>新規</small></div>
+    </div></div>
+    <div class="fig-scroll"><div class="roadmap">
+      <div class="rm-row rm-head" style="grid-template-columns:120px repeat(3,1fr)">
+        <div class="rm-lane"></div>
+        <div class="rm-h">1週目 Day50〜54</div><div class="rm-h">2週目 Day55〜59</div><div class="rm-h">3週目 Day60〜63</div>
+      </div>
+      <div class="rm-row" style="grid-template-columns:120px repeat(3,1fr)">
+        <div class="rm-lane">設計・単価・見積</div>
+        <div class="rm-bar on" style="grid-column:2/3">設計 → 単価 → 見積 → 受注</div>
+      </div>
+      <div class="rm-row" style="grid-template-columns:120px repeat(3,1fr)">
+        <div class="rm-lane">入金・繰越・締め</div>
+        <div class="rm-bar on" style="grid-column:3/4">消込 → 繰越 → 月次締め</div>
+      </div>
+      <div class="rm-row" style="grid-template-columns:120px repeat(3,1fr)">
+        <div class="rm-lane">確かめる</div>
+        <div class="rm-bar" style="grid-column:4/5">端から端まで → 権限 → 仕上げ</div>
+      </div>
+      <div class="rm-row" style="grid-template-columns:120px repeat(3,1fr)">
+        <div class="rm-lane">振り返り</div>
+        <div class="rm-ms" style="grid-column:2">◆ Day54</div><div class="rm-ms" style="grid-column:3">◆ Day59</div><div class="rm-ms" style="grid-column:4">◆ Day63 段階4の展開</div>
+      </div>
+    </div></div>
+    <ul>
+      <li><b>設計の柱:</b>繰越の形式の請求を始める。売掛金の残高は履歴から作り直した値と一致することを確かめる。日付で効く決まりは Domain に置き、今日は日本時間で決める。新しい操作は役割の表に行を足してから作る。</li>
+      <li><b>持ち越し:</b>段階2からの持ち越しは関係する日の先頭に置いた（桁あふれの文言は見積の入力の Day52、一覧のページ分けは入金の前の Day56）。</li>
+      <li><b>作らないもの:</b>利用者の管理の画面、マスタの無効化、受注の明細の変更、返品の画面、値引きの明細行、与信限度額、締め日の変更、銀行データの取り込み。</li>
+      <li><b>作業の前に聞くこと:</b>Day50 は新しい操作の役割と、支店の受注の単価（出荷先か請求先か）。Day57 は請求額が0円以下の時の扱いと、回収条件の形。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>チームの CLAUDE.md の雛形に、画面と権限の決まりを足した</h2>
+    <p class="msg">段階2で実測して分かったことを、次のチームが最初から持てる形にした。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>決まり</th><th>種別</th><th>実測の裏付け</th></tr></thead>
+      <tbody>
+        <tr><td>画面はユースケースだけを呼ぶ</td><td>強制</td><td>入れ子の型が検査を素通りした（AI レビューが発見）</td></tr>
+        <tr><td>役割の表をテストが読む</td><td>強制</td><td>全60通り。表だけ変えても落ちる</td></tr>
+        <tr><td>ボタンを隠すことは守りにならない</td><td>お願い＋強制</td><td>隠し忘れと入口の両方を外すと通った（2026-11-09）</td></tr>
+        <tr><td>権限の取り消しを Cookie と回線の両方で</td><td>強制</td><td>測る前は最長14日効かなかった（2026-11-10）</td></tr>
+        <tr><td>時間の約束は仕組みの数だけ足し算</td><td>お願い</td><td>1分＋1分で最悪約2分。短くした副作用でテストが揺らいだ</td></tr>
+        <tr><td>DB の文脈は操作ごと</td><td>強制</td><td>回線は長く生きる</td></tr>
+        <tr><td>入力のある画面はプリレンダーしない</td><td>強制</td><td>本物のブラウザで初めて見つかった</td></tr>
+        <tr><td>CSRF と Cookie</td><td>強制</td><td>テストは「消させる応答が無いこと」を見る</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">ほかに「画面のテストの書き方」3つと、開発の進め方3項目（通らない経路の書き出し、完了条件の対応表と新しいセッションでの確認、件数は出力から写す）を足した。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>PR #21 の Minor 2件を直した（PR #22）</h2>
+    <p class="msg">ログアウトのテストを、文字列の形でなく Set-Cookie の意味で確かめるようにした。対照実験には「通るべきもの」も入れた。</p>
+    <p>Set-Cookie を <code>SetCookieHeaderValue.ParseList</code> で解析し、同じ名前で値が空・期限が過去・Max-Age が0以下のどれかなら「Cookie を消させる応答」とみなす。新しいパッケージは足していない。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>対照実験</th><th>期待</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>ログアウトの印の検査を外す</td><td>落ちる</td><td>落ちた（本物の削除の Cookie を見つけた）</td></tr>
+        <tr><td>ログアウトの前に2.5秒待つ（作り直しの Cookie が付く）</td><td>通る</td><td>3回とも合格</td></tr>
+        <tr><td>上の状態で、名前だけで判定する</td><td>落ちる</td><td>落ちた（作り直しの Cookie が本当に付いていた）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">Max-Age の判定は AI レビュー1回目の Minor で足した。画面がこの形の応答を返す状況を作れないため、対照実験はしていない（PR の本文に記録）。</p>
+    <p>設計の「操作がまだ無い行」は、業務ルール集の3行（監査ログの参照・返品・利用者の管理）にそろえた。マスタの変更は登録と同じ行の一部と書いた。</p>
+    <div class="tbl">
+    <table>
+      <thead><tr><th>回</th><th>判定</th><th class="num">費用</th><th>主な指摘と対応</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>マージ可</td><td class="num">$0.1898</td><td>Minor: Max-Age が0以下も削除の形 → 足した</td></tr>
+        <tr><td>2</td><td>マージ可</td><td class="num">$0.1919</td><td>Important なし。Minor: PR の本文に Max-Age が無い → レビューの後に本文を直しており、対応不要</td></tr>
+        <tr><td>3</td><td><b>マージ可</b></td><td class="num">$0.2004</td><td>Important なし（決定の記録を足したコミット）。Minor: ParseList は解析できない値を黙って捨てる → Day50 へ。PR の本文に決定の記録が無い → 足した</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">SecurityE2ETests 4件合格。CI（build-and-test）は全コミットで成功。テストは足していない（既存のテストの判定を変えた）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>今日学んだこと</h2>
+    <p class="msg">振り返りは、次の段階の計画の入力にして初めて効く。</p>
+    <ul>
+      <li><b>振り返りは次の段階の計画の入力にする。</b>時間が絡む誤りは、段階2だけを見ると、ばらばらの失敗に見えた。日付が中心の段階3の前に並べると、最初に試すことが決まった。</li>
+      <li><b>業務の判断は計画の時に聞く。</b>消込の方法と締めた後の扱いで、テーブルと完了条件が変わる。</li>
+      <li><b>テストは文字列の形でなく意味で確かめる。</b>削除の Set-Cookie は書き方が何通りもある。解析すれば違いに左右されない。</li>
+      <li><b>対照実験は「通るべきもの」も入れる。</b>名前だけの判定が落ちたことで、作り直しの Cookie が本当に付いていたと分かった。</li>
+      <li><b>AI レビューの指摘は今の状態と照らす。</b>2回目の Minor は、レビューの後に直した本文を見ていなかった。</li>
+    </ul>
+    <div class="tbl">
+    <table>
+      <caption>つまずき</caption>
+      <thead><tr><th>症状</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>AI レビューの費用を gh -q で足せなかった</td><td>jq の式の中の <code>\$</code> を解釈できなかった</td><td>JSON を書き出して node で足した</td></tr>
+        <tr><td>「PR の本文に Max-Age が無い」と指摘された</td><td>本文はレビューの後に直していた（時間差）</td><td>今の本文に書いてあることを確かめ、対応不要とした</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>次回予告と成果物</h2>
+    <p class="msg">Day50 は段階3の設計と役割の表。完了条件は、設計の文書があり、新しい操作の行が役割の表にあって PermissionTests が通ること。</p>
+    <ul>
+      <li>docs/specs/ に段階3の設計を書く。完了条件 → テスト → 対照実験の対応表の枠を置く。</li>
+      <li>業務ルール集に今日の決定4件を写す（今は docs/decisions/2026-11-12.md にだけある）。</li>
+      <li>新しい操作を役割の表に足す。どの役割に付けるかは、作業の前に本人に聞く。</li>
+      <li>PR #22 の AI レビュー3回目の Minor: ParseList は解析できない値を黙って捨てる（厳格版にするか）。</li>
+      <li>段階2からの持ち越し: .razor の SALES001 の自動化、Routes.razor の bUnit テスト、DB の接続の時間切れ（見張る）。</li>
+    </ul>
+    <h3>成果物（タグ day49）</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day49/tests/SalesCore.E2E.Tests/SecurityE2ETests.cs">SecurityE2ETests.cs</a>・<a href="https://github.com/kiyo015/sales-core/blob/day49/docs/specs/2026-10-22-stage2-screens-and-permissions-design.md">段階2の設計</a>・<a href="https://github.com/kiyo015/sales-core/blob/day49/docs/decisions/2026-11-12.md">docs/decisions/2026-11-12.md</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/pull/22">kiyo015/sales-core#22</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day49/2026-11-12/summary.md">summary.md</a>・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day49/study_plan_next_month.md">study_plan_next_month.md</a>（段階2の振り返り、段階3）・<a href="https://github.com/kiyo015/vibe-coding-study/blob/day49/templates/team-CLAUDE.md">templates/team-CLAUDE.md</a></li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day49 学習記録（2026-11-12）</span><span>段階2: 15日・テスト 201→476件・AI レビュー33回</span>
+  </footer>
+
+</div>
+</body>
+</html>
