@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day53 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bar.on{background:var(--accent);color:#fff}
+.rm-ms{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day53 ／ 基幹システム開発 段階3の4日目</p>
+    <h1>見積から受注 — 全明細を1つの受注に写し、期限切れ・受注済・同時の受注化を止めた</h1>
+    <p class="lead">見積を受注にする処理と、見積の API（登録・参照・明細を直す・提出・失注・受注化）を作った。受注日と期限の扱いは作業の前に本人に聞いて決めた。同じ見積から2回受注できないことは、見積の版数と DB の一意インデックスの二重で守る。</p>
+    <div class="doc-meta"><span>2026-11-18</span><span>対象: sales-core（Domain・DB・API・テスト・業務ルール集）、Study（計画）</span><span>段階3 / Day53</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>見積から受注が API で作れ、期限切れ・受注済・同時の受注化が止まることを、25通りの対照実験で確かめた。</li>
+      <li><b>本人の決定4件で、受注日と期限の扱いが決まった。</b>受注日は受注にした日、取り消しても見積は受注済のまま、有効期限は必ず入れる、期限切れは提出できない。</li>
+      <li><b>値型の項目を省くと、黙って既定値になっていた。</b>明細を直す API で単価を省くと 0円の明細になった（AI レビューの Important）。null を許す型で受け、「入れる」と返す形にした。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">4<small>件</small></div><div class="l">本人の決定（すべて推奨の案）</div></div>
+      <div class="kpi"><div class="v">6<small>本</small></div><div class="l">見積の API</div></div>
+      <div class="kpi"><div class="v">25<small>通り</small></div><div class="l">対照実験（すべて検出）</div></div>
+      <div class="kpi"><div class="v">613<small>件</small></div><div class="l">テスト（前日から +28）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>本人の決定</h2>
+    <p class="msg">4件とも作業の前に聞き、推奨の案に決まった。業務ルール集・段階3の設計・決定の記録に書いた。</p>
+    <div class="tbl">
+    <table>
+      <caption>表1　見積から受注の決まり</caption>
+      <thead><tr><th>問い</th><th>決定</th></tr></thead>
+      <tbody>
+        <tr><td>見積から受注にする時の受注日</td><td><b>受注にした日（日本時間の今日）。</b>入力はさせない</td></tr>
+        <tr><td>見積から作った受注を取り消した時</td><td><b>見積は受注済のまま。</b>もう一度受注にするなら新しい見積を作る</td></tr>
+        <tr><td>見積の有効期限</td><td><b>登録の時に必ず入れる。</b>既定値は持たない</td></tr>
+        <tr><td>有効期限を過ぎた作成中の見積の提出</td><td><b>提出できない。</b>有効期限の当日までは提出できる</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>見積を受注にする処理</h2>
+    <p class="msg">受注を作れた時だけ見積を受注済にする。止まった時は、見積は提出済のまま残る。</p>
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">状態と有効期限<small>EnsureCanOrder</small></div>
+      <div class="chev">得意先・商品が有効か</div>
+      <div class="chev">受注日の税率<small>引き直す</small></div>
+      <div class="chev on">受注を作る<small>ToSalesOrder</small></div>
+      <div class="chev">見積を受注済に<small>元の見積を残す</small></div>
+    </div></div>
+    <ul>
+      <li><b>写すもの:</b> 数量と単価は見積のまま。受注日は今日、税率は受注日の税率で引き直す。承認待ちかどうかは、受注の登録と同じく税抜合計（100万円以上）で決まる。</li>
+      <li><b>検査の順番:</b> 状態と有効期限を先に見る。失注の見積で商品が無効でも、「受注にできない状態」の理由（409）を返す。</li>
+      <li><b>見積を受注済にするだけの操作は無くした。</b>受注を作らずに見積だけ受注済になる道を残さない。</li>
+      <li><b>提出も期限を見る:</b> <code>Submit(today)</code> に変え、期限切れなら止める（4/30 が期限なら 4/30 は通り、5/1 は止まる）。</li>
+      <li><b>見積明細が商品を持つ形にした。</b>Day52 では DB の列だけで持っていた。得意先が空・同じ明細を2度・別の見積の明細を入れることも止めた。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>DB と API</h2>
+    <p class="msg">受注に元の見積を残し、一意インデックスで同じ見積からの受注を1つに限った。API は受注の登録と同じ引き方・同じ検査を使う。</p>
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">ER 図を直す</div>
+      <div class="chev">マイグレーションを作る<small>AddSalesOrderQuotation</small></div>
+      <div class="chev on">SQL を出して読む<small>docs/migrations</small></div>
+      <div class="chev">テスト用 DB で結合テスト</div>
+      <div class="chev">開発用 DB に当てる<small>未適用0件</small></div>
+    </div></div>
+    <div class="tbl">
+    <table>
+      <caption>表2　DB に足したもの</caption>
+      <thead><tr><th>もの</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>列</td><td><code>sales_orders.quotation_id</code>。NULL を許す（見積を通らない受注がある）</td></tr>
+        <tr><td>外部キー</td><td><code>quotations</code> へ。RESTRICT</td></tr>
+        <tr><td>一意インデックス</td><td><code>IX_sales_orders_quotation_id</code>。引っかかった時は 409「同じ見積からの受注」</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="tbl">
+    <table>
+      <caption>表3　見積の API（/quotations）</caption>
+      <thead><tr><th>操作</th><th>道</th><th>役割</th></tr></thead>
+      <tbody>
+        <tr><td>登録</td><td><code>POST /quotations</code>（201）</td><td>営業・管理者</td></tr>
+        <tr><td>参照</td><td><code>GET /quotations/{id}</code></td><td>全員</td></tr>
+        <tr><td>明細を直す</td><td><code>POST /quotations/{id}/lines/{lineId}</code></td><td>営業・管理者</td></tr>
+        <tr><td>提出・失注</td><td><code>POST …/submit</code>・<code>…/lost</code></td><td>営業・管理者</td></tr>
+        <tr><td>受注化</td><td><code>POST …/order</code>（201、受注の場所を返す）</td><td>営業・管理者</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <ul>
+      <li><b>日付の使い分け:</b> 見積の単価と税率は<b>見積日</b>で引く。受注化では<b>受注日</b>の税率で引き直す。「日本時間の今日」は <code>TimeProvider</code> から作り、12/16 00:00（日本時間）の境目で税率が切り替わることを確かめた。</li>
+      <li><b>共通の関数:</b> 得意先・商品・税率・得意先別単価の引き方は、受注の登録と同じ関数を使う。エラーの文言もそろう。</li>
+      <li><b>役割:</b> 見積の2行を <code>PermissionTests</code> が役割の表と突き合わせる対象に移した。</li>
+    </ul>
+    <h3>PR #25 の Minor の片付け</h3>
+    <ul>
+      <li>業務ルール集の古い一文「受注にする前に見積を直す」を、今の決まりに直した。</li>
+      <li>上限ちょうどの値（数量 999999999999.999・単価 9999999999999.99・明細金額 15桁）を受け付けるテストを足した。明細金額のあふれのエラーは、数量の欄を指さないようにした。</li>
+      <li>sales-core の CLAUDE.md に「数の入力を足したら、Domain で桁を止めるテストも足す」を書いた。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>対照実験</h2>
+    <p class="msg">25通りすべて検出した。同時の受注化は版数と一意インデックスの二重で守られ、片方だけ外してもテストは通った。</p>
+    <div class="tbl">
+    <table>
+      <caption>表4　入れた誤り（R21〜R25 は AI レビューの対応の分）</caption>
+      <thead><tr><th>番号</th><th>入れた誤り</th></tr></thead>
+      <tbody>
+        <tr><td>R1・R2</td><td>提出で有効期限を見ない、受注化で有効期限を見ない</td></tr>
+        <tr><td>R3・R4・R12</td><td>受注化で税率を見積のまま写す、受注日を見積日にする、受注化の税率を見積日で引く</td></tr>
+        <tr><td>R5・R6</td><td>受注を作る前に受注済にする、受注に元の見積を残さない</td></tr>
+        <tr><td>R7〜R9</td><td>一意インデックスが無い、見積の版数で止めない、その両方</td></tr>
+        <tr><td>R10・R11</td><td>受注化で得意先・商品の有効を見ない</td></tr>
+        <tr><td>R13〜R15</td><td>見積の単価・税率を今日で引く、「今日」を UTC の日付にする</td></tr>
+        <tr><td>R16</td><td>受注化の入口を参照の権限で検査する</td></tr>
+        <tr><td>R17〜R20</td><td>2つの見積に同じ明細を入れられる、明細金額のあふれで数量の欄を指す、上限を1桁・1円厳しくする</td></tr>
+        <tr><td>R21・R22</td><td>明細を見積に入れた印を検査の前に立てる、商品の無い明細を作れる</td></tr>
+        <tr><td>R23・R24</td><td>有効期限を省くと日付の最小値、単価を省くと0円にする</td></tr>
+        <tr><td>R25</td><td>受注化で状態と有効期限を後で見る</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="tbl">
+    <table>
+      <caption>表5　同時の受注化の守り（R7〜R9）</caption>
+      <thead><tr><th>外したもの</th><th>同時の受注化のテスト</th><th>止めたもの</th></tr></thead>
+      <tbody>
+        <tr><td>一意インデックス（R7）</td><td>落ちた（一意インデックスのテスト）</td><td>—</td></tr>
+        <tr><td>見積の版数（R8）</td><td><b>通った</b></td><td>一意インデックス</td></tr>
+        <tr><td>両方（R9）</td><td>落ちた</td><td>—（2つ目の受注化も通った）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">R13・R14 は、最初のテストのままでは検出できない形だった。見積日と登録する日が同じ日だと、見積日で引いても今日で引いても同じ値になる。登録する日を 12/31 にずらし、12/16 から単価が 85円に変わるデータを置いてから実験した。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>CI と AI レビュー（PR #26）</h2>
+    <p class="msg">2回目の Important（単価を省くと0円）をテストで再現してから直した。3回目と4回目はマージ可で、任意の Minor は Day54 に回した。</p>
+    <div class="tbl">
+    <table>
+      <caption>表6　AI レビューの判定</caption>
+      <thead><tr><th>回</th><th>判定</th><th class="num">費用（ドル）</th><th>主な指摘と対応</th></tr></thead>
+      <tbody>
+        <tr><td>1回目</td><td>マージ可</td><td class="num">0.6242</td><td>Minor 4件を直した（作れなかった見積の明細が使えなくなる、商品が空、有効期限の省略、明細の対応の取り方）</td></tr>
+        <tr><td>2回目</td><td>修正後マージ可</td><td class="num">0.6225</td><td>明細を直す時に単価を省くと黙って0円（Important）。見積日の省略、受注化で状態を後で見る（Minor）</td></tr>
+        <tr><td>3回目</td><td>マージ可</td><td class="num">0.6349</td><td>任意の Minor 3件（未来の見積日、一意インデックスの文言のテスト、明細の件数の検査が 500）</td></tr>
+        <tr><td>4回目</td><td>マージ可</td><td class="num">0.6371</td><td>決定の記録を自動書き出しの形にそろえたコミット。Minor 2件（見積明細の読み込みに順序の指定が無い、明細の件数の検査にテストが無い）</td></tr>
+        <tr class="total"><td>合計</td><td></td><td class="num">2.5187</td><td></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <figure>
+      <figcaption>図表1　テストの件数（Day52 → Day53）</figcaption>
+      <svg viewBox="0 0 680 190" role="img" aria-label="テストの件数の増加">
+        <text x="0" y="24" font-size="12" fill="#1a1a1a">Domain</text>
+        <rect x="110" y="12" width="388" height="16" fill="#c9ccd1"/><rect x="498" y="12" width="20" height="16" fill="#173f66"/>
+        <text x="526" y="25" font-size="11.5" fill="#1a1a1a">259 → <tspan font-weight="700" fill="#173f66">272</tspan></text>
+        <text x="0" y="60" font-size="12" fill="#1a1a1a">結合</text>
+        <rect x="110" y="48" width="372" height="16" fill="#c9ccd1"/><rect x="482" y="48" width="22" height="16" fill="#173f66"/>
+        <text x="512" y="61" font-size="11.5" fill="#1a1a1a">248 → <tspan font-weight="700" fill="#173f66">263</tspan></text>
+        <text x="0" y="96" font-size="12" fill="#1a1a1a">Web</text>
+        <rect x="110" y="84" width="70" height="16" fill="#c9ccd1"/>
+        <text x="188" y="97" font-size="11.5" fill="#1a1a1a">47（変わらず）</text>
+        <text x="0" y="132" font-size="12" fill="#1a1a1a">アーキテクチャ</text>
+        <rect x="110" y="120" width="30" height="16" fill="#c9ccd1"/>
+        <text x="148" y="133" font-size="11.5" fill="#1a1a1a">20（変わらず）</text>
+        <text x="0" y="168" font-size="12" fill="#1a1a1a">端から端まで</text>
+        <rect x="110" y="156" width="17" height="16" fill="#c9ccd1"/>
+        <text x="135" y="169" font-size="11.5" fill="#1a1a1a">11（変わらず）</text>
+      </svg>
+      <p class="src">合計 585件 → 613件。濃紺が今日足した分。Release ビルドの警告は0件。CI（build-and-test・ai-review）は全回成功。</p>
+    </figure>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>今日学んだこと</h2>
+    <p class="msg">値型の省略、同じ日付のテスト、二重の柵は、どれも「テストが通っても確かめたことにならない」形をしていた。</p>
+    <ul>
+      <li><b>値型の項目は、JSON で省くと黙って既定値になる。</b><code>decimal</code> は 0、<code>DateOnly</code> は 0001-01-01。必ず入れてほしい値は null を許す型で受け、「入れる」と返す。同じ形の入力は、1つ直したらまとめて見直す。</li>
+      <li><b>テストの日付が同じ日だと、「どの日付で引くか」の誤りが見えない。</b>比べる2つの日付をずらし、その間に値が変わるデータを置いてはじめて確かめたことになる。</li>
+      <li><b>2つ目の柵があると、1つ目の柵のテストは確かめたことにならない。</b>Day52 の Q12（版数と排他制約）と同じ形が、今日は版数と一意インデックスで出た。</li>
+      <li><b>検査の順番は、返す理由を決める。</b>直せない理由（状態・期限）を、直せる理由（マスタの有効）より先に返す。</li>
+      <li><b>印を立てるのは、全部の検査が通った後。</b>途中で立てると、作れなかった見積の明細が二度と使えなくなる。</li>
+    </ul>
+    <div class="tbl">
+    <table>
+      <caption>表7　つまずき</caption>
+      <thead><tr><th>症状</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>ヒアドキュメントのスクリプトが「unexpected EOF」</td><td>引用符やバックスラッシュをシェルが先に解釈した</td><td>Write ツールでファイルに書き、python で流す</td></tr>
+        <tr><td>テストのファイルの先頭に BOM が入った</td><td>書き換えのスクリプトが BOM 付きで保存した</td><td>取り除き、BOM と改行コードを保つ <code>ed.py</code> に寄せた</td></tr>
+        <tr><td>対照実験で置き換える文字列が見つからない</td><td>対象は CRLF、スクリプトは LF</td><td><code>chr(13)+chr(10)</code> に読み替えて探す</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>次回（Day54 見積の画面、1週目の振り返り）と持ち越し</h2>
+    <p class="msg">Day54 は見積の一覧・登録・詳細の画面を作り、営業の画面から受注まで通す。作業の前に、未来の見積日を許すかを本人に聞く。</p>
+    <div class="tbl">
+    <table>
+      <caption>表8　Day54 に回すもの</caption>
+      <thead><tr><th>種類</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>作業の前に聞く</td><td>見積日が今日より先の見積を許すか。今は許していて、見積日より前の日に受注にでき、まだ来ていない日の単価になる</td></tr>
+        <tr><td>Minor</td><td>一意インデックスが止めた時の 409 の文言（「同じ見積からの受注」）を確かめるテストが無い</td></tr>
+        <tr><td>Minor</td><td>受注化で見積明細を読む時に順序の指定が無い（受注明細の並びが EF Core の読み込み順に頼る）</td></tr>
+        <tr><td>作る</td><td>見積の一覧の API（画面と一緒に）、手で直した単価の後で得意先・日付を変えた時に入れ直して知らせる</td></tr>
+        <tr><td>確かめていない</td><td>出荷・返品の数量の整数部の桁、明細の件数が合わない時に止める処理（今は起きない経路）</td></tr>
+        <tr><td>持ち越し</td><td>PR #19 の Minor 3件、Routes.razor の「権限がありません」のテスト、DB の接続の時間切れ（見張る）</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>成果物</h2>
+    <p class="msg">リンクはすべてタグ day53 に固定した。</p>
+    <h3>sales-core</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/src/SalesCore.Domain/Quotation.cs">src/SalesCore.Domain/Quotation.cs</a>（ToSalesOrder・EnsureCanOrder・Submit(today)）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/src/SalesCore.Domain/SalesOrderLine.cs">src/SalesCore.Domain/SalesOrderLine.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/src/SalesCore.Application/QuotationContracts.cs">src/SalesCore.Application/QuotationContracts.cs</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/src/SalesCore.Application/QuotationUseCases.cs">src/SalesCore.Application/QuotationUseCases.cs</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/src/SalesCore.Application/SalesOrderUseCases.cs">src/SalesCore.Application/SalesOrderUseCases.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/src/SalesCore.Application/Permissions.cs">src/SalesCore.Application/Permissions.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/src/SalesCore.Application/OperationError.cs">src/SalesCore.Application/OperationError.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/src/SalesCore.Api/Program.cs">src/SalesCore.Api/Program.cs</a>（/quotations）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/src/SalesCore.Infrastructure/Persistence/Configurations.cs">src/SalesCore.Infrastructure/Persistence/Configurations.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/src/SalesCore.Infrastructure/Persistence/Migrations/20261118003815_AddSalesOrderQuotation.cs">src/SalesCore.Infrastructure/Persistence/Migrations/20261118003815_AddSalesOrderQuotation.cs</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/docs/migrations/2026-11-18-AddSalesOrderQuotation.sql">docs/migrations/2026-11-18-AddSalesOrderQuotation.sql</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/tests/SalesCore.Domain.Tests/QuotationTests.cs">tests/SalesCore.Domain.Tests/QuotationTests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/tests/SalesCore.Domain.Tests/SalesOrderTests.cs">tests/SalesCore.Domain.Tests/SalesOrderTests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/tests/SalesCore.Integration.Tests/QuotationApiTests.cs">tests/SalesCore.Integration.Tests/QuotationApiTests.cs</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/tests/SalesCore.Integration.Tests/QuotationPersistenceTests.cs">tests/SalesCore.Integration.Tests/QuotationPersistenceTests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/tests/SalesCore.Integration.Tests/PermissionTests.cs">tests/SalesCore.Integration.Tests/PermissionTests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/docs/domain/business-rules.md">docs/domain/business-rules.md</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/docs/domain/er-diagram.md">docs/domain/er-diagram.md</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/docs/specs/2026-11-13-stage3-sales-completion-design.md">docs/specs/2026-11-13-stage3-sales-completion-design.md</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/docs/decisions/2026-11-18.md">docs/decisions/2026-11-18.md</a>（新規。本人の決定4件）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day53/CLAUDE.md">CLAUDE.md</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/pull/26">kiyo015/sales-core#26</a></li>
+    </ul>
+    <h3>Study</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day53/2026-11-18/summary.md">2026-11-18/summary.md</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day53/2026-11-18/summary.html">2026-11-18/summary.html</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day53/study_plan_next_month.md">study_plan_next_month.md</a></li>
+    </ul>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day53 学習記録（2026-11-18）</span><span>sales-core PR #26 ／ タグ day53</span>
+  </footer>
+
+</div>
+</body>
+</html>
