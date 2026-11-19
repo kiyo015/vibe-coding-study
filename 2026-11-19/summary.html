@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day54 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bar.on{background:var(--accent);color:#fff}
+.rm-ms{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day54 ／ 基幹システム開発 段階3の5日目</p>
+    <h1>見積の画面 — 営業が画面で見積を作り、提出して受注にするところまで通した</h1>
+    <p class="lead">見積の一覧・登録・詳細の画面を作り、単価の入れ方を受注と共通にした。見積日・明細を直すこと・期限切れの見せ方は、作業の前に本人に聞いて決めた。段階3の1週目（Day50〜54）も振り返った。</p>
+    <div class="doc-meta"><span>2026-11-19</span><span>対象: sales-core（画面・API・Domain・テスト・業務ルール集）、Study（計画と振り返り）</span><span>段階3 / Day54</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>画面で見積を作って受注にでき、画面のテスト（bUnit）が通る。1週目の振り返りもある。本物のブラウザでも、営業が見積から受注まで通した。</li>
+      <li><b>AI レビューの指摘を直したら、逆向きの穴ができた。</b>「入れかけた値が消える」を直すと、「触っていない行が古い値のまま残る」が出た。守るべき性質の両方向をテストにして止めた。</li>
+      <li><b>対照実験の未検出1通りは、止めた柵を実測で名指しした。</b>順序の指定を外しても、EF Core が <code>ORDER BY</code> を自分で付けていた。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">3<small>件</small></div><div class="l">本人の決定（すべて推奨の案）</div></div>
+      <div class="kpi"><div class="v">3<small>画面</small></div><div class="l">見積の一覧・登録・詳細</div></div>
+      <div class="kpi"><div class="v">25<small>/26</small></div><div class="l">対照実験（検出／通り）</div></div>
+      <div class="kpi"><div class="v">634<small>件</small></div><div class="l">テスト（前日から +21）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>本人の決定</h2>
+    <p class="msg">3件とも作業の前に聞き、推奨の案に決まった。業務ルール集・段階3の設計・決定の記録に書いた。</p>
+    <div class="tbl">
+    <table>
+      <caption>表1　見積の画面の決まり</caption>
+      <thead><tr><th>問い</th><th>決定</th></tr></thead>
+      <tbody>
+        <tr><td>見積日に今日より先の日付を入れられるか（PR #26 の AIレビュー3回目の Minor）</td><td><b>拒む。</b>見積日は日本時間の今日まで。過去の日付は入れられる</td></tr>
+        <tr><td>作成中の見積の明細（数量・単価）を画面で直せるか</td><td><b>直せる。</b>見積の詳細の画面で1行ずつ</td></tr>
+        <tr><td>有効期限を過ぎた提出済の見積の見せ方</td><td><b>状態はそのままで「（期限切れ）」と出す。</b>受注にするボタンは出さず、失注は人が押す</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>見積の画面</h2>
+    <p class="msg">営業の画面だけで、見積の登録から受注の詳細まで進める。ボタンを出すかは、状態・有効期限・役割から1か所（<code>QuotationActions</code>）で決める。</p>
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">一覧<small>新しい順・期限切れ表示</small></div>
+      <div class="chev">登録<small>見積日は今日、期限は空</small></div>
+      <div class="chev">詳細で明細を直す<small>作成中だけ</small></div>
+      <div class="chev">提出</div>
+      <div class="chev on">受注にする<small>受注の詳細へ移る</small></div>
+    </div></div>
+    <div class="tbl">
+    <table>
+      <caption>表2　画面ごとの中身</caption>
+      <thead><tr><th>画面</th><th>使える役割</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>一覧 <code>/quotations</code></td><td>全員</td><td>新しい順。有効期限を過ぎた作成中・提出済は「（期限切れ）」。登録の入口は営業と管理者だけ</td></tr>
+        <tr><td>登録 <code>/quotations/new</code></td><td>営業・管理者</td><td>見積日の初期値は日本時間の今日。有効期限は空で、必ず入れる。単価は得意先別単価から入る</td></tr>
+        <tr><td>詳細 <code>/quotations/{id}</code></td><td>全員（操作は営業・管理者）</td><td>作成中は明細の数量・単価を直せる。提出・受注にする・失注のボタン。期限切れは提出・受注にするを出さない</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <ul>
+      <li><b>単価の入れ方を共通にした（<code>LinePricing</code>）。</b>受注の登録の画面から切り出し、見積の登録の画面でも使う。</li>
+      <li><b>手で直した単価を入れ直したら知らせる</b>（Day52 の決定）。手で直した単価の後で得意先・日付を変えると、新しい単価を入れ直して「確かめてください」と出す。手で直していない明細だけなら知らせない。受注の画面にも効く。</li>
+      <li><b>API:</b> 見積の一覧（<code>GET /quotations</code>）を足した。見積日が今日より先なら 400。見積の単価の問い合わせは、見積の役割で検査する。</li>
+      <li><b>PR #26 の Minor 2件:</b> 一意インデックスが止めた時の 409 の文言のテスト、受注化で見積明細を Id の順に読む。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>テストと対照実験</h2>
+    <p class="msg">RED を見てから作り、26通りの誤りを入れて25通りがテストで落ちた。落ちなかった1通りは、止めている柵を実測で確かめた。</p>
+    <ul>
+      <li><b>RED:</b> 未来の見積日は 201 で通った。一覧の API は 405。受注の画面は入れ直しても知らせなし。見積の画面はビルドが通らない。メニューに見積が無い。</li>
+      <li><b>画面のテストの時計は、日本時間 2030-04-01 0:30。</b>UTC ではまだ 3/31 なので、「今日」を UTC で決める誤り（S16）が2件で落ちた。</li>
+    </ul>
+    <div class="tbl">
+    <table>
+      <caption>表3　対照実験（26通り）</caption>
+      <thead><tr><th>入れた誤り</th><th>落ちたテスト</th></tr></thead>
+      <tbody>
+        <tr><td>S1 見積日が今日より先でも登録できる</td><td>結合 1件</td></tr>
+        <tr><td>S2 見積日が今日でも拒む</td><td>結合 15件</td></tr>
+        <tr><td>S3 見積日の「今日」を UTC の日付にする</td><td>結合 1件</td></tr>
+        <tr><td>S4 一覧を古い順にする</td><td>結合 1件・画面 1件</td></tr>
+        <tr><td>S5 一意インデックスの理由が無い</td><td>結合 1件</td></tr>
+        <tr><td>S6 受注化で見積明細を読む順序を指定しない</td><td><b>未検出</b>（下）</td></tr>
+        <tr><td>S7 手で直した単価を入れ直しても知らせない</td><td>画面 1件</td></tr>
+        <tr><td>S8 手で直していなくても知らせる</td><td>画面 1件</td></tr>
+        <tr><td>S9 期限切れでも受注にするボタンを出す</td><td>画面 1件</td></tr>
+        <tr><td>S10 期限切れでも提出のボタンを出す</td><td>画面 1件</td></tr>
+        <tr><td>S11 受注済・失注にも期限切れと出す</td><td>画面 1件</td></tr>
+        <tr><td>S12 有効期限の当日を期限切れにする</td><td>Domain 2件</td></tr>
+        <tr><td>S13 明細を直す欄を役割で隠さない</td><td>画面 1件</td></tr>
+        <tr><td>S14 失注のボタンを役割で隠さない</td><td>画面 1件</td></tr>
+        <tr><td>S15 登録の画面を URL で開いた時に拒まない</td><td>画面 1件</td></tr>
+        <tr><td>S16 見積日の初期値を UTC の日付にする</td><td>画面 2件</td></tr>
+        <tr><td>S17 一覧に期限切れを出さない</td><td>画面 3件</td></tr>
+        <tr><td>S18 受注にした後、受注の画面に移らない</td><td>画面 1件</td></tr>
+        <tr><td>S19 有効期限に初期値（30日後）を入れる</td><td>画面 2件</td></tr>
+        <tr><td>S20 メニューに見積が無い</td><td>Web 3件</td></tr>
+        <tr><td>S21 明細を直す時に空の単価を 0円で送る</td><td>画面 1件</td></tr>
+        <tr><td>S22 見積の単価の問い合わせを、見積の役割で検査しない</td><td><code>PermissionTests</code> 1件</td></tr>
+        <tr><td>S23 見積の単価の問い合わせを、参照の役割で検査する</td><td><code>PermissionTests</code> 1件</td></tr>
+        <tr><td>S24 一覧の番号を、別の見積の番号にする</td><td>結合 1件</td></tr>
+        <tr><td>S25 読み直すと、入れかけた行も新しい値にする</td><td>画面 1件</td></tr>
+        <tr><td>S26 読み直しても、触っていない行を古い値のまま残す</td><td>画面 1件</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <h3>S6 が落ちなかった理由（実測）</h3>
+    <ul>
+      <li>PostgreSQL は、更新した行を表の後ろに書き直す。順序を指定しない SQL では、直した1行目が実際に後ろへ回った（Id 1451, 1450 の順）。</li>
+      <li>ただ EF Core が、読み込みの SQL に明細の Id の <code>ORDER BY</code> を自分で付けていた（<code>ToQueryString</code> で確かめた）。指定を外しても受注明細の順は変わらない。</li>
+      <li>明示の <code>OrderBy</code> は、EF Core の付け方が変わった時の柵として残す。テストもそのために残す。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>CI と AI レビュー（PR #27）</h2>
+    <p class="msg">4回で最後はマージ可。2回目の指摘への直し方が3回目の Important を生んだので、両方向のテストで止めた。</p>
+    <div class="tbl">
+    <table>
+      <caption>表4　AI レビューの回ごとの判定と対応</caption>
+      <thead><tr><th>回</th><th>判定</th><th class="num">費用（$）</th><th>主な指摘と対応</th></tr></thead>
+      <tbody>
+        <tr><td>1回目</td><td>マージ可</td><td class="num">0.6322</td><td>Minor 4件をすべて直した（見積の単価の問い合わせを見積の役割で検査、端から端までのテストの期待を役割の表から書き写す、ほか）</td></tr>
+        <tr><td>2回目</td><td>マージ可</td><td class="num">0.6541</td><td>1行を直すと、ほかの行に入れかけた値が戻った（RED：7 が 1.000 に）。CI で <code>MasterPageTests</code> が1件落ちた</td></tr>
+        <tr><td>3回目</td><td>修正後マージ可</td><td class="num">0.6864</td><td>Important：触っていない行の欄が古い値のまま残り、ほかの人の変更を戻せた（RED：ほかの人が 9 にした数量が 1.000 のまま）</td></tr>
+        <tr><td>4回目</td><td>マージ可</td><td class="num">0.6931</td><td>Minor 4件。Day55 へ回した</td></tr>
+        <tr class="total"><td>計</td><td></td><td class="num">2.6658</td><td></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: PR #27 の AI レビューのコメント。費用は API 換算の額で、実際はプランの利用枠を使う。</p>
+    <h3>指摘を直すと、逆向きの穴ができた</h3>
+    <div class="tbl">
+    <table>
+      <caption>表5　読み直した時の明細の欄（詳細の画面）</caption>
+      <thead><tr><th>直し方</th><th>入れかけた行</th><th>触っていない行</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>最初（毎回すべて読み直す）</td><td>新しい値で上書き</td><td>新しい値</td><td>入れかけが消える（2回目の Minor）</td></tr>
+        <tr><td>2回目の直し（既にある行は更新しない）</td><td>残る</td><td>古い値のまま</td><td>ほかの人の変更を戻せる（3回目の Important）</td></tr>
+        <tr class="total"><td>3回目の直し（行ごとに「触ったか」を持つ）</td><td>残る</td><td>新しい値</td><td>両方を守る。S25・S26 で両方向を確かめた</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">CI でだけ落ちた <code>MasterPageTests</code> は、今日触っていないテスト。商品の画面は一覧の後で税区分を読むが、一覧が出たところで入力を始めていた。最後に読む税区分の選択肢を待ち、探してから入れるまでを <code>InvokeAsync</code> の1つの流れにした。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>今日学んだこと</h2>
+    <p class="msg">守るべき性質は、両方向のテストにしないと片方を壊しても落ちない。</p>
+    <ul>
+      <li><b>指摘を直すと、逆向きの穴ができることがある。</b>「入れかけは残す」と「触っていない値は新しくする」の2つを守る必要があった。直す時は、逆向きのテストも一緒に足す。</li>
+      <li><b>対照実験が通った時は、止めた柵を実測で名指しする。</b>S6 はテストが弱いのではなく、EF Core の <code>ORDER BY</code> と明示の指定が二重になっていた。</li>
+      <li><b>時計を日本時間 0:00〜9:00 に置くと、日付の誤りが見える。</b>UTC ではまだ前日なので、「今日」を取り違えるとテストが落ちる。</li>
+      <li><b>読み込みが2段ある画面は、最後に読むものを待つ。</b>途中の描き直しで操作の口が古くなり、CI でだけ揺れる。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>つまずき</h2>
+    <p class="msg">要約の前の自動書き出しが、決定の記録を実際と合わない時刻で上書きした（2回目）。今回は戻し、PR を動かさなかった。</p>
+    <div class="tbl">
+    <table>
+      <caption>表6　つまずきと対策</caption>
+      <thead><tr><th>症状</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>今日触っていない画面のテストが CI でだけ落ちた</td><td>読み込みの途中で入力を始めていた</td><td>最後に読むものを待つ。見積の画面のテストも同じ書き方に</td></tr>
+        <tr><td>一覧の金額のテストが落ちた（期待 99.99）</td><td>33.33円×3 の明細金額は円に丸めて 100円</td><td>期待を直した</td></tr>
+        <tr><td>決定の記録の見出しに「09:55」が付いた（締めた時は 07:28）</td><td>要約の前の自動書き出しが上書きした</td><td><code>git checkout</code> で戻した。締めの前に <code>git status</code> で確かめる（Day55 に申し送り）</td></tr>
+        <tr><td>計画シートを相対パスで直せなかった</td><td>書き換えのスクリプトは sales-core に移ってから動く</td><td>Study のファイルは絶対パスで指定</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>段階3 1週目（Day50〜54）の振り返り</h2>
+    <p class="msg">予定の5日で見積から受注までが画面・API・ブラウザで通った。テストは 476件から 634件に増え、本人の決定は24件になった。</p>
+    <figure>
+      <figcaption>図1　日ごとの本人の決定（件）</figcaption>
+      <svg viewBox="0 0 640 190" role="img" aria-label="日ごとの本人の決定">
+        <g font-size="12" fill="#1a1a1a">
+          <text x="0" y="24">Day50 設計</text>
+          <rect x="130" y="10" width="160" height="22" fill="#c9ccd1"/><text x="298" y="26">4</text>
+          <text x="0" y="60">Day51 単価</text>
+          <rect x="130" y="46" width="200" height="22" fill="#c9ccd1"/><text x="338" y="62">5</text>
+          <text x="0" y="96">Day52 見積</text>
+          <rect x="130" y="82" width="320" height="22" fill="#c9ccd1"/><text x="458" y="98">8</text>
+          <text x="0" y="132">Day53 受注化</text>
+          <rect x="130" y="118" width="160" height="22" fill="#c9ccd1"/><text x="298" y="134">4</text>
+          <text x="0" y="168">Day54 画面</text>
+          <rect x="130" y="154" width="120" height="22" fill="#173f66"/><text x="258" y="170" font-weight="700" fill="#173f66">3</text>
+        </g>
+      </svg>
+      <p class="src">出所: sales-core の docs/decisions。24件のうち3件は AI レビューの指摘から聞いた。</p>
+    </figure>
+    <div class="tbl">
+    <table>
+      <caption>表7　1週目の数字</caption>
+      <thead><tr><th>指標</th><th>段階2の終わり（Day49）</th><th>1週目の終わり（Day54）</th></tr></thead>
+      <tbody>
+        <tr><td>sales-core のテスト</td><td>476件</td><td>634件</td></tr>
+        <tr><td>本人の決定</td><td>―</td><td>24件</td></tr>
+        <tr><td>対照実験</td><td>―</td><td>Day51 23・Day52 17・Day53 25・Day54 26通り。未検出は S6 だけ</td></tr>
+        <tr><td>PR と AI レビュー</td><td>―</td><td>PR 5本（#23〜#27）。AI レビュー21回・$12.3995</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="fig-scroll"><div class="matrix" style="--mx-label:120px;--mx-cols:1">
+      <div class="mx-h"></div><div class="mx-h">中身</div>
+      <div class="mx-label">続けること</div>
+      <div class="mx-cell"><ul><li>業務の判断を作業の前に聞く（24件）</li><li>対照実験が通った時に、止めた柵を実測で確かめる（Day52 Q12・Day53 R8・Day54 S6）</li><li>本物のブラウザのテストに、その日の画面を1本足す</li></ul></div>
+      <div class="mx-label alt">繰り返した失敗</div>
+      <div class="mx-cell"><ul><li>値型の項目を省くと黙って既定値（0円・0001-01-01）になる</li><li>決定の記録の書き方がそろわない</li><li>ヒアドキュメントでスクリプトが壊れた</li><li>指摘への直し方が次の穴を作った</li><li>画面のテストが CI でだけ揺れた</li></ul></div>
+      <div class="mx-label alt">2週目で試すこと</div>
+      <div class="mx-cell"><ul><li>数・日付の入力を足したら、「省いた時」の行を通らない経路に書く</li><li>日付で値が変わる処理は、テストの日付を2つずらす。時計は日本時間 0:00〜9:00</li><li>対照実験が通ったら、止めた柵を実測で名指しする</li></ul></div>
+    </div></div>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>成果物</h2>
+    <p class="msg">リンクはタグ <code>day54</code> で固定した。</p>
+    <h3>sales-core</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/src/SalesCore.Web/Components/Pages/Quotations/QuotationList.razor">Pages/Quotations/QuotationList.razor</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/src/SalesCore.Web/Components/Pages/Quotations/NewQuotation.razor">Pages/Quotations/NewQuotation.razor</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/src/SalesCore.Web/Components/Pages/Quotations/QuotationDetail.razor">Pages/Quotations/QuotationDetail.razor</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/src/SalesCore.Web/Components/Pages/Quotations/QuotationStatusText.cs">Pages/Quotations/QuotationStatusText.cs</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/src/SalesCore.Web/Components/Shared/LinePricing.cs">Shared/LinePricing.cs</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/src/SalesCore.Web/Components/Pages/Orders/NewSalesOrder.razor">Pages/Orders/NewSalesOrder.razor</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/src/SalesCore.Application/QuotationActions.cs">Application/QuotationActions.cs</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/src/SalesCore.Application/QuotationUseCases.cs">Application/QuotationUseCases.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/src/SalesCore.Domain/Quotation.cs">Domain/Quotation.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/tests/SalesCore.Integration.Tests/QuotationPageTests.cs">tests/QuotationPageTests.cs</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/tests/SalesCore.Integration.Tests/QuotationApiTests.cs">tests/QuotationApiTests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/tests/SalesCore.E2E.Tests/SalesFlowE2ETests.cs">tests/SalesFlowE2ETests.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/docs/domain/business-rules.md">docs/domain/business-rules.md</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day54/docs/decisions/2026-11-19.md">docs/decisions/2026-11-19.md</a>（新規。本人の決定3件）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/pull/27">kiyo015/sales-core#27</a>（ほかの変更ファイルは summary.md に列挙）</li>
+    </ul>
+    <h3>Study</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day54/2026-11-19/summary.md">2026-11-19/summary.md</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day54/study_plan_next_month.md">study_plan_next_month.md</a>（Day54 の振り返り）</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">09</span>次のアクション</h2>
+    <p class="msg">Day55 は入金と消込。作業の前に、消込と繰越の形式が両立しない件を本人に聞く。</p>
+    <div class="tbl">
+    <table>
+      <caption>表8　Day55 に持ち越すもの</caption>
+      <thead><tr><th>項目</th><th>出どころ</th></tr></thead>
+      <tbody>
+        <tr><td>見積の詳細の「入れかけ」を欄ごとに持つか、明細を直す時に版数を送る</td><td>PR #27 4回目の Minor</td></tr>
+        <tr><td>受注にした後は読み直さずに移る</td><td>PR #27 4回目の Minor</td></tr>
+        <tr><td>詳細の数量・単価の欄で、数でない値の理由を出す</td><td>PR #27 4回目の Minor</td></tr>
+        <tr><td>見積の登録の画面で、手で直した単価の知らせのテスト</td><td>PR #27 4回目の Minor</td></tr>
+        <tr><td><code>Routes.razor</code> の「権限がありません」のテスト、PR #19 の Minor 3件、出荷・返品の数量の桁、一覧が全件を読む、DB の接続の時間切れ</td><td>段階3 1週目</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day54 学習記録（2026-11-19）</span><span>記録の正本は summary.md</span>
+  </footer>
+
+</div>
+</body>
+</html>
