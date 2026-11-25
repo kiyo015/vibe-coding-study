@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day57 学習記録</title>
+<style>
+:root{
+  --ink:#1a1a1a;
+  --ink-2:#555555;
+  --ink-3:#8e8e8e;
+  --accent:#173f66;
+  --accent-tint:#eef3f8;
+  --hairline:#d9d9d9;
+  --fill-gray:#e7e9ec;
+  --paper:#ffffff;
+}
+html{color-scheme:light}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px;line-height:1.9;
+  border-top:6px solid var(--accent);
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:760px;margin:0 auto;padding:56px clamp(24px,6vw,48px) 96px}
+
+.doc-header{padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin:0 0 20px}
+h1{font-size:27px;line-height:1.5;letter-spacing:.02em;margin:0 0 12px;font-feature-settings:"palt" 1}
+.lead{font-size:14px;color:var(--ink-2);margin:0 0 24px;max-width:38em}
+.doc-meta{font-size:12px;color:var(--ink-3);display:flex;gap:24px;flex-wrap:wrap}
+
+.page>section{border-top:1px solid var(--hairline);padding-top:44px;margin-top:64px}
+.page>section:first-of-type{border-top:0;padding-top:0;margin-top:56px}
+h2{font-size:19px;letter-spacing:.03em;margin:0;font-feature-settings:"palt" 1}
+h2 .no{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+.msg{font-size:16px;font-weight:600;line-height:1.8;margin:18px 0 24px;max-width:36em}
+h3{font-size:15px;margin:36px 0 8px}
+p{margin:0 0 16px;max-width:42em}
+
+ul,ol{margin:0 0 16px;padding-left:1.4em;max-width:41em}
+li{margin-bottom:6px}
+ul{list-style:none;padding-left:1.2em}
+ul li::before{content:"–";float:left;margin-left:-1.2em;color:var(--ink-3)}
+
+.summary{list-style:none;margin:24px 0 0;padding:0;counter-reset:s;max-width:44em}
+.summary li{counter-increment:s;position:relative;padding-left:2.4em;margin-bottom:14px}
+.summary li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.4em;
+  font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.kpis{display:flex;flex-wrap:wrap;row-gap:24px;margin:32px 0 8px}
+.kpi{padding:2px 32px}
+.kpi:first-child{padding-left:0}
+.kpi+.kpi{border-left:1px solid var(--hairline)}
+.kpi .v{font-size:30px;font-weight:700;color:var(--accent);line-height:1.3;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .v small{font-size:14px;font-weight:600;margin-left:2px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:6px}
+
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:28px 0 8px;font-size:13px;line-height:1.6}
+caption{text-align:left;font-size:12.5px;font-weight:600;margin-bottom:10px}
+th{font-size:12px;font-weight:600;text-align:left;padding:10px 12px;
+  border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.c,td.c{text-align:center}
+td.hit{color:var(--accent);font-weight:700}
+td.miss{color:var(--ink-3)}
+tr.total td{border-top:1px solid var(--ink);border-bottom:2px solid var(--ink);
+  font-weight:600;background:var(--accent-tint)}
+
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--hairline);
+  padding:2px 0 2px 14px;margin:24px 0 16px;max-width:40em}
+.fig-scroll{overflow-x:auto}
+
+.chevrons{display:flex;margin:28px 0 8px;min-width:560px}
+.chev{flex:1;padding:9px 10px 9px 22px;font-size:12px;font-weight:600;line-height:1.5;
+  text-align:center;background:var(--fill-gray);margin-left:4px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%)}
+.chev:first-child{margin-left:0;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
+.chev.on{background:var(--accent);color:#fff}
+.chev small{display:block;font-size:10.5px;font-weight:500;opacity:.75}
+
+figure{margin:32px 0 8px}
+figcaption{font-size:12.5px;font-weight:600;margin-bottom:14px}
+b,strong{font-weight:700}
+code{font-family:"Consolas","Courier New",monospace;font-size:.92em}
+pre{font-family:"Consolas","Courier New",monospace;font-size:11.5px;line-height:1.6;margin:16px 0;
+  padding:4px 0 4px 14px;border-left:2px solid var(--hairline);overflow-x:auto;white-space:pre}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+
+.doc-footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--hairline);
+  font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  @page{size:A4;margin:16mm}
+  body{border-top-width:4px}
+  .page{max-width:none;padding:0}
+  .page>section{margin-top:48px;padding-top:32px}
+  table,.kpis,.chevrons{break-inside:avoid}
+  a{text-decoration:none}
+}
+.roadmap{min-width:560px;margin:28px 0 8px}
+.rm-row{display:grid;grid-template-columns:120px repeat(6,1fr);align-items:center}
+.rm-row.rm-head{border-bottom:1px solid var(--ink)}
+.rm-h{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 0 8px;letter-spacing:.04em}
+.rm-row:not(.rm-head){border-bottom:1px solid var(--hairline);padding:12px 0}
+.rm-lane{font-size:12px;font-weight:600;padding-right:12px;line-height:1.5}
+.rm-bar{font-size:11px;font-weight:600;line-height:1.4;padding:4px 10px;background:var(--fill-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bar.on{background:var(--accent);color:#fff}
+.rm-ms{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+.matrix{display:grid;grid-template-columns:var(--mx-label,140px) repeat(var(--mx-cols,2),1fr);gap:18px 20px;margin:28px 0 8px;min-width:560px}
+.mx-h{font-size:11.5px;font-weight:600;color:var(--ink-2);text-align:center;align-self:end;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.mx-label{background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;font-size:12px;font-weight:700;line-height:1.5;padding:12px 10px}
+.mx-label small{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.08em}
+.mx-label.alt{background:var(--fill-gray);color:var(--ink)}
+.mx-cell{font-size:12px;line-height:1.75}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">学習記録 ／ Day57 ／ 基幹システム開発 段階3の8日目</p>
+    <h1>繰越の請求と支払期限 — 請求額を「前回 − 入金 ＋ 今回分」にし、締めた時に前受を充てる</h1>
+    <p class="lead">請求額を繰越の形式にし、得意先に回収条件を持たせて支払期限を決めた。10月〜2月の締めを手で計算した値と比べて一致した。誤りを入れる対照実験は34通りで、32通りがテストで落ちた。</p>
+    <div class="doc-meta"><span>2026-11-25</span><span>対象: sales-core（Domain・表・締め・画面・テスト・業務ルール集）</span><span>段階3 / Day57</span></div>
+  </header>
+
+  <section>
+    <h2>サマリー</h2>
+    <ol class="summary">
+      <li><b>完了条件を達成した。</b>入金の前後・一部入金・過入金・返品だけの月で、請求額が手で計算した値と一致した。繰越の計算を外す対照実験でも落ちた。Day55 から持ち越した T6 も、繰越のある請求書で確かめた。</li>
+      <li><b>EF の既定値の罠を実測で見つけた。</b>当月（int の 0）で登録した得意先が、DB の既定値の翌月（1）で保存された。値を常に送る形にして塞いだ。</li>
+      <li><b>AI レビューが、決まりの想定していない順序を見つけた。</b>締め日の後・締めの前に取り消した入金の扱い。本人に聞いて「元の入金日で数える」に決め直した。</li>
+    </ol>
+    <div class="kpis">
+      <div class="kpi"><div class="v">5<small>件</small></div><div class="l">本人の決定（作業の前に4件＋レビューから1件）</div></div>
+      <div class="kpi"><div class="v">32<small>/34</small></div><div class="l">対照実験（検出／通り）</div></div>
+      <div class="kpi"><div class="v">721<small>件</small></div><div class="l">テスト（前日から +39）</div></div>
+      <div class="kpi"><div class="v">$1.61</div><div class="l">AI レビュー 2回の計（最後はマージ可）</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">01</span>本人の決定</h2>
+    <p class="msg">「入金額」は、まだどの請求書にも数えていない入金にした。入金日の期間で数えると、締めた後に遡って登録した入金がどこにも出ない。</p>
+    <div class="tbl">
+    <table>
+      <caption>表1　繰越の請求の決まり</caption>
+      <thead><tr><th>問い</th><th>決定</th></tr></thead>
+      <tbody>
+        <tr><td>繰越の「入金額」の数え方</td><td><b>まだ数えていない入金。</b>締め日以前の入金の合計 − 前に数えた入金額の合計</td></tr>
+        <tr><td>前受で請求額が0円以下になる時</td><td><b>今回分が正なら作る</b>（支払い不要）。今回分が0円以下は作らず次に回す。返金は作らない</td></tr>
+        <tr><td>回収条件の形</td><td><b>何か月後の何日。</b>当月〜3か月後、5〜25日・月末。休日の調整なし。今ある得意先は翌月末</td></tr>
+        <tr><td>今日の範囲</td><td><b>繰越・前受・支払期限まで</b>（PR #29 の Minor 2件も直す）</td></tr>
+        <tr class="total"><td>締め日の後・締めの前に取り消した入金（AI レビューから）</td><td><b>打ち消しも元の入金日で数える。</b>その請求書の入金額に出さない</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">sales-core の docs/decisions/2026-11-25.md、業務ルール集「4. 請求」の「繰越の締め」「支払期限」に記録。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>締めの流れ</h2>
+    <p class="msg">締めでは請求先の請求書と入金を全部読み、繰越を決めてから前受を充てる。繰越を渡し忘れても通る入口は消した。</p>
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">請求書と入金を読む<small>請求先のもの全部</small></div>
+      <div class="chev on">繰越を決める<small>前回 − 未計上の入金</small></div>
+      <div class="chev">今回分を見る<small>0円以下なら締めない</small></div>
+      <div class="chev">前受を充てる<small>古い入金 → 古い請求書</small></div>
+      <div class="chev">支払期限<small>請求先の回収条件</small></div>
+    </div></div>
+    <ul>
+      <li><b>入口を1つに:</b> 前の請求書と入金を受け取らない4引数の入口を消した。テストの呼び出し25か所は機械的に直した。</li>
+      <li><b>前受の充当:</b> 入金は入金日の古い順、請求書は締め日の古い順。取消で未回収に戻った古い請求書が先。取り消した入金は充てない。</li>
+      <li><b>支払期限:</b> 締め日の月から回収月だけ後の月の回収日。支店の売上でも請求先の条件。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>手で計算した値と比べる</h2>
+    <p class="msg">10月〜2月の締めを API で通し、5か月とも手で計算した請求額と一致した。過入金の12月は請求額が負でも作り、返品だけの1月は締めない。</p>
+    <div class="tbl">
+    <table>
+      <caption>表2　本社（月末締め翌月末）の締め（円）</caption>
+      <thead><tr><th>締め</th><th class="num">前回請求額</th><th class="num">入金額</th><th class="num">繰越</th><th class="num">今回分</th><th class="num">請求額</th><th>確かめること</th></tr></thead>
+      <tbody>
+        <tr><td>10月</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">1,155</td><td class="num">1,155</td><td>最初の請求書</td></tr>
+        <tr><td>11月</td><td class="num">1,155</td><td class="num">500</td><td class="num">655</td><td class="num">231</td><td class="num">886</td><td>一部入金</td></tr>
+        <tr><td>12月</td><td class="num">886</td><td class="num">2,100</td><td class="num">▲1,214</td><td class="num">116</td><td class="num">▲1,098</td><td>過入金、遡って登録した 100円</td></tr>
+        <tr><td>1月</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">▲231</td><td class="num">締めない</td><td>返品だけの月</td></tr>
+        <tr class="total"><td>2月</td><td class="num">▲1,098</td><td class="num">0</td><td class="num">▲1,098</td><td class="num">2,079</td><td class="num">981</td><td>1月の返品を含む、前受 1,098円を充てる</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">繰越のある11月（請求額 886円）に 2,000円の入金を充てても、充てるのは今回分の 231円まで。Day55 から持ち越していた T6（上限を請求額にする誤り）は、ここで落ちた（V32）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>EF の既定値の罠</h2>
+    <p class="msg">C# の既定値（0）と業務の値（当月＝0）が重なると、EF は値を送らず、DB の既定値で保存する。テストに「0を選ぶ」場面があったので見つかった。</p>
+    <div class="fig-scroll"><div class="chevrons">
+      <div class="chev">当月（0）で登録</div>
+      <div class="chev">EF は 0 を「値なし」と見なす</div>
+      <div class="chev">INSERT から列を外す</div>
+      <div class="chev on">DB の既定値 1（翌月）で保存</div>
+    </div></div>
+    <p>既定値は、今ある得意先のために DB 側にだけ残した。EF には <code>ValueGeneratedNever()</code> を付けて、値を常に送る形にした。SQL を読み、消す操作・型の変更・削除の連鎖が無いことを確かめてから当てた。開発用 DB の未適用は0件。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>対照実験</h2>
+    <p class="msg">34通りのうち32通りが落ちた。未検出だった理由は3種類あった。誤りになっていないもの、届かない条件、誤りを見せないデータ。</p>
+    <div class="fig-scroll"><div class="matrix" style="--mx-label:150px;--mx-cols:2">
+      <div class="mx-h"></div><div class="mx-h">例</div><div class="mx-h">対応</div>
+      <div class="mx-label">誤りになっていない</div>
+      <div class="mx-cell">V15 回収日を月の末日に丸めない。選べる日は5〜25日と月末だけで、どの式でも同じ結果</div>
+      <div class="mx-cell">そのまま（未検出として記録）</div>
+      <div class="mx-label">届かない条件</div>
+      <div class="mx-cell">V19 打ち消しの入金を除く条件。前受は必ず0以下で、別の条件が先に外す</div>
+      <div class="mx-cell">条件を消し、理由をコメントに</div>
+      <div class="mx-label alt">データが見せない</div>
+      <div class="mx-cell">V20 充てる順、V25 別の請求先の入金、V19 の2回目（打ち消しの日付が遅い）</div>
+      <div class="mx-cell">データとテストを直して検出</div>
+    </div></div>
+    <div class="tbl">
+    <table>
+      <caption>表3　対照実験（34通り、主なもの）</caption>
+      <thead><tr><th>入れた誤り</th><th>落ちたテスト</th></tr></thead>
+      <tbody>
+        <tr><td>V1 前回請求額を0にする</td><td>Domain 7件・結合 4件</td></tr>
+        <tr><td>V2 前回を一番古い請求書にする</td><td>Domain 4件・結合 2件</td></tr>
+        <tr><td>V3 前に数えた入金を引かない</td><td>Domain 3件・結合 2件</td></tr>
+        <tr><td>V4 入金日の期間で数える（採らなかった案）</td><td>Domain 1件・結合 1件</td></tr>
+        <tr><td>V5〜V7 締め日より後も数える・打ち消しを数えない・繰越の符号</td><td>Domain 1〜5件・結合 0〜3件</td></tr>
+        <tr><td>V8・V9 請求額0円以下で作らない・今回分0円以下でも作る</td><td>Domain 3件・結合 1〜2件</td></tr>
+        <tr><td>V10〜V12 別の請求先・今回以後の請求書と入金</td><td>Domain 1件ずつ</td></tr>
+        <tr><td>V13〜V17 支払期限・回収月・回収日・当月の検査</td><td>Domain 1〜3件・結合 0〜4件（V15 は未検出）</td></tr>
+        <tr><td>V18〜V21 前受の充当の条件と順</td><td>Domain 1件ずつ（V19 はテストを直して）</td></tr>
+        <tr><td>V22〜V25 締めで前受を充てない・渡さない・別の請求先も読む</td><td>結合 1〜4件（V25 はテストを足して）</td></tr>
+        <tr><td>V26 ValueGeneratedNever を外す</td><td>結合 1件</td></tr>
+        <tr><td>V27〜V30 ユースケースの検査・画面の表示と送信</td><td>結合・画面 1〜2件</td></tr>
+        <tr><td>V31 入金の画面で選び直した後の古い結果</td><td><b>未検出</b>（テストが無い）</td></tr>
+        <tr class="total"><td>V32 上限を今回分でなく請求額にする（Day55 の T6）</td><td>Domain 3件・結合 1件</td></tr>
+        <tr><td>V33・V34 打ち消しを取り消した日で数える・読み込み漏れ</td><td>Domain 1〜2件・結合 0〜1件</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>CI と AI レビュー（PR #30）</h2>
+    <p class="msg">2回目でマージ可。Important の1件は決まりの穴だったので、本人に聞いて決め直した。CI の失敗は、画面の読み込みとテストの DB 操作が重なったもの。</p>
+    <div class="tbl">
+    <table>
+      <caption>表4　AI レビューの回ごとの判定と対応</caption>
+      <thead><tr><th>回</th><th>判定</th><th class="num">費用（$）</th><th>主な指摘と対応</th></tr></thead>
+      <tbody>
+        <tr><td>1回目</td><td>修正後マージ可</td><td class="num">0.7907</td><td>Important：締めの前に取り消した入金を入金済みと出す → 本人に聞いて「元の入金日で数える」（RED は Domain 2件・結合 1件）。Important：V31 のテストが無い → 未検証と記録。Minor 4件 → 文書・文言・コメント</td></tr>
+        <tr><td>2回目</td><td>マージ可</td><td class="num">0.8218</td><td>Minor 5件（取消を作る時の繰越、締め日より後の入金の充当の例、V31、例外の型、締めの同時実行）。Day58 へ回した</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">出所: PR #30 の AI レビューのコメント。費用は API 換算の額で、実際はプランの利用枠を使う。テストは 682件 → 721件（Domain 320・Web 47・アーキテクチャ 20・結合 322・端から端まで 12）、Release ビルドの警告0件。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>今日学んだこと</h2>
+    <p class="msg">渡し忘れは入口を1つにして型で止める。対照実験で落ちない時は、落ちない理由を3種類に分けて扱いを決める。</p>
+    <ul>
+      <li><b>入口を1つにする:</b> 繰越を受け取らない入口を残すと、ユースケースの渡し忘れが通る。</li>
+      <li><b>EF の既定値:</b> C# の既定値と業務の値が重なると、黙って DB の既定値になる。</li>
+      <li><b>未検出の3種類:</b> 誤りになっていないものは記録する。届かない条件は消す。誤りを見せないデータは直す。</li>
+      <li><b>決まりの穴は、レビューが順序から見つける:</b> 決定の文言どおりに動いても、業務として困る順序がある。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>つまずき</h2>
+    <p class="msg">ヒアドキュメントでスクリプトが壊れたのは3回目。ファイルに書いてから流す形を徹底する。</p>
+    <div class="tbl">
+    <table>
+      <caption>表5　つまずきと対策</caption>
+      <thead><tr><th>症状</th><th>原因</th><th>対策</th></tr></thead>
+      <tbody>
+        <tr><td>スクリプトが unexpected EOF で止まった</td><td>シェルのヒアドキュメントで、引用符の入ったスクリプトを書いた</td><td>Write でファイルに書いてから流した</td></tr>
+        <tr><td>乱数のテストで支払期限があふれた</td><td>締め日に DateOnly.MaxValue を使っていた</td><td>締め日を 9999-01-31 に</td></tr>
+        <tr><td>対照実験の V18 と V19 の中身が逆になった</td><td>sed の置き換えで名前が入れ替わった</td><td>結果を読む前に気付いて直した</td></tr>
+        <tr><td>ApiAuthenticationTests が1回だけ落ちた</td><td>不明（単独では通る。今日は触っていない）</td><td>CI で見張る</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">前日の締めで CLI のログインが切れていたガードの実効性テストは、ログインし直してから流し直した。7セルすべて合格した（$0.1580）。</p>
+  </section>
+
+  <section>
+    <h2><span class="no">09</span>成果物</h2>
+    <p class="msg">リンクはタグ <code>day57</code> で固定した。</p>
+    <h3>sales-core</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day57/src/SalesCore.Domain/Invoice.cs">Domain/Invoice.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day57/src/SalesCore.Domain/Receipt.cs">Domain/Receipt.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day57/src/SalesCore.Domain/Customer.cs">Domain/Customer.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day57/src/SalesCore.Application/InvoiceUseCases.cs">Application/InvoiceUseCases.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day57/src/SalesCore.Infrastructure/Persistence/Configurations.cs">Persistence/Configurations.cs</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day57/src/SalesCore.Infrastructure/Persistence/Migrations/20261125043745_AddCollectionTerms.cs">Migrations/20261125043745_AddCollectionTerms.cs</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day57/tests/SalesCore.Domain.Tests/CarryOverTests.cs">tests/CarryOverTests.cs</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day57/tests/SalesCore.Integration.Tests/CarryOverApiTests.cs">tests/CarryOverApiTests.cs</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day57/docs/migrations/2026-11-25-AddCollectionTerms.sql">docs/migrations/2026-11-25-AddCollectionTerms.sql</a>（新規）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day57/docs/domain/business-rules.md">docs/domain/business-rules.md</a></li>
+      <li><a href="https://github.com/kiyo015/sales-core/blob/day57/docs/decisions/2026-11-25.md">docs/decisions/2026-11-25.md</a>（新規。本人の決定5件）</li>
+      <li><a href="https://github.com/kiyo015/sales-core/pull/30">kiyo015/sales-core#30</a>（ほかの変更ファイルは summary.md に列挙）</li>
+    </ul>
+    <h3>Study</h3>
+    <ul>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day57/2026-11-25/summary.md">2026-11-25/summary.md</a></li>
+      <li><a href="https://github.com/kiyo015/vibe-coding-study/blob/day57/study_plan_next_month.md">study_plan_next_month.md</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">10</span>次のアクション</h2>
+    <p class="msg">Day58 は月次締めと売掛金の残高。締めた月の日付の売上・入金を止める。</p>
+    <div class="tbl">
+    <table>
+      <caption>表6　持ち越すもの</caption>
+      <thead><tr><th>項目</th><th>出どころ</th><th>いつ</th></tr></thead>
+      <tbody>
+        <tr><td>最初に締められる月、残高の売上は税込か、未請求の売上の税、月次締めの取消</td><td>段階3の設計（作業の前に本人に聞く）</td><td>Day58</td></tr>
+        <tr><td>取消を作る時の繰越、締め日より後の入金の充当の例とテスト、V31 のテスト、例外の型、締めの同時実行のテスト</td><td>PR #30 2回目の Minor</td><td>Day58</td></tr>
+        <tr><td>締めと入金の同時操作の 409、ApiAuthenticationTests の一時的な失敗</td><td>PR #30</td><td>Day58 以降</td></tr>
+        <tr><td>PR #27・#16・#19 の Minor、一覧のページ分け、Swagger の Bearer、Routes.razor のテスト</td><td>これまでの持ち越し</td><td>Day58 以降</td></tr>
+        <tr><td>入金の画面の型の流用、請求書の一覧がエンティティを丸ごと読む、数量の桁、DB の接続の時間切れ</td><td>これまでの持ち越し</td><td>Day58 以降</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Day57 学習記録（2026-11-25）</span><span>記録の正本は summary.md</span>
+  </footer>
+
+</div>
+</body>
+</html>
