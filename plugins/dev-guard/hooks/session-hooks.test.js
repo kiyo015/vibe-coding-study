@@ -2,7 +2,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('path');
-const { currentTurn, findUntestedCsEdit, editedFiles, decisionsOn, renderDecisions, decisionsFolder } = require('./session-hooks');
+const { currentTurn, findUntestedCsEdit, editedFiles, decisionsOn, renderDecisions, canOverwrite, decisionsFolder } = require('./session-hooks');
 
 const user = text => ({ type: 'user', message: { role: 'user', content: text } });
 const toolUse = (name, input) => ({ type: 'assistant', message: { content: [{ type: 'tool_use', name, input }] } });
@@ -61,6 +61,16 @@ test('パスワードやキーの形をした値は、決定の記録に書く�
   for (const secret of secrets) assert.ok(!text.includes(secret), `伏せていない: ${secret}`);
   assert.match(text, /Password=\*\*\*/);
   assert.match(text, /- 回答: password: \*\*\*/);
+});
+
+test('決定の記録は、無いか、前に自動で書いたもの(新しい書き出しの先頭と同じ)の時だけ書き直す(Day58 で手の注記が消えた)', () => {
+  const morning = renderDecisions('2026-11-26', [{ time: '09:00', header: '月', question: 'どの月？', answer: '古い月' }]);
+  const evening = renderDecisions('2026-11-26', [{ time: '09:00', header: '月', question: 'どの月？', answer: '古い月' }, { time: '15:00', header: '範囲', question: 'どこまで？', answer: '全部' }]);
+  assert.equal(canOverwrite(null, evening), true);
+  assert.equal(canOverwrite(morning, evening), true);
+  assert.equal(canOverwrite(morning.replace(/\n/g, '\r\n'), evening), true, 'git が CRLF にしても自動の版とみなす');
+  assert.equal(canOverwrite(`${morning}\n質問の前に、聞かずに進めることとして次の3つを伝えた。\n`, evening), false, '自動の版に手で書き足した');
+  assert.equal(canOverwrite('# 決定の記録 2026-11-26\n\nその日に本人に確認して決めたこと。\n', evening), false, '手で書いた');
 });
 
 test('書き出す先は、環境変数 DEV_GUARD_DECISIONS_DIR があればそれ、無ければ引数(どちらもセッションのフォルダからの相対)', () => {

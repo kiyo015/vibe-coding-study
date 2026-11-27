@@ -100,6 +100,14 @@ function renderDecisions(date, decisions) {
   ].join('\n');
 }
 
+/**
+ * 決定の記録を書き直してよいか。無いか、前に自動で書いたもの(その日の決定は増えるだけなので、新しい書き出しの先頭と同じ)の時だけ。
+ * 手で書いた・書き足した記録は消さない(Day58 で、手で書き足した注記が要約の前に消えた)。git が CRLF にしても同じとみなす。
+ */
+function canOverwrite(existing, rendered) {
+  return existing == null || rendered.startsWith(existing.replace(/\r\n/g, '\n'));
+}
+
 // git のリポジトリごとに、未コミットの変更の件数
 function uncommittedByRepo(files) {
   const counts = new Map();
@@ -133,7 +141,12 @@ function preCompact(input, folder) {
   if (decisions.length === 0) return null;
   fs.mkdirSync(folder, { recursive: true });
   const file = path.join(folder, `${date}.md`);
-  fs.writeFileSync(file, renderDecisions(date, decisions)); // その日の分を毎回書き直す(重ならない)
+  const rendered = renderDecisions(date, decisions);
+  const existing = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
+  if (!canOverwrite(existing, rendered)) {
+    return { systemMessage: `[PreCompact] ${file} は手で書いた(書き足した)記録なので書き直さない。今日の決定 ${decisions.length} 件が載っているか確かめる` };
+  }
+  fs.writeFileSync(file, rendered); // その日の分を毎回書き直す(重ならない)
   return { systemMessage: `[PreCompact] 今日の決定 ${decisions.length} 件を ${file} に書き出した` };
 }
 
@@ -164,4 +177,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { currentTurn, findUntestedCsEdit, editedFiles, decisionsOn, renderDecisions, decisionsFolder };
+module.exports = { currentTurn, findUntestedCsEdit, editedFiles, decisionsOn, renderDecisions, canOverwrite, decisionsFolder };
